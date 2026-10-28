@@ -1,0 +1,2 @@
+# Preserve the imported Windows line endings while checking other whitespace.
+src/usv_nav2/maps/demo_water.yaml whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
