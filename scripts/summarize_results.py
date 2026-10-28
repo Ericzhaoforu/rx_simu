@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Rectangle, Polygon
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -33,6 +33,9 @@ def metrics(path):
     after=[r for r in rows if r['phase']=='post_goal']
     if after:
         start=after[0]['wall']
+        # Early traces kept the same phase during final HOLD/disarm cleanup.
+        # Limit them to the intended observation window; newer traces tag cleanup.
+        after=[r for r in after if r['wall']<start+10]
         def stable(predicate):
             beginning=None
             for row in after:
@@ -41,7 +44,8 @@ def metrics(path):
                     if row['wall']-beginning>=.5:return beginning-start
                 else:beginning=None
             return None
-        report['post_goal']={'stable_exact_zero_thrust_delay_s':stable(lambda r:abs(r.get('left_n',999))+abs(r.get('right_n',999))<1e-6),
+        report['post_goal']={'thrust_measurement':sorted(set(r.get('thrust_source','command_topic_only') for r in after)),
+                             'stable_exact_zero_thrust_delay_s':stable(lambda r:abs(r.get('left_n',999))+abs(r.get('right_n',999))<1e-6),
                              'stable_speed_below_002_delay_s':stable(lambda r:math.hypot(*r['truth'][4:6])<.02 and abs(r['truth'][6])<.02),
                              'final_thrust_n':[after[-1].get('left_n'),after[-1].get('right_n')],
                              'travel_distance_m':sum(math.dist(a['truth'][:2],b['truth'][:2]) for a,b in zip(after,after[1:]))}
@@ -67,6 +71,14 @@ def plot(item):
     if moving:
         positions=np.asarray(moving)
         ax[0].plot(positions[:,0],positions[:,1],':',color='tab:red',label='Scripted obstacle centre')
+    nearest=min(range(len(rows)),key=lambda i:rows[i].get('clearance_m',math.inf))
+    angle=a[nearest,3];rotation=np.array([[math.cos(angle),-math.sin(angle)],[math.sin(angle),math.cos(angle)]])
+    hull=np.asarray(scene['footprint'])@rotation.T+a[nearest,:2]
+    ax[0].add_patch(Polygon(hull,fill=False,color='tab:blue',alpha=.7,label='Hull at closest pass'))
+    previous=[r for r in events if r.get('event')=='move_dynamic_obstacle' and r['wall']<=rows[nearest]['wall']]
+    if previous:
+        x,y=previous[-1]['position']
+        ax[0].add_patch(Rectangle((x-1,y-1),2,2,color='tab:red',alpha=.3))
     ax[0].set(xlabel='East (m)',ylabel='North (m)',title=name,aspect='equal')
     ax[0].set_xlim(a[:,0].min()-4,a[:,0].max()+4);ax[0].set_ylim(a[:,1].min()-4,a[:,1].max()+4)
     ax[0].legend();ax[0].grid(alpha=.3)
@@ -92,7 +104,7 @@ def navigation_table(output):
         lines.append(f"| {name} | {verdict} / {result.get('status','—')} | "+' | '.join(values)+
                      f' | [{run.name}](../{run}/{name}_result.json) |')
     lines.extend(['','action 4 = 成功，5 = 取消，6 = 中止。验收条件不只检查 action 状态，还检查真值误差、碰撞、途经点和零指令延迟。',
-                  '推力归零和物理停止观测见 `results.json` 的 `metrics.post_goal`；`null` 表示观察窗口内未达到该条件。',''])
+                  '推力归零和物理停止观测见 `results.json` 的 `metrics.post_goal`；`thrust_measurement` 区分输入推力命令与物理插件反馈，`null` 表示观察窗口内未达到该条件。',''])
     (ROOT/'docs/results_summary.md').write_text('\n'.join(lines))
 
 
@@ -107,7 +119,9 @@ def main():
             [path,run/(name+'_result.json'),run/'generated/usv_nav.sdf',run/'generated/nav2_wamv.yaml',
              run/'provenance.json',run/'source_snapshot.tar.gz',run/'map_alignment.json',
              run/'overview.png',run/'overview.mp4'] if p.exists()}
-        if path.exists() and ('goals' in item['case'] or name=='dynamic_navigation'):plot(item)
+        if path.exists() and ('goals' in item['case'] or name=='dynamic_navigation'):
+            plot(item)
+            if (run/'trajectory.png').exists():entry['evidence_sha256']['trajectory.png']=sha(run/'trajectory.png')
         output['latest'][name]=entry
     for name in ['single_1','single_2','single_3','multi_1','multi_2','multi_3','static_obstacle','wind','waves','wind_waves']:
         if name in latest:

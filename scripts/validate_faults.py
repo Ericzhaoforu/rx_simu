@@ -23,6 +23,7 @@ def stopping_observation(rows, start):
     def first(predicate):
         return next((r['wall']-start for r in rows if predicate(r)),None)
     return {'observed_duration_s':rows[-1]['wall']-start,
+            'thrust_measurement':rows[-1].get('thrust_source','command_topic_only'),
             'initial_velocity':[rows[0]['truth'][4],rows[0]['truth'][6]],
             'zero_thrust_delay_s':first(lambda r:abs(r.get('left_n',999))+abs(r.get('right_n',999))<1e-7),
             'physical_rest_delay_s':first(lambda r:math.hypot(*r['truth'][4:6])<.02 and abs(r['truth'][6])<.02),
@@ -91,7 +92,7 @@ def main():
             runner.spin(2)
             truth=runner.data['/usv/ground_truth']
             results[-1]['yaw_rate_after_2s']=truth.twist.twist.angular.z
-            results[-1]['thrust_after_2s']=[runner.data[t].data for t in ('/usv/thrust_left','/usv/thrust_right')]
+            results[-1]['thrust_after_2s']=[runner.rows[-1][side+'_n'] for side in ('left','right')]
             results[-1]['stopping']=stopping_observation(
                 [r for r in runner.rows if r['phase']=='fault_'+name and 'truth' in r],start)
         fault[0]=None
@@ -108,7 +109,7 @@ def main():
                         'physical_simulation_continued':runner.rows[-1]['sim']-before_sim>5,
                         'drift_m':math.hypot(after.pose.pose.position.x-start_xy[0],after.pose.pose.position.y-start_xy[1]),
                         'final_yaw_rate':after.twist.twist.angular.z,
-                        'final_thrust':[runner.data[t].data for t in ('/usv/thrust_left','/usv/thrust_right')],
+                        'final_thrust':[runner.rows[-1][side+'_n'] for side in ('left','right')],
                         'stopping':stopping_observation([r for r in runner.rows if r['phase']=='bridge_exited' and 'truth' in r],start)})
         results[-1]['passed']=results[-1]['physical_simulation_continued'] and all(abs(x)<1e-7 for x in results[-1]['final_thrust'])
         (runner.run/'fault_inputs_result.json').write_text(json.dumps(results,indent=2)+'\n')

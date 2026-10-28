@@ -19,6 +19,7 @@ CASES=[
     {'name':'waves','goals':[[5,0,0]],'wave_gain':.3},
     {'name':'wind_waves','goals':[[5,0,0]],'wind':3,'wave_gain':.3},
     {'name':'gps_input_fixed','goals':[[5,0,0]],'gps_input':True},
+    {'name':'feedback_goal','goals':[[5,0,0]]},
     *[{'name':name,'environment_case':name} for name in
       ('dynamic_map','dynamic_navigation','pause','motors','protocol','disarm','collision_sensor','reset','mavros_exit','sitl_exit')],
     {'name':'gnss','environment_case':'gnss','gps_input':True},

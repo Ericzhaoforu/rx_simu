@@ -5,6 +5,7 @@ import json
 import math
 from pathlib import Path
 import time
+import xml.etree.ElementTree as ET
 
 import rclpy
 from rclpy.action import ActionClient
@@ -32,6 +33,15 @@ class Runner:
     def __init__(self, label):
         self.run = Path((ROOT/'runs/latest.txt').read_text().strip())
         self.scene=json.loads((self.run/'generated/scene.json').read_text())
+        model=ET.parse(self.run/'generated/usv_nav.sdf')
+        self.thrust_factors={p.findtext('name'):float(p.findtext('fluid_density'))*
+                            float(p.findtext('thrust_coefficient'))*float(p.findtext('propeller_diameter'))**4
+                            for p in model.findall('.//plugin') if p.get('name')=='gz::sim::systems::Thruster'}
+        (self.run/'thrust_observation.json').write_text(json.dumps({
+            'force_from_feedback':'density * coefficient * diameter^4 * abs(omega) * omega',
+            'factors':self.thrust_factors,
+            'meaning':'Force applied by the configured Gazebo ForceCmd/velocity_control model, inferred from its PreUpdate feedback; not a physical load cell or shaft dynamics measurement.',
+            'source':'https://github.com/gazebosim/gz-sim/blob/gz-sim7_7.9.0/src/systems/thruster/Thruster.cc'},indent=2)+'\n')
         self.node = rclpy.create_node('validation_'+label, parameter_overrides=[Parameter('use_sim_time', value=True)])
         self.data = {}
         self.received = {}
@@ -49,6 +59,9 @@ class Runner:
                            ('/usv/setpoint_preview', PositionTarget), ('/usv/control_status', String),
                            ('/usv/thrust_left', Float64), ('/usv/thrust_right', Float64), ('/usv/sitl_frame', UInt32)]:
             self.node.create_subscription(cls, topic, lambda msg,t=topic:self.receive(t,msg), qos_profile_sensor_data)
+        for side in ('left','right'):
+            topic='/usv/thruster_'+side+'_feedback'
+            self.node.create_subscription(Float64,topic,lambda msg,t=topic:self.receive(t,msg),qos_profile_sensor_data)
         self.raw = self.node.create_publisher(PositionTarget, '/mavros/setpoint_raw/local', 10)
         self.twist = self.node.create_publisher(Twist, '/usv/cmd_vel', 10)
         self.node.create_subscription(Contacts,'/usv/contacts',self.on_contacts,qos_profile_sensor_data)
@@ -104,6 +117,15 @@ class Runner:
                         row['map_alignment_xy']=self.alignment['offset_xy_m']
         for topic,key in [('/usv/thrust_left','left_n'),('/usv/thrust_right','right_n'),('/usv/sitl_frame','frame'),('/usv/control_status','gate')]:
             if topic in self.data:row[key]=self.data[topic].data
+        row['thrust_source']='command_topic_only'
+        if all('/usv/thruster_'+side+'_feedback' in self.data for side in ('left','right')):
+            row['thrust_source']='thruster_feedback'
+            for side in ('left','right'):
+                topic='/usv/thruster_'+side+'_feedback';omega=self.data[topic].data
+                row['command_'+side+'_n']=row.get(side+'_n')
+                row[side+'_n']=self.thrust_factors[side]*abs(omega)*omega
+                row[side+'_feedback_age_s']=now-self.received[topic]
+                if row[side+'_feedback_age_s']>.5:row['thrust_source']='stale_thruster_feedback'
         if '/usv/cmd_vel' in self.data:
             m=self.data['/usv/cmd_vel'];row['command']=[m.linear.x,m.angular.z]
         if '/usv/setpoint_preview' in self.data:
@@ -265,6 +287,8 @@ class Runner:
         raise TimeoutError('Nav2 did not become active')
 
     def close(self):
+        # Cleanup HOLD/disarm must never count as the controller's stopping response.
+        self.phase='cleanup'
         self.command(0,0,True)
         if self.mav_available:
             self.mav.mav.set_mode_send(1,mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,4)

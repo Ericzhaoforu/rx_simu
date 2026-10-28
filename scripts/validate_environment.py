@@ -99,17 +99,20 @@ def mavros_exit(runner,process_name='mavros'):
     return {'initial_thrust_n':[before.get('left_n'),before.get('right_n')],
             'initial_forward_velocity_mps':before['truth'][4],
             'initially_active':active,
+            'thrust_measurement':after.get('thrust_source','command_topic_only'),
             'thrust_zero_wall_s':zero,'speed_below_002_wall_s':stopped,
             'displacement_m':math.dist(before['truth'][:2],after['truth'][:2]),
             'sim_advanced_s':after['sim']-before['sim'],'final_thrust_n':[after['left_n'],after['right_n']],
             'final_native_mode':mode,
             'passed':active and zero is not None and after['sim']-before['sim']>8 and mode==4
+                     and after.get('thrust_source')=='thruster_feedback'
                      and abs(after['left_n'])+abs(after['right_n'])<1e-6}
 
 
 def sitl_exit(runner):
     result=mavros_exit(runner,'sitl')
     result['passed']=result['initially_active'] and result['thrust_zero_wall_s'] is not None and result['sim_advanced_s']>8 \
+                     and result['thrust_measurement']=='thruster_feedback' \
                      and all(abs(force)<1e-7 for force in result['final_thrust_n'])
     result['note']='Tests plugin command clearing with continuing external physics.'
     return result
@@ -163,11 +166,14 @@ def gnss(runner):
     runner.wait(lambda:runner.data.get('/usv/sitl_frame') is not None and runner.data['/usv/sitl_frame'].data>=70000,
                 210,'Did not cross the 16-bit frame boundary with live physics')
     extra_resets=(runner.run/'gazebo.log').read_text().count('ArduPilot controller has reset')-initial_resets
+    final=runner.rows[-1]
+    fresh=all(-1e-6<=final.get(key,999)<.5 for key in ('ekf_age','scan_age'))
     return {'profiles':results,'action_status_before_test_cleanup':status,
             'target':[0,-25,-math.pi/2],'final_true_position_error_m':final_error,
             'collision_messages':len(runner.contacts),
             'endurance':{'final_frame':runner.data['/usv/sitl_frame'].data,'new_controller_resets':extra_resets,
-                         'passed':extra_resets==0},
+                         'final_odom_age_s':final.get('ekf_age'),'final_scan_age_s':final.get('scan_age'),
+                         'passed':extra_resets==0 and fresh},
             'note':'No new RTK/EKF gate or automatic retry policy is implemented.'}
 
 
@@ -182,8 +188,9 @@ def motors(runner):
             row=runner.rows[-1];expected=(pwm-1500)*.6 if 1000<=pwm<=2000 else 0
             actual=row['left_n' if side=='left' else 'right_n']
             results.append({'side':side,'pwm':pwm,'expected_n':expected,'actual_n':actual,
+                            'thrust_measurement':row.get('thrust_source','command_topic_only'),
                             'other_n':row['right_n' if side=='left' else 'left_n'],'truth_yaw_rate':row['truth'][6],
-                            'passed':abs(actual-expected)<1e-6})
+                            'passed':abs(actual-expected)<1e-6 and row.get('thrust_source')=='thruster_feedback'})
             runner.phase='motor_timeout';runner.spin(3)
     # Exercise both motors together through the FCU's normal manual RC mapping.
     # The navigation bridge yields control outside GUIDED.
@@ -200,8 +207,10 @@ def motors(runner):
         row=runner.rows[-1];sign=(pwm>1500)-(pwm<1500)
         forces=[row['left_n'],row['right_n']]
         results.append({'side':'both','rc_throttle_pwm':pwm,'actual_n':forces,'forward_velocity':row['truth'][4],
+                        'thrust_measurement':row.get('thrust_source','command_topic_only'),
                         'servo_pwm':row.get('SERVO_OUTPUT_RAW'),
-                        'passed':all(f*sign>0 for f in forces) if sign else all(abs(f)<1e-6 for f in forces)})
+                        'passed':row.get('thrust_source')=='thruster_feedback' and
+                                 (all(f*sign>0 for f in forces) if sign else all(abs(f)<1e-6 for f in forces))})
     message.channels=[0]*18;override.publish(message)
     return results
 
@@ -229,8 +238,10 @@ def protocol(runner):
             rows=runner.rows[start:]
             maximum=max(abs(r.get('left_n',999))+abs(r.get('right_n',999)) for r in rows)
             results.append({'case':case,'maximum_total_absolute_thrust_n':maximum,
+                            'thrust_measurement':rows[-1].get('thrust_source','command_topic_only'),
                             'sim_advanced_s':rows[-1]['sim']-rows[0]['sim'],
-                            'passed':maximum<1e-6 and rows[-1]['sim']-rows[0]['sim']>.1})
+                            'passed':maximum<1e-6 and rows[-1]['sim']-rows[0]['sim']>.1
+                                     and rows[-1].get('thrust_source')=='thruster_feedback'})
     finally:sock.close()
     return results
 
@@ -251,8 +262,10 @@ def disarm(runner):
             'sim_advanced_s':after['sim']-before['sim'],
             'final_thrust_n':[after.get('left_n'),after.get('right_n')],
             'final_armed':after.get('fcu_state',{}).get('armed'),
+            'thrust_measurement':after.get('thrust_source','command_topic_only'),
             'passed':abs(before.get('left_n',0))+abs(before.get('right_n',0))>1 and zero is not None
                      and after.get('fcu_state',{}).get('armed') is False
+                     and after.get('thrust_source')=='thruster_feedback'
                      and abs(after.get('left_n',999))+abs(after.get('right_n',999))<1e-7
                      and after['sim']-before['sim']>5}
 
