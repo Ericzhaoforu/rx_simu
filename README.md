@@ -4,6 +4,10 @@
 
 已实现独立的 VRX 场景、固定版本 SITL、MAVROS 控制链、飞控 EKF 定位和 LiDAR 避障输入。WAM-V 配置按实际碰撞几何生成；原包 1.2 m × 0.7 m 参数保留。验证结果、已知限制与失败记录见 [验证报告](docs/validation_report.md)。
 
+单目标和多途经点各三次冷启动回归通过。最终 WAM-V 速度命令上限为 0.3 m/s；具体误差与净空见 [测量表](docs/results_summary.md)。直接 Gazebo 时间重置尚不能自动恢复，使用整链停止/重启流程。当前桥没有 RTK/EKF 质量门控，定位降级实验按现有行为记录。
+
+到点和取消后的十秒观测中仍有约 ±0.6 N 的小幅差动推力；发出零速度不能等同于推进器停机。disarm 和进程故障的反馈测量单独记录在报告中。
+
 ## 启动
 
 本服务器的 Ubuntu 22.04、ROS 2 Humble、Garden 7.9 与既有 VRX 安装是环境基础。新增依赖安装在仓库的 `external/`，不要求 sudo，不覆盖既有工程。详细依赖和排障见 [运行说明](docs/runbook.md)。
@@ -40,6 +44,12 @@ python3 scripts/sim_session.py stop
 | [docs/navigation_handoff.md](docs/navigation_handoff.md) | 原始交接附件，原文保存 |
 | [docs/import_manifest.json](docs/import_manifest.json) | 附件及 24 个导入文件的 SHA256 |
 | [src/usv_nav2](src/usv_nav2) | ROS 2 导航包、参数、地图与现有测试 |
+| [src/usv_sim](src/usv_sim) | LiDAR 过滤、GNSS 注入、地图地理原点配准和独立几何评估 |
+| [scripts](scripts) | 固定依赖安装、世界生成、启动监督、批测、故障注入与结果汇总 |
+| [config/dependencies.lock.json](config/dependencies.lock.json) | 第三方源码提交和依赖包版本、SHA256 |
+| [patches/ardupilot_gazebo_rover44.patch](patches/ardupilot_gazebo_rover44.patch) | 官方插件的 4.4.0 兼容补丁 |
+| [docs/runbook.md](docs/runbook.md) | 启动、复现、参数依据与自主排障记录 |
+| [docs/results.json](docs/results.json) | 批测历史、最新结果与证据校验值 |
 
 交接附件中的部分 GPS 参数来自较新固件；本项目以固定提交源码和现行验证计划为准。现阶段先用 WAM-V 检验软件链路，模型与最终实船的尺寸、水动力和推进器参数需要后续单独适配。
 

@@ -27,14 +27,37 @@
   "plugin_revision": "80dc9664dda7efd6c5d1a71a79198d1d6b708c0e",
   "plugin_patch_sha256": "c06588e5da0a1a200957e4b93030003832e46e61fe6216e45b5d2382a740adbc",
   "plugin_binary_sha256": "bd1bf81c44e2cac162ceffd665aafe4d595ced5214114ffc794339830390571b",
-  "runtime_version_evidence": "runs/20261029_045311_unreachable/mavros.log: Flight software 040400ff (d0356316)",
+  "runtime_version_evidence": "runs/20261029_062853_mavros_exit/mavros.log: Flight software 040400ff (d0356316); MY ID 255.191, TARGET ID 1.1",
   "tf_authorities": {
     "base_link -> base_link_frd": 1,
     "base_link -> wamv/wamv/base_link/lidar_wamv_sensor": 1,
     "base_stabilized -> base_link": 1,
-    "map -> base_stabilized": 1,
     "map -> map_ned": 1,
+    "map -> odom": 1,
+    "odom -> base_stabilized": 1,
     "odom -> odom_ned": 1
   },
-  "graph_audit": "runs/20261029_045547_single_1/graph_audit.json"
+  "graph_audit": "runs/20261029_055421_static_obstacle/graph_audit.json",
+  "tf_authority_evidence": "runs/tf_authority_final.json (observed during runs/20261029_060015_wind)",
+  "unit_checks": {
+    "navigation_tests": 22,
+    "simulation_tests": 7,
+    "passed": true
+  },
+  "source_snapshots": "Each late run includes source_snapshot.tar.gz and its SHA256 in provenance.json; raw artifacts are ignored by Git.",
+  "final_checks": {
+    "runs/final_build.log": "bca913a906ffe1080a7bc330feef929c3f112de850dc257012a33d9108331ba5",
+    "runs/final_unit_tests.log": "362f98763a000f6195a2aa6978693c91967f66cec30dce657db516da78951162",
+    "runs/tf_authority_final.json": "0934ca20ec5f061194a147440a9f41bff247fb55fd89cd8cb4a099cb4419935b",
+    "runs/20261029_055421_static_obstacle/graph_audit.json": "5c7eeb8cbb9acde7772eec741cc97c41ee9cb54d837fa2f3b63fc527ca8db5c4"
+  },
+  "final_validation": {
+    "retained_attempts": 67,
+    "latest_case_names": 27,
+    "endurance_frame": 70000,
+    "force_measurement": "Gazebo Thruster PreUpdate feedback, reconstructed using run-specific SDF coefficients",
+    "source_implementation_commit": "33e7566de0e9830cb1e2c973206bcca6f4e61a74",
+    "post_goal_observation": "Cleanup HOLD/disarm is excluded; legacy command-only records are labelled.",
+    "navigation_config_sha256": "29871d7a729558ddb7b3bababe2d2b4ca0a1d32baede91a875efad1f56b5dbdf"
+  }
 }
