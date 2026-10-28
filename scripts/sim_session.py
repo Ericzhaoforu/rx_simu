@@ -2,6 +2,7 @@
 """Start/stop only this workspace's processes; run after sourcing scripts/env.sh."""
 import argparse
 import datetime
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -57,6 +58,16 @@ def start(args):
     stamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     run = ROOT/'runs'/f'{stamp}_{args.name}'
     run.mkdir(parents=True)
+    workspace_patch=subprocess.check_output(['git','diff','--binary'],cwd=ROOT)
+    (run/'workspace.patch').write_bytes(workspace_patch)
+    provenance={'workspace_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
+                'workspace_patch_sha256':hashlib.sha256(workspace_patch).hexdigest(),
+                'firmware_revision':actual,'files':{}}
+    for path in ('external/ardupilot/build/sitl/bin/ardurover',
+                 'external/ardupilot_gazebo/build/libArduPilotPlugin.so',
+                 'patches/ardupilot_gazebo_rover44.patch','config/dependencies.lock.json'):
+        provenance['files'][path]=hashlib.sha256((ROOT/path).read_bytes()).hexdigest()
+    (run/'provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
     generated = run/'generated'
     command = [sys.executable, str(ROOT/'scripts/generate_world.py'), '--output', str(generated),
                '--wind', str(args.wind), '--wave-gain', str(args.wave_gain)]

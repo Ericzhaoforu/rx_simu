@@ -14,10 +14,14 @@ CASES=[
     {'name':'static_obstacle','goals':[[18,0,0]]},
     {'name':'cancel','goals':[[5,0,0]],'cancel_after':5,'expected_status':5},
     {'name':'unreachable','goals':[[60,0,0]],'expected_status':6},
+    {'name':'unreachable_obstacle','goals':[[10,0,0]],'expected_status':6},
     {'name':'wind','goals':[[5,0,0]],'wind':3},
     {'name':'waves','goals':[[5,0,0]],'wave_gain':.3},
     {'name':'wind_waves','goals':[[5,0,0]],'wind':3,'wave_gain':.3},
     {'name':'gps_input_fixed','goals':[[5,0,0]],'gps_input':True},
+    *[{'name':name,'environment_case':name} for name in
+      ('dynamic_map','dynamic_navigation','pause','motors','collision_sensor','reset','mavros_exit','sitl_exit')],
+    {'name':'gnss','environment_case':'gnss','gps_input':True},
 ]
 
 
@@ -47,9 +51,12 @@ def main():
                 time.sleep(.2)
             if run is None:raise TimeoutError('Session startup timeout')
             # Let the supervisor attach ROS nodes; validate also waits for fresh data and lifecycle state.
-            command=[sys.executable,str(ROOT/'scripts/validate.py'),'goal','--goals',json.dumps(case['goals']),'--label',name]
-            if case.get('cancel_after'):command.extend(['--cancel-after',str(case['cancel_after'])])
-            command.extend(['--expect-status',str(case.get('expected_status',4))])
+            if case.get('environment_case'):
+                command=[sys.executable,str(ROOT/'scripts/validate_environment.py'),case['environment_case']]
+            else:
+                command=[sys.executable,str(ROOT/'scripts/validate.py'),'goal','--goals',json.dumps(case['goals']),'--label',name]
+                if case.get('cancel_after'):command.extend(['--cancel-after',str(case['cancel_after'])])
+                command.extend(['--expect-status',str(case.get('expected_status',4))])
             outcome=subprocess.run(command,stdout=(run/'test_console.log').open('w'),stderr=subprocess.STDOUT,timeout=420)
             report=run/(name+'_result.json')
             item={'case':case,'run_dir':str(run),'exit_code':outcome.returncode,

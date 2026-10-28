@@ -37,6 +37,7 @@ class Runner:
         self.received = {}
         self.rows = []
         self.telemetry = {}
+        self.mav_available = True
         self.contacts = []
         self.contact_messages = 0
         self.log = (self.run/(label+'.jsonl')).open('w')
@@ -84,6 +85,9 @@ class Runner:
             if topic in self.data:
                 m=self.data[topic];p=m.pose.pose.position;v=m.twist.twist.linear
                 row[key]=[p.x,p.y,p.z,yaw(m.pose.pose.orientation),v.x,v.y,m.twist.twist.angular.z]
+                q=m.pose.pose.orientation
+                row[key+'_rpy']=[math.atan2(2*(q.w*q.x+q.y*q.z),1-2*(q.x*q.x+q.y*q.y)),
+                                math.asin(max(-1,min(1,2*(q.w*q.y-q.z*q.x)))),yaw(q)]
                 row[key+'_age']=row['sim']-m.header.stamp.sec-m.header.stamp.nanosec/1e9
         for topic,key in [('/usv/thrust_left','left_n'),('/usv/thrust_right','right_n'),('/usv/sitl_frame','frame'),('/usv/control_status','gate')]:
             if topic in self.data:row[key]=self.data[topic].data
@@ -106,6 +110,7 @@ class Runner:
             rclpy.spin_once(self.node,timeout_sec=min(0.02,max(0,end-time.monotonic())))
             # Keep receiving ACK/status without emitting an extra GCS heartbeat.
             while True:
+                if not self.mav_available:break
                 message=self.mav.recv_match(blocking=False)
                 if message is None:break
                 if message.get_type() in ('GPS_RAW_INT','EKF_STATUS_REPORT','SERVO_OUTPUT_RAW'):
@@ -199,11 +204,19 @@ class Runner:
                 zero_delay=time.monotonic()-completion
         after=self.data['/usv/ground_truth'].pose.pose.position
         clearance=min((row['clearance_m'] for row in self.rows if 'clearance_m' in row),default=None)
+        waypoints=[]
+        for x,y,h in poses[:-1]:
+            closest=min((r for r in self.rows if r.get('phase')=='navigation' and 'truth' in r),
+                        key=lambda r:math.dist(r['truth'][:2],[x,y]))['truth']
+            waypoints.append({'target':[x,y,h],'closest_position_error_m':math.dist(closest[:2],[x,y]),
+                              'yaw_error_at_closest_rad':abs(math.atan2(math.sin(closest[3]-h),math.cos(closest[3]-h)))})
         return {'status':result.status,'elapsed_wall_s':time.monotonic()-start-10,'true_position_error_m':error,
                 'true_yaw_error_rad':heading_error,'at_goal':at_goal,'drift_10s_m':math.hypot(after.x-at_goal[0],after.y-at_goal[1]),
                 'zero_command_delay_s':zero_delay,'min_planar_clearance_m':clearance,'expected_status':expected_status,
                 'contact_messages':self.contact_messages,'collision_messages':len(self.contacts),
+                'via_points':waypoints,
                 'passed':result.status==expected_status and (expected_status!=4 or (error<=.5 and heading_error<=.25))
+                         and all(p['closest_position_error_m']<=.5 and p['yaw_error_at_closest_rad']<=.25 for p in waypoints)
                          and clearance is not None and clearance>0 and not self.contacts
                          and zero_delay is not None and zero_delay<=.6}
 
@@ -236,9 +249,10 @@ class Runner:
 
     def close(self):
         self.command(0,0,True)
-        self.mav.mav.set_mode_send(1,mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,4)
-        self.spin(.3)
-        self.mav.mav.command_long_send(1,1,mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,0,0,0,0,0,0,0,0)
+        if self.mav_available:
+            self.mav.mav.set_mode_send(1,mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,4)
+            self.spin(.3)
+            self.mav.mav.command_long_send(1,1,mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,0,0,0,0,0,0,0,0)
         self.spin(.3);self.mav.close();self.log.close();self.node.destroy_node()
 
 

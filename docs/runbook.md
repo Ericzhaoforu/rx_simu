@@ -71,8 +71,13 @@ python3 scripts/validate_environment.py gnss
 5. MAVROS timesync 的整数参数不可传浮点数：`max_rtt_sample` 设为整数 50。
 6. 原 1875×16 LiDAR 加 5 Hz 画面产生扫描延迟：保留 16 线，水平 720 点、10 Hz；画面改为 1 Hz，使用 NVIDIA 无窗口渲染。
 7. 点云投影无点不能直接当自由空间：只有原始水平射线证实无障碍的方向保留 +Inf，其余空投影为 NaN；桥拒绝全 NaN、过期时间戳或缺失 TF 的扫描。
-8. DWB 0.1 m 栅格与 0.02 m/s 初始速度窗口产生量化停滞：局部栅格改 0.05 m；6 s 预测试验导致近障全部轨迹无效，已保留失败并恢复 3 s。冷启动静止 EKF 速度偏差达到约 0.02 m/s，WAM-V 配置的 DWB 速度死区改为 0.03 m/s，继续用独立冷启动回归。
+8. DWB 0.1 m 栅格与 0.02 m/s 初始速度窗口产生量化停滞：局部栅格改 0.05 m；6 s 预测试验导致近障全部轨迹无效，已保留失败并恢复 3 s。冷启动静止 EKF 速度偏差达到约 0.02 m/s，速度死区改为 0.03 m/s。评分日志进一步证实毫米每秒轨迹在栅格边界得分更低，最终改用 `StandardTrajectoryGenerator`，按整个 3 s 时域模拟加减速；飞控仍限制 0.2 m/s²。单目标和多途经点各三个独立冷启动通过。
 9. Action endpoint 存在不代表生命周期已激活：测试器等待 bt_navigator active。EKF 开始发布不代表普通解锁已可用：等待正常预解锁检查收敛，不强制解锁。
+10. EKF 航向有约 0.02 rad 偏差，内部 0.25 rad 容差曾使真值误差达到 0.263 rad；内部航向容差收紧到 0.20 rad，真值验收标准保持 0.25 rad。位置内部容差 0.40 m，真值验收保持 0.50 m。
+
+轨迹生成器与栅格评分的依据是 Nav2 1.1.20 的 [LimitedAccelGenerator](https://github.com/ros-navigation/navigation2/blob/1.1.20/nav2_dwb_controller/dwb_plugins/src/limited_accel_generator.cpp)、[StandardTrajectoryGenerator](https://github.com/ros-navigation/navigation2/blob/1.1.20/nav2_dwb_controller/dwb_plugins/src/standard_traj_generator.cpp) 和 [MapGridCritic](https://github.com/ros-navigation/navigation2/blob/1.1.20/nav2_dwb_controller/dwb_critics/src/map_grid.cpp)，以及本机 `runs/dwb_scores.json` 中的实际评分。
+
+`scripts/audit_graph.py` 检查话题 QoS、源时间戳和时钟配置；`build/tf_audit/tf_audit` 用实际 DDS 发布者 GID 检查每条 TF 边是否唯一。MAVROS 会创建通用 TF publisher，即使动态位置 TF 关闭，因此话题上的 publisher 数量不能直接当作每条边的发布者数。MAVROS `/param/get_parameters` 代理飞控参数，不是普通 ROS 节点参数查询；其未设置结果不代表时钟为墙钟。
 
 ## 本地检查
 

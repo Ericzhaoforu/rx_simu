@@ -1,5 +1,5 @@
 diff --git a/src/ArduPilotPlugin.cc b/src/ArduPilotPlugin.cc
-index 78c0e20..9c23608 100755
+index 78c0e20..e73960e 100755
 --- a/src/ArduPilotPlugin.cc
 +++ b/src/ArduPilotPlugin.cc
 @@ -21,6 +21,7 @@
@@ -68,7 +68,7 @@ index 78c0e20..9c23608 100755
        recvSize = getServoPacket(
            this->dataPtr->sock,
            this->dataPtr->fcu_address,
-@@ -1568,6 +1581,14 @@ bool gz::sim::systems::ArduPilotPlugin::ReceiveServoPacket()
+@@ -1568,12 +1581,22 @@ bool gz::sim::systems::ArduPilotPlugin::ReceiveServoPacket()
      gzdbg << "\n" << oss.str();
  #endif
  
@@ -77,13 +77,21 @@ index 78c0e20..9c23608 100755
 +      sizeof(servo_packet_32) : sizeof(servo_packet_16);
 +    if (recvSize != static_cast<ssize_t>(expectedSize))
 +    {
++      this->ResetPIDs();
 +      return false;
 +    }
 +
      // check magic, return if invalid
      constexpr uint16_t magic_16 = 18458;
      constexpr uint16_t magic_32 = 29569;
-@@ -1626,6 +1647,12 @@ bool gz::sim::systems::ArduPilotPlugin::ReceiveServoPacket()
+     uint16_t magic = this->dataPtr->have32Channels ? magic_32 : magic_16;
+     if (magic != pkt_magic)
+     {
++        this->ResetPIDs();
+         gzwarn << "Incorrect protocol magic "
+             << pkt_magic << " should be "
+             << magic << "\n";
+@@ -1626,6 +1649,12 @@ bool gz::sim::systems::ArduPilotPlugin::ReceiveServoPacket()
  
      // update frame count
      this->dataPtr->fcu_frame_count = pkt_frame_count;
@@ -96,9 +104,14 @@ index 78c0e20..9c23608 100755
  
      // reset the connection timeout so we don't accumulate
      this->dataPtr->connectionTimeoutCount = 0;
-@@ -1660,7 +1687,9 @@ void gz::sim::systems::ArduPilotPlugin::UpdateMotorCommands(
-                 // pwm = 0 => no servo output.
-                 if (_pwm[this->dataPtr->controls[i].channel] == 0)
+@@ -1657,10 +1686,12 @@ void gz::sim::systems::ArduPilotPlugin::UpdateMotorCommands(
+                 const double multiplier = this->dataPtr->controls[i].multiplier;
+                 const double offset = this->dataPtr->controls[i].offset;
+ 
+-                // pwm = 0 => no servo output.
+-                if (_pwm[this->dataPtr->controls[i].channel] == 0)
++                // Disabled or out-of-range PWM must not retain/saturate thrust.
++                if (pwm == 0 || pwm < pwm_min || pwm > pwm_max || pwm_max <= pwm_min)
                  {
 -                  this->dataPtr->controls[i].outputReady = false;
 +                  // COMMAND consumers retain their last message, so send zero.
@@ -107,7 +120,7 @@ index 78c0e20..9c23608 100755
                    this->dataPtr->controls[i].cmd = 0.0;
  #if 0
                    gzdbg << "apply input chan["
-@@ -2011,11 +2040,12 @@ void gz::sim::systems::ArduPilotPlugin::CreateStateJSON(
+@@ -2011,11 +2042,12 @@ void gz::sim::systems::ArduPilotPlugin::CreateStateJSON(
  
      // Set no time sync
      writer.Key("no_time_sync");

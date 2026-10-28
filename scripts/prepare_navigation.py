@@ -37,6 +37,7 @@ def prepare(scene_file):
         sim_time=3.0, publish_evaluation=True, debug_trajectory_details=True,
         xy_goal_tolerance=0.4)
     config['controller_server']['ros__parameters']['goal_checker']['xy_goal_tolerance'] = 0.4
+    config['controller_server']['ros__parameters']['goal_checker']['yaw_goal_tolerance'] = 0.2
     (out/'nav2_wamv.yaml').write_text(json.dumps(config, indent=2)+'\n')
     area = {'resolution': 0.2, 'padding': 1.0,
             'navigable_boundary': [[-50,-50],[50,-50],[50,50],[-50,50]],

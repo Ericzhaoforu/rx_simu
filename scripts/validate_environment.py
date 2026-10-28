@@ -12,6 +12,8 @@ import numpy as np
 import rclpy
 from rclpy.qos import QoSProfile, DurabilityPolicy
 from nav_msgs.msg import OccupancyGrid
+from geometry_msgs.msg import PoseStamped
+from nav2_msgs.action import NavigateToPose
 from rcl_interfaces.srv import SetParameters
 from rclpy.parameter import Parameter
 from validate import ROOT, Runner, yaw
@@ -29,6 +31,8 @@ def move(runner,x,y):
     gz_service('/world/usv_nav/set_pose','gz.msgs.Pose',
                f'name: "dynamic_obstacle" position {{ x: {x} y: {y} z: 1.5 }} orientation {{ w: 1 }}')
     next(obj for obj in runner.scene['obstacles'] if obj['name']=='dynamic_obstacle').update(x=x,y=y)
+    runner.log.write(json.dumps({'event':'move_dynamic_obstacle','wall':time.monotonic(),
+                                'sim':runner.node.get_clock().now().nanoseconds/1e9,'position':[x,y]})+'\n')
 
 
 def dynamic_map(runner):
@@ -74,11 +78,12 @@ def pause(runner):
             'note':'Paused physics is not evidence of physical stopping.'}
 
 
-def mavros_exit(runner):
+def mavros_exit(runner,process_name='mavros'):
     runner.arm();runner.phase='before_mavros_exit'
     for _ in range(100):runner.command(.2,0);runner.spin(.05)
     session=json.loads((ROOT/'runs/session.json').read_text())
-    process=next(p for p in session['processes'] if p['name']=='mavros')
+    process=next(p for p in session['processes'] if p['name']==process_name)
+    if process_name=='sitl':runner.mav_available=False
     before=runner.rows[-1];start=time.monotonic();os.killpg(process['pid'],signal.SIGKILL)
     runner.phase='mavros_exited';runner.spin(12)
     rows=[r for r in runner.rows if r['phase']=='mavros_exited']
@@ -91,12 +96,28 @@ def mavros_exit(runner):
             'passed':zero is not None and after['sim']-before['sim']>8}
 
 
+def sitl_exit(runner):
+    result=mavros_exit(runner,'sitl')
+    result['passed']=result['thrust_zero_wall_s'] is not None and result['sim_advanced_s']>1
+    result['note']='Tests plugin command clearing with continuing external physics.'
+    return result
+
+
 def gnss(runner):
     client=runner.node.create_client(SetParameters,'/gnss_injector/set_parameters')
     if not client.wait_for_service(timeout_sec=10):raise RuntimeError('Start with --gps-input')
     runner.arm();results=[]
+    goal=NavigateToPose.Goal();goal.pose=PoseStamped();goal.pose.header.frame_id='map'
+    goal.pose.header.stamp=runner.node.get_clock().now().to_msg();goal.pose.pose.position.y=-25.
+    goal.pose.pose.orientation.z=-math.sqrt(.5);goal.pose.pose.orientation.w=math.sqrt(.5)
+    if not runner.single.wait_for_server(timeout_sec=10):raise RuntimeError('Nav2 action unavailable')
+    request=runner.single.send_goal_async(goal);runner.wait(request.done,10,'GNSS test goal acknowledgement')
+    handle=request.result()
+    if not handle.accepted:raise RuntimeError('GNSS test goal rejected')
+    action=handle.get_result_async()
     profiles=[('fixed',6,.02,.02,.1,False,8),('float',5,.3,.3,.1,False,12),
-              ('ordinary',3,1.5,1.5,.3,False,15),('lost',1,1.5,1.5,.3,True,15),
+              ('ordinary',3,1.5,1.5,.3,False,15),('no_fix',1,1.5,1.5,.1,False,12),
+              ('lost',1,1.5,1.5,.3,True,15),
               ('recover',6,.02,.02,.1,False,20)]
     for name,fix,sigma,accuracy,delay,drop,duration in profiles:
         values=dict(fix_type=fix,horizontal_sigma=sigma,reported_accuracy=accuracy,delay_s=delay,drop=drop)
@@ -105,8 +126,8 @@ def gnss(runner):
         if not all(item.successful for item in future.result().results):raise RuntimeError(str(future.result()))
         runner.phase='gnss_'+name;start=len(runner.rows);end=time.monotonic()+duration
         while time.monotonic()<end:
-            # Exercise the current control gate during degradation, without pretending this is a new policy.
-            runner.command(.10,0);runner.spin(.05)
+            # Nav2 owns the command stream throughout the quality changes.
+            runner.spin(.05)
         rows=runner.rows[start:]
         errors=[math.dist(r['truth'][:2],r['ekf'][:2]) for r in rows if 'truth' in r and 'ekf' in r]
         results.append({'profile':name,'settings':values,'position_rmse_m':float(np.sqrt(np.mean(np.square(errors)))),
@@ -114,19 +135,27 @@ def gnss(runner):
                         'nonzero_preview_samples':sum(abs(r.get('preview',[0,0])[0])>.01 for r in rows),
                         'samples':len(rows),'reported_fix_types':sorted(set(r.get('GPS_RAW_INT',{}).get('fix_type',-1) for r in rows)),
                         'last_ekf_status':rows[-1].get('EKF_STATUS_REPORT'),
+                        'nav2_action_status':action.result().status if action.done() else 'running',
                         'minimum_clearance_m':min(r['clearance_m'] for r in rows)})
-    return results
+    status=action.result().status if action.done() else 'running'
+    if not action.done():
+        handle.cancel_goal_async();runner.wait(action.done,10,'GNSS test cancellation')
+    position=runner.data['/usv/ground_truth'].pose.pose.position
+    return {'profiles':results,'action_status_before_test_cleanup':status,
+            'target':[0,-25,-math.pi/2],'final_true_position_error_m':math.hypot(position.x,position.y+25),
+            'collision_messages':len(runner.contacts),
+            'note':'No new RTK/EKF gate or automatic retry policy is implemented.'}
 
 
 def motors(runner):
     # Standard ArduRover motor-test command, not direct Gazebo actuator control.
     runner.arm();runner.mav.mav.set_mode_send(1,1,4);runner.spin(1);results=[]
     for side,number in [('left',3),('right',4)]:
-        for pwm in (1600,1400,1500):
+        for pwm in (1600,1400,1500,900,2100):
             runner.phase=f'motor_{side}_{pwm}'
             runner.mav.mav.command_long_send(1,1,209,0,number,1,pwm,3,0,0,0)
             runner.spin(2)
-            row=runner.rows[-1];expected=(pwm-1500)*.6
+            row=runner.rows[-1];expected=(pwm-1500)*.6 if 1000<=pwm<=2000 else 0
             actual=row['left_n' if side=='left' else 'right_n']
             results.append({'side':side,'pwm':pwm,'expected_n':expected,'actual_n':actual,
                             'other_n':row['right_n' if side=='left' else 'left_n'],'truth_yaw_rate':row['truth'][6],
@@ -157,13 +186,14 @@ def reset(runner):
 
 
 def dynamic_navigation(runner):
-    original=runner.spin;start=[None];moved=[False];removed=[False]
+    original=runner.spin;start=[None];moved=[False];removed=[False];last_move=[-1.]
     def spin(duration=.05):
         original(duration)
         if runner.phase!='navigation':return
         if start[0] is None:start[0]=time.monotonic()
         elapsed=time.monotonic()-start[0]
-        if elapsed>3 and not moved[0]:move(runner,6,4);moved[0]=True
+        if 3<elapsed<28 and elapsed-last_move[0]>.5:
+            move(runner,6,7-.14*(elapsed-3));moved[0]=True;last_move[0]=elapsed
         if elapsed>28 and not removed[0]:move(runner,15,20);removed[0]=True
     runner.spin=spin
     result=runner.goal([[12,8,0]])
@@ -172,7 +202,7 @@ def dynamic_navigation(runner):
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('case',choices=['dynamic_map','dynamic_navigation','pause','mavros_exit','gnss','motors','collision_sensor','reset'])
+    parser=argparse.ArgumentParser();parser.add_argument('case',choices=['dynamic_map','dynamic_navigation','pause','mavros_exit','sitl_exit','gnss','motors','collision_sensor','reset'])
     args=parser.parse_args();rclpy.init();runner=Runner(args.case)
     try:
         runner.ready();runner.navigation_ready()
