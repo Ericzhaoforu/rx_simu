@@ -92,7 +92,7 @@ def mavros_exit(runner,process_name='mavros'):
     runner.phase='mavros_exited';runner.spin(12)
     rows=[r for r in runner.rows if r['phase']=='mavros_exited']
     zero=next((r['wall']-start for r in rows if abs(r.get('left_n',999))+abs(r.get('right_n',999))<1e-7),None)
-    stopped=next((r['wall']-start for r in rows if math.hypot(*r['truth'][4:6])<.02),None)
+    stopped=next((r['wall']-start for r in rows if math.hypot(*r['truth'][4:6])<.02 and abs(r['truth'][6])<.02),None)
     after=runner.rows[-1]
     mode=runner.telemetry.get('HEARTBEAT',{}).get('custom_mode')
     active=abs(before.get('left_n',0))+abs(before.get('right_n',0))>1

@@ -118,6 +118,8 @@ def main():
         entry['evidence_sha256']={str(p.relative_to(run)):sha(p) for p in
             [path,run/(name+'_result.json'),run/'generated/usv_nav.sdf',run/'generated/nav2_wamv.yaml',
              run/'provenance.json',run/'source_snapshot.tar.gz',run/'map_alignment.json',
+             run/'rover.parm',run/'thrust_observation.json',run/'generated/scene.json',
+             run/'generated/water.pgm',run/'generated/water.yaml',
              run/'overview.png',run/'overview.mp4'] if p.exists()}
         if path.exists() and ('goals' in item['case'] or name=='dynamic_navigation'):
             plot(item)
