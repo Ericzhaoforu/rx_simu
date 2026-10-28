@@ -2,7 +2,33 @@
 
 在 Ubuntu 上使用 **VRX WAM-V + ArduRover SITL + ROS 2 Humble Nav2** 验证导航、避障和异常响应。目标固件固定为 **ArduRover V4.4.0 / `d0356316eb0fa34ed1c9f39f7b059b9ae7ba4664`**。
 
-当前已导入附件中的 `usv_nav2` 源码并建立 Git 管理。VRX 与 ArduRover 的连接、WAM-V 参数配置及闭环场景仍待按计划实现；原包参数对应 1.2 m × 0.7 m 船体，不能直接作为 WAM-V 的验收配置。
+已实现独立的 VRX 场景、固定版本 SITL、MAVROS 控制链、飞控 EKF 定位和 LiDAR 避障输入。WAM-V 配置按实际碰撞几何生成；原包 1.2 m × 0.7 m 参数保留。验证结果、已知限制与失败记录见 [验证报告](docs/validation_report.md)。
+
+## 启动
+
+本服务器的 Ubuntu 22.04、ROS 2 Humble、Garden 7.9 与既有 VRX 安装是环境基础。新增依赖安装在仓库的 `external/`，不要求 sudo，不覆盖既有工程。详细依赖和排障见 [运行说明](docs/runbook.md)。
+
+```bash
+cd /home/zjy/usv_nav
+python3 scripts/bootstrap.py
+source scripts/env.sh
+# 前台保持运行；默认只检查传感器和规划，控制关闭。
+python3 scripts/sim_session.py start --name inspection --navigation
+```
+
+另一个终端：
+
+```bash
+cd /home/zjy/usv_nav
+source scripts/env.sh
+python3 scripts/validate.py plan --label preview
+# 启动器校验固定 SITL 源码和本机端口；确认当前会话后启用控制。
+python3 scripts/sim_session.py navigation --replace --control
+python3 scripts/validate.py goal --goals '[[5,0,0]]' --label goal
+python3 scripts/sim_session.py stop
+```
+
+每次运行的场景、参数、节点日志、飞控日志和验证 JSONL 保存在 `runs/<时间>_<名称>/`。`runs/latest.txt` 指向当前运行目录。仿真与 Nav2 使用 Gazebo 时钟，控制超时使用单调墙钟。
 
 ## 项目文件
 
@@ -26,9 +52,9 @@
 git diff --check
 ```
 
-2026-10-29 在本服务器运行：20 项现有单元测试通过，12 个 Python 文件通过 Python 3.10 语法解析；24 个源码文件及交接文档的 SHA256 与附件一致。测试中的 ROS 消息使用替身，尚未验证真实 DDS、节点启动或仿真闭环。
+首次导入的 20 项测试、12 个 Python 文件语法检查及附件字节校验均通过。后续新增检查与真实闭环结果分别记录，不以单元测试替代仿真验收。
 
-ROS 构建、依赖安装、传感器和控制联调按 [验证计划](docs/validation_plan.md) 分阶段执行。包内 [README](src/usv_nav2/README.md) 介绍已有导航接口；其中示例地图和实船初始参数尚未适配 VRX。
+包内 [README](src/usv_nav2/README.md) 介绍导航接口。WAM-V 的独立参数由 `scripts/prepare_navigation.py` 生成，不使用包内实船 footprint 验收。
 
 ## 代码管理
 

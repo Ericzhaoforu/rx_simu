@@ -1,0 +1,86 @@
+# VRX / ArduRover / Nav2 运行说明
+
+## 依赖和版本
+
+基于本机 `/opt/ros/humble` 与 `/home/zjy/vrx_docking/install`。ROS、Gazebo GPU 驱动和既有 VRX 的环境调查见 `environment_baseline.md`。`config/dependencies.lock.json` 记录固件、插件、VRX SHA 和新增 deb 的版本与 SHA256。VRX 资产依赖既有安装；本仓库不包含其完整源码，也不是任意干净 Ubuntu 的一键安装器。
+
+`python3 scripts/bootstrap.py` 在 `external/` 下载/解包依赖、建立独立源码检出、应用兼容补丁并构建。已有原工程用作 Git 对象和子模块来源，不更改其工作树。`ARDUPILOT_SOURCE` 可覆盖本地来源；`VRX_ROOT` 可覆盖 VRX 路径。版本不匹配时中止，不自动升级飞控。
+
+新增 MAVROS 2.16.0、GeographicLib egm96-5、pointcloud_to_laserscan 及构建依赖解包到 `external/deps`，不修改系统 apt 数据库。下载包若在仓库镜像下架，需要保留的 `external/debs` 缓存或同 SHA256 包。`scripts/env.sh` 只影响当前 shell，并选择 Garden、NVIDIA EGL、ROS domain 42 和 Gazebo partition `usv_nav_validation`。
+
+## 控制和坐标链
+
+```
+Nav2 /usv/cmd_vel → rover_bridge → MAVROS → ArduRover 4.4.0
+  → JSON PWM → ArduPilotPlugin → VRX 左右推进器（牛顿）
+VRX 专用 IMU + GNSS → ArduRover EKF → MAVROS odom → /usv/odom + TF
+VRX 16 线点云 → 船体过滤 → 水平投影 → 无回波有效性检查 → /scan
+```
+
+左右输出分别是 SERVO1/3、功能 73/74。PWM 1000/1500/2000 映射到 -300/0/+300 N；固定转角的双推进器通过差动转向。正 ROS 角速度为逆时针，仅 MAVROS 执行命令符号转换。专用 IMU 位于模型参考点，模型与传感器的 FLU/FRD 转换在生成的 SDF 中明确配置。
+
+世界为 ENU，固定 GNSS 原点为 `(-33.724223, 150.679736, 0)`，初始艏向东。TF 的 `map → base_stabilized → base_link` 仅由 `odom_tf` 发布；LiDAR 外参由单个静态发布者发布。Gazebo 真值只用于传感器生成和验证，不进入导航定位。
+
+推进器始终由飞控驱动；ROS/Gazebo bridge 全部为 GZ_TO_ROS。默认控制关闭。`--control` 才允许桥发布真实速度指令，且桥仍要求 GUIDED、正常解锁与新鲜输入。测试脚本只对本机会话执行正常解锁，无 force-arm。
+
+## 启动和测试
+
+先 `source scripts/env.sh`，每次只运行一个本仓库会话。SITL 端口 UDP 9002/14550、TCP 5760/5762 必须空闲。启动器前台监督进程必须存活；目标固件检测父进程退出后会自行退出。
+
+```bash
+python3 scripts/sim_session.py start --name baseline --navigation --control
+# 在另一个已 source 环境的终端：
+python3 scripts/validate.py goal --goals '[[5,0,0]]' --label single
+python3 scripts/validate.py goal --goals '[[3,-3,-0.6],[6,-4,0]]' --label multi
+python3 scripts/validate_environment.py dynamic_map
+python3 scripts/validate_environment.py pause
+python3 scripts/validate_faults.py
+python3 scripts/sim_session.py stop
+```
+
+故障测试会替换/退出桥或 MAVROS；后续测试应重新启动场景。`sim_session.py stop` 仅按本次保存的 PID、进程启动时间和进程组停止工作区进程。
+
+自动独立场景批测（先停止手动会话）：
+
+```bash
+python3 scripts/run_suite.py --cases single_1 single_2 single_3 multi_1 multi_2 multi_3 static_obstacle cancel unreachable
+python3 scripts/run_suite.py --cases wind waves wind_waves gps_input_fixed
+```
+
+风速初值 3 m/s、方向 240°、固定风随机种子 10、随机增益 0。波浪使用 VRX gain 0.3、周期 5 s；gain 是波浪模型参数，不等同于实测显著波高。每轮保留完整 SDF。GNSS 注入随机种子 42、10 Hz：
+
+```bash
+python3 scripts/sim_session.py start --name gnss --navigation --control --gps-input
+python3 scripts/validate_environment.py gnss
+```
+
+`GPS_TYPE=14` 通过 `GPS_INPUT` 注入 fix_type、报告精度、误差和延迟。导航仍使用飞控 EKF。该实验测量现有质量门控缺口，不新增 RTK/EKF 门控策略。
+
+## 结果解释
+
+`*_result.json` 提供结果，`*.jsonl` 保留独立真值、EKF、指令、推力、时间戳、输入状态和净空。动作状态 4/5/6 分别为成功/取消/中止。测试进程退出 0 只代表记录成功写出，是否达标以 JSON 的 `passed` 为准；失败不会删除或覆盖旧运行。
+
+验收使用实际动作完成时的真值误差；另记录 10 秒漂移。零指令、推力归零和船速低于阈值是三项不同观测。平面净空使用包含推进器的碰撞轮廓凸包，偏保守；接触传感器用于补充检查。风浪下的三维接触及未建模对象仍需单独评估。
+
+## 调试记录
+
+1. 无 sudo：使用固定版本 deb 在用户目录解包，补齐 MAVROS 运行时所需 `diagnostic_updater` 新共享库及 egm96-5。
+2. 指定 4.4.0 JSON 解析器将 `true/false` 解析为整数失败：插件输出 0/1；保持固件源码不变。
+3. 插件旧帧计数 uint16 在 65,535 回绕：改为 uint32；添加低频帧计数观测。PWM 0 与失联时显式发送零推力，拒绝截断数据包。
+4. SITL CLI 声明 `--rate` 却未处理该选项：去掉该选项，按目标源码支持的接口运行。
+5. MAVROS timesync 的整数参数不可传浮点数：`max_rtt_sample` 设为整数 50。
+6. 原 1875×16 LiDAR 加 5 Hz 画面产生扫描延迟：保留 16 线，水平 720 点、10 Hz；画面改为 1 Hz，使用 NVIDIA 无窗口渲染。
+7. 点云投影无点不能直接当自由空间：只有原始水平射线证实无障碍的方向保留 +Inf，其余空投影为 NaN；桥拒绝全 NaN、过期时间戳或缺失 TF 的扫描。
+8. DWB 0.1 m 栅格与 0.02 m/s 初始速度窗口产生量化停滞：局部栅格改 0.05 m；6 s 预测试验导致近障全部轨迹无效，已保留失败并恢复 3 s。冷启动静止 EKF 速度偏差达到约 0.02 m/s，WAM-V 配置的 DWB 速度死区改为 0.03 m/s，继续用独立冷启动回归。
+9. Action endpoint 存在不代表生命周期已激活：测试器等待 bt_navigator active。EKF 开始发布不代表普通解锁已可用：等待正常预解锁检查收敛，不强制解锁。
+
+## 本地检查
+
+```bash
+source scripts/env.sh
+bash scripts/build.sh
+(cd src/usv_nav2 && python3 -m unittest discover -s test -v)
+python3 -m unittest discover -s src/usv_sim/test -v
+python3 -m compileall -q scripts src
+git diff --check
+```

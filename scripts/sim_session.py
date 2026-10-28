@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+"""Start/stop only this workspace's processes; run after sourcing scripts/env.sh."""
+import argparse
+import datetime
+import json
+import os
+from pathlib import Path
+import signal
+import socket
+import subprocess
+import sys
+import time
+
+ROOT = Path(__file__).resolve().parents[1]
+PIDFILE = ROOT/'runs/session.json'
+REVISION = 'd0356316eb0fa34ed1c9f39f7b059b9ae7ba4664'
+
+
+def process_start(pid):
+    try:
+        return Path(f'/proc/{pid}/stat').read_text().split(') ', 1)[1].split()[19]
+    except FileNotFoundError:
+        return None
+
+
+def stop():
+    if not PIDFILE.exists():
+        return
+    state = json.loads(PIDFILE.read_text())
+    for child in reversed(state['processes']):
+        if process_start(child['pid']) == child['start']:
+            os.killpg(child['pid'], signal.SIGINT)
+    deadline = time.monotonic()+8
+    while time.monotonic() < deadline:
+        if not any(process_start(p['pid']) == p['start'] for p in state['processes']):
+            break
+        time.sleep(0.2)
+    for child in state['processes']:
+        if process_start(child['pid']) == child['start']:
+            os.killpg(child['pid'], signal.SIGTERM)
+    PIDFILE.unlink(missing_ok=True)
+    print('Stopped workspace session:', state['run_dir'])
+
+
+def start(args):
+    if PIDFILE.exists():
+        state = json.loads(PIDFILE.read_text())
+        if any(process_start(p['pid']) == p['start'] for p in state['processes']):
+            raise RuntimeError('A managed session is already active; stop it first.')
+    actual = subprocess.check_output(['git', '-C', str(ROOT/'external/ardupilot'), 'rev-parse', 'HEAD'], text=True).strip()
+    if actual != REVISION:
+        raise RuntimeError('Firmware revision mismatch: '+actual)
+    for family, port in ((socket.SOCK_DGRAM, 9002), (socket.SOCK_DGRAM, 14550), (socket.SOCK_STREAM, 5760), (socket.SOCK_STREAM, 5762)):
+        with socket.socket(socket.AF_INET, family) as probe:
+            probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            probe.bind(('127.0.0.1', port))
+    stamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    run = ROOT/'runs'/f'{stamp}_{args.name}'
+    run.mkdir(parents=True)
+    generated = run/'generated'
+    command = [sys.executable, str(ROOT/'scripts/generate_world.py'), '--output', str(generated),
+               '--wind', str(args.wind), '--wave-gain', str(args.wave_gain)]
+    if args.lockstep:
+        command.append('--lockstep')
+    subprocess.run(command, check=True, stdout=(run/'generation.log').open('w'), stderr=subprocess.STDOUT)
+    state = {'run_dir': str(run), 'firmware_revision': actual, 'processes': []}
+
+    def spawn(name, command, cwd=ROOT):
+        process = subprocess.Popen(command, cwd=cwd, start_new_session=True,
+                                   stdout=(run/(name+'.log')).open('w'), stderr=subprocess.STDOUT)
+        state['processes'].append({'name': name, 'pid': process.pid, 'start': process_start(process.pid), 'command': command})
+        PIDFILE.write_text(json.dumps(state, indent=2)+'\n')
+        time.sleep(0.4)
+        if process.poll() is not None:
+            raise RuntimeError(f'{name} exited: see {run}/{name}.log')
+
+    try:
+        spawn('gazebo', ['gz', 'sim', '--force-version', '7', '-s', '-r', '--headless-rendering', '-v', '3', str(generated/'usv_nav.sdf')])
+        spawn('gz_bridge', ['ros2', 'run', 'ros_gz_bridge', 'parameter_bridge', '--ros-args', '-p', 'use_sim_time:=true', '-p', 'config_file:='+str(ROOT/'config/gz_bridge.yaml')])
+        sitl = run/'sitl'
+        sitl.mkdir()
+        parameters = (ROOT/'config/rover_wamv.parm').read_text()
+        if args.gps_input:
+            parameters = parameters.replace('GPS_TYPE 1\n', 'GPS_TYPE 14\n')
+        (run/'rover.parm').write_text(parameters)
+        # This exact firmware advertises --rate but has no case for it in its CLI.
+        spawn('sitl', [str(ROOT/'external/ardupilot/build/sitl/bin/ardurover'), '--model', 'JSON:127.0.0.1',
+                       '--home', '-33.724223,150.679736,0,90', '--speedup', '1',
+                       '--defaults', str(run/'rover.parm'), '--serial0', 'tcp:5760',
+                       '--serial1', 'udpclient:127.0.0.1:14550', '--serial2', 'tcp:5762'], sitl)
+        spawn('mavros', ['ros2', 'run', 'mavros', 'mavros_node', '--ros-args', '--params-file', str(ROOT/'config/mavros.yaml')])
+        if args.gps_input:
+            spawn('gnss', ['ros2','run','usv_sim','gnss_injector','--ros-args','-p','use_sim_time:=true'])
+    except Exception:
+        stop()
+        raise
+    (ROOT/'runs/latest.txt').write_text(str(run)+'\n')
+    print(run, flush=True)
+    if args.navigation:
+        navigation(args)
+    # ArduPilot deliberately exits when its parent exits. Keep a supervisor alive.
+    signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
+    try:
+        while PIDFILE.exists():
+            time.sleep(1)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        stop()
+
+
+def navigation(args):
+    state = json.loads(PIDFILE.read_text())
+    run = Path(state['run_dir'])
+    generated = run/'generated'
+    names={'navigation','lidar_tf','cloud_filter','cloud_to_scan'}
+    existing=[p for p in state['processes'] if p['name'] in names and process_start(p['pid'])==p['start']]
+    if existing and not args.replace:
+        raise RuntimeError('Navigation already attached; use --replace to restart that layer.')
+    if existing:
+        for process in existing:os.killpg(process['pid'],signal.SIGINT)
+        time.sleep(3)
+        state['processes']=[p for p in state['processes'] if p['name'] not in names]
+    subprocess.run([sys.executable, str(ROOT/'scripts/prepare_navigation.py'), str(generated/'scene.json')], check=True)
+    commands = {
+        'lidar_tf': ['ros2', 'run', 'tf2_ros', 'static_transform_publisher', '--x', '0.7', '--y', '-0.3', '--z', '1.8',
+                     '--frame-id', 'base_link', '--child-frame-id', 'wamv/wamv/base_link/lidar_wamv_sensor',
+                     '--ros-args', '-p', 'use_sim_time:=true'],
+        'cloud_filter': ['ros2', 'run', 'usv_sim', 'cloud_filter', '--ros-args', '-p', 'use_sim_time:=true',
+                         '-p', 'scene_file:='+str(generated/'scene.json')],
+        'cloud_to_scan': ['ros2', 'run', 'pointcloud_to_laserscan', 'pointcloud_to_laserscan_node', '--ros-args',
+                          '--params-file', str(ROOT/'config/cloud_to_scan.yaml'), '-r', 'cloud_in:=/usv/lidar/filtered', '-r', 'scan:=/usv/scan_raw'],
+        'navigation': ['ros2', 'launch', 'usv_nav2', 'navigation.launch.py', 'map:='+str(generated/'water.yaml'),
+                       'params_file:='+str(generated/'nav2_wamv.yaml'), 'use_sim_time:=true', 'rviz:=false',
+                       'enable_control:='+str(args.control).lower()],
+    }
+    for name, command in commands.items():
+        previous_log=run/(name+'.log')
+        if previous_log.exists():
+            previous_log.rename(run/(name+'.'+datetime.datetime.now().strftime('%H%M%S')+'.log'))
+        process = subprocess.Popen(command, cwd=ROOT, start_new_session=True,
+                                   stdout=(run/(name+'.log')).open('w'), stderr=subprocess.STDOUT)
+        state['processes'].append({'name': name, 'pid': process.pid, 'start': process_start(process.pid), 'command': command})
+        PIDFILE.write_text(json.dumps(state, indent=2)+'\n')
+    print('Attached navigation, control='+str(args.control), flush=True)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('action', choices=['start', 'stop', 'status', 'navigation'])
+    parser.add_argument('--name', default='baseline')
+    parser.add_argument('--wind', type=float, default=0)
+    parser.add_argument('--wave-gain', type=float, default=0)
+    parser.add_argument('--lockstep', action='store_true')
+    parser.add_argument('--navigation', action='store_true')
+    parser.add_argument('--control', action='store_true')
+    parser.add_argument('--gps-input', action='store_true')
+    parser.add_argument('--replace', action='store_true')
+    args = parser.parse_args()
+    if args.action == 'start':
+        start(args)
+    elif args.action == 'stop':
+        stop()
+    elif args.action == 'navigation':
+        navigation(args)
+    elif PIDFILE.exists():
+        print(PIDFILE.read_text())
+    else:
+        print('No managed session.')
+
+
+if __name__ == '__main__':
+    main()

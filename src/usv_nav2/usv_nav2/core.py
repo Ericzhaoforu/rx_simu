@@ -3,6 +3,12 @@
 import math
 
 
+def scan_ranges_valid(ranges, range_min, range_max):
+    """NaNs are unknown; +inf denotes a valid no-hit ray, -inf is invalid."""
+    return any(value == math.inf or (math.isfinite(value) and range_min <= value <= range_max)
+               for value in ranges)
+
+
 # SET_POSITION_TARGET_LOCAL_NED: ignore position, vz, acceleration and yaw.
 # Keep vx, vy and yaw_rate. Do not set FORCE (512).
 VELOCITY_YAW_RATE_MASK = 1 | 2 | 4 | 32 | 64 | 128 | 256 | 1024

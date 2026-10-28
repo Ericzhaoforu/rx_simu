@@ -12,9 +12,11 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
+from tf2_ros import Buffer, TransformListener
+from rclpy.time import Time
 
 from .core import (BODY_NED_FRAME, VELOCITY_YAW_RATE_MASK, CommandGate,
-                   bounded_command, normalise_quaternion, stamp_is_fresh)
+                   bounded_command, normalise_quaternion, stamp_is_fresh, scan_ranges_valid)
 
 
 class RoverBridge(Node):
@@ -46,6 +48,8 @@ class RoverBridge(Node):
         self.gate = CommandGate(**{key: self.p[key] for key in (
             'command_timeout', 'odom_timeout', 'scan_timeout', 'state_timeout')})
         self.sensor_headers = {}
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
         # Preview is always available. No FCU output publisher in preview mode.
         self.preview_pub = self.create_publisher(PositionTarget, '/usv/setpoint_preview', 10)
         self.status_pub = self.create_publisher(String, '/usv/control_status', 10)
@@ -101,7 +105,10 @@ class RoverBridge(Node):
                  bool(msg.header.frame_id) and len(msg.ranges) > 0 and
                  math.isfinite(msg.angle_increment) and msg.angle_increment > 0.0 and
                  math.isfinite(msg.range_min) and math.isfinite(msg.range_max) and
-                 0.0 <= msg.range_min < msg.range_max)
+                 0.0 <= msg.range_min < msg.range_max and
+                 scan_ranges_valid(msg.ranges, msg.range_min, msg.range_max) and
+                 self.tf_buffer.can_transform(self.p['body_frame'], msg.header.frame_id,
+                                              Time.from_msg(msg.header.stamp)))
         if valid:
             self.gate.mark('scan', time.monotonic())
             self.sensor_headers['scan'] = msg.header
@@ -123,6 +130,9 @@ class RoverBridge(Node):
     def tick(self):
         for source, header in self.sensor_headers.items():
             if not self.header_fresh(header, self.p[source + '_timeout']):
+                self.gate.invalidate(source)
+            elif source == 'scan' and not self.tf_buffer.can_transform(
+                    self.p['body_frame'], header.frame_id, Time.from_msg(header.stamp)):
                 self.gate.invalidate(source)
         command, reason = self.gate.evaluate(time.monotonic())
         msg = self.setpoint(command)
