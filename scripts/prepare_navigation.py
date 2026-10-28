@@ -17,8 +17,8 @@ def prepare(scene_file):
     config = json.loads((ROOT/'src/usv_nav2/config/nav2_params.yaml').read_text())
     for key in ('local_costmap', 'global_costmap'):
         params = config[key][key]['ros__parameters']
-        params.update(footprint=json.dumps(scene['footprint']), footprint_padding=0.2)
-        params['inflation_layer'].update(inflation_radius=3.0, cost_scaling_factor=1.5)
+        params.update(footprint=json.dumps(scene['footprint']), footprint_padding=0.5)
+        params['inflation_layer'].update(inflation_radius=4.5, cost_scaling_factor=1.0)
         # The guarded scan supplies +inf only for observed no-hit directions.
         params['obstacle_layer']['scan']['inf_is_valid'] = True
     # Allow a large differential-thrust hull enough space on the global path.
@@ -34,10 +34,17 @@ def prepare(scene_file):
         # repeatedly stalled at cell boundaries with noisy near-zero EKF speed.
         # ArduRover's ATC_ACCEL/DECEL_MAX still enforces the measured 0.2 m/s² limit.
         trajectory_generator_name='dwb_plugins::StandardTrajectoryGenerator',
+        max_vel_x=0.3, max_speed_xy=0.3,
         sim_time=3.0, publish_evaluation=True, debug_trajectory_details=True,
         xy_goal_tolerance=0.4)
+    # A moving obstacle was observed correctly but the original soft clearance
+    # weight allowed contact. Reserve more hull clearance and shorten stopping distance.
+    config['controller_server']['ros__parameters']['FollowPath']['ObstacleFootprint.scale'] = 1.0
+    config['rover_bridge']['ros__parameters']['max_speed'] = 0.3
     config['controller_server']['ros__parameters']['goal_checker']['xy_goal_tolerance'] = 0.4
     config['controller_server']['ros__parameters']['goal_checker']['yaw_goal_tolerance'] = 0.2
+    config['odom_tf']['ros__parameters']['expected_parent_frame'] = 'odom'
+    config['rover_bridge']['ros__parameters']['expected_parent_frame'] = 'odom'
     (out/'nav2_wamv.yaml').write_text(json.dumps(config, indent=2)+'\n')
     area = {'resolution': 0.2, 'padding': 1.0,
             'navigable_boundary': [[-50,-50],[50,-50],[50,50],[-50,50]],

@@ -10,6 +10,7 @@ import signal
 import socket
 import subprocess
 import sys
+import tarfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -51,6 +52,20 @@ def start(args):
     actual = subprocess.check_output(['git', '-C', str(ROOT/'external/ardupilot'), 'rev-parse', 'HEAD'], text=True).strip()
     if actual != REVISION:
         raise RuntimeError('Firmware revision mismatch: '+actual)
+    firmware=ROOT/'external/ardupilot'
+    dirty=subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],cwd=firmware,text=True)
+    submodules=subprocess.check_output(['git','submodule','status','--recursive'],cwd=firmware,text=True)
+    if dirty or any(line[0]!=' ' for line in submodules.splitlines()):
+        raise RuntimeError('Firmware source or recursive submodules differ from the pinned checkout')
+    lock=json.loads((ROOT/'config/dependencies.lock.json').read_text())
+    plugin=ROOT/'external/ardupilot_gazebo'
+    if subprocess.check_output(['git','rev-parse','HEAD'],cwd=plugin,text=True).strip()!=lock['ardupilot_gazebo']:
+        raise RuntimeError('Gazebo plugin revision mismatch')
+    if subprocess.check_output(['git','diff','HEAD','--binary'],cwd=plugin)!=(ROOT/'patches/ardupilot_gazebo_rover44.patch').read_bytes():
+        raise RuntimeError('Gazebo plugin checkout does not match the tracked compatibility patch')
+    vrx=Path(os.environ.get('VRX_ROOT','/home/zjy/vrx_docking'))
+    if subprocess.check_output(['git','rev-parse','HEAD'],cwd=vrx,text=True).strip()!=lock['vrx']:
+        raise RuntimeError('VRX revision mismatch')
     for family, port in ((socket.SOCK_DGRAM, 9002), (socket.SOCK_DGRAM, 14550), (socket.SOCK_STREAM, 5760), (socket.SOCK_STREAM, 5762)):
         with socket.socket(socket.AF_INET, family) as probe:
             probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -62,7 +77,14 @@ def start(args):
     (run/'workspace.patch').write_bytes(workspace_patch)
     provenance={'workspace_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
                 'workspace_patch_sha256':hashlib.sha256(workspace_patch).hexdigest(),
-                'firmware_revision':actual,'files':{}}
+                'firmware_revision':actual,'submodules':submodules.splitlines(),'files':{}}
+    # Retain this run's own code, including work in progress, without third-party trees.
+    paths=subprocess.check_output(['git','ls-files','-z','--cached','--others','--exclude-standard'],cwd=ROOT).decode().split('\0')
+    with tarfile.open(run/'source_snapshot.tar.gz','w:gz') as archive:
+        for relative in sorted(set(paths)):
+            path=ROOT/relative
+            if relative and path.is_file():archive.add(path,arcname=relative,recursive=False)
+    provenance['source_snapshot_sha256']=hashlib.sha256((run/'source_snapshot.tar.gz').read_bytes()).hexdigest()
     for path in ('external/ardupilot/build/sitl/bin/ardurover',
                  'external/ardupilot_gazebo/build/libArduPilotPlugin.so',
                  'patches/ardupilot_gazebo_rover44.patch','config/dependencies.lock.json'):
@@ -124,7 +146,7 @@ def navigation(args):
     state = json.loads(PIDFILE.read_text())
     run = Path(state['run_dir'])
     generated = run/'generated'
-    names={'navigation','lidar_tf','cloud_filter','cloud_to_scan'}
+    names={'navigation','lidar_tf','cloud_filter','cloud_to_scan','map_origin'}
     existing=[p for p in state['processes'] if p['name'] in names and process_start(p['pid'])==p['start']]
     if existing and not args.replace:
         raise RuntimeError('Navigation already attached; use --replace to restart that layer.')
@@ -134,6 +156,7 @@ def navigation(args):
         state['processes']=[p for p in state['processes'] if p['name'] not in names]
     subprocess.run([sys.executable, str(ROOT/'scripts/prepare_navigation.py'), str(generated/'scene.json')], check=True)
     commands = {
+        'map_origin': ['ros2','run','usv_sim','map_origin','--ros-args','-p','use_sim_time:=true'],
         'lidar_tf': ['ros2', 'run', 'tf2_ros', 'static_transform_publisher', '--x', '0.7', '--y', '-0.3', '--z', '1.8',
                      '--frame-id', 'base_link', '--child-frame-id', 'wamv/wamv/base_link/lidar_wamv_sensor',
                      '--ros-args', '-p', 'use_sim_time:=true'],

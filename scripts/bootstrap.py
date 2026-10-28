@@ -66,6 +66,8 @@ def sources():
                 if url.startswith('../') and 'CrashDebug' in str(gm):url='https://github.com/adamgreen/'+url[3:]
             run(['git','config',key.removesuffix('.path')+'.url',url],gm.parent)
     run(['git','-c','protocol.file.allow=always','submodule','update','--init','--recursive','--jobs','4'],firmware)
+    if subprocess.check_output(['git','status','--porcelain','--untracked-files=no'],cwd=firmware,text=True):
+        raise RuntimeError('Refusing to build modified firmware or submodules')
     plugin=EXTERNAL/'ardupilot_gazebo'
     if not (plugin/'.git').exists():
         run(['git','init',plugin]);run(['git','remote','add','origin','https://github.com/ArduPilot/ardupilot_gazebo.git'],plugin)
@@ -78,6 +80,8 @@ def sources():
     patch=ROOT/'patches/ardupilot_gazebo_rover44.patch'
     applied=subprocess.run(['git','apply','--reverse','--check',str(patch)],cwd=plugin,capture_output=True).returncode==0
     if not applied:run(['git','apply',patch],plugin)
+    if subprocess.check_output(['git','diff','HEAD','--binary'],cwd=plugin)!=patch.read_bytes():
+        raise RuntimeError('Unexpected plugin modifications beyond the compatibility patch')
 
 
 def main():

@@ -20,8 +20,9 @@ CASES=[
     {'name':'wind_waves','goals':[[5,0,0]],'wind':3,'wave_gain':.3},
     {'name':'gps_input_fixed','goals':[[5,0,0]],'gps_input':True},
     *[{'name':name,'environment_case':name} for name in
-      ('dynamic_map','dynamic_navigation','pause','motors','collision_sensor','reset','mavros_exit','sitl_exit')],
+      ('dynamic_map','dynamic_navigation','pause','motors','protocol','disarm','collision_sensor','reset','mavros_exit','sitl_exit')],
     {'name':'gnss','environment_case':'gnss','gps_input':True},
+    {'name':'fault_inputs','script':'validate_faults.py'},
 ]
 
 
@@ -51,7 +52,9 @@ def main():
                 time.sleep(.2)
             if run is None:raise TimeoutError('Session startup timeout')
             # Let the supervisor attach ROS nodes; validate also waits for fresh data and lifecycle state.
-            if case.get('environment_case'):
+            if case.get('script'):
+                command=[sys.executable,str(ROOT/'scripts'/case['script'])]
+            elif case.get('environment_case'):
                 command=[sys.executable,str(ROOT/'scripts/validate_environment.py'),case['environment_case']]
             else:
                 command=[sys.executable,str(ROOT/'scripts/validate.py'),'goal','--goals',json.dumps(case['goals']),'--label',name]

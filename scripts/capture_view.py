@@ -9,13 +9,15 @@ import numpy as np
 import rclpy
 from sensor_msgs.msg import Image
 from rclpy.qos import qos_profile_sensor_data
+from rclpy.parameter import Parameter
 from validate import ROOT
 
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--seconds',type=float,default=1)
     args=parser.parse_args();run=Path((ROOT/'runs/latest.txt').read_text().strip())
-    rclpy.init();node=rclpy.create_node('capture_validation_view');writer=[None];count=[0]
+    rclpy.init();node=rclpy.create_node('capture_validation_view',
+        parameter_overrides=[Parameter('use_sim_time',value=True)]);writer=[None];count=[0]
     def receive(msg):
         if msg.encoding not in ('rgb8','bgr8'):raise ValueError(msg.encoding)
         a=np.frombuffer(msg.data,dtype=np.uint8).reshape(msg.height,msg.step)[:,:msg.width*3].reshape(msg.height,msg.width,3)

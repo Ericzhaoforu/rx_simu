@@ -9,7 +9,7 @@ import time
 import rclpy
 from rclpy.action import ActionClient
 from rclpy.parameter import Parameter
-from rclpy.qos import qos_profile_sensor_data
+from rclpy.qos import qos_profile_sensor_data, QoSProfile, DurabilityPolicy
 from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import Odometry
 from ros_gz_interfaces.msg import Contacts
@@ -40,6 +40,7 @@ class Runner:
         self.mav_available = True
         self.contacts = []
         self.contact_messages = 0
+        self.alignment = None
         self.log = (self.run/(label+'.jsonl')).open('w')
         self.last_record = 0
         self.phase = 'startup'
@@ -51,6 +52,8 @@ class Runner:
         self.raw = self.node.create_publisher(PositionTarget, '/mavros/setpoint_raw/local', 10)
         self.twist = self.node.create_publisher(Twist, '/usv/cmd_vel', 10)
         self.node.create_subscription(Contacts,'/usv/contacts',self.on_contacts,qos_profile_sensor_data)
+        self.node.create_subscription(String,'/usv/map_alignment',self.on_alignment,
+                                      QoSProfile(depth=1,durability=DurabilityPolicy.TRANSIENT_LOCAL))
         deadline=time.monotonic()+30
         while True:
             try:
@@ -73,6 +76,10 @@ class Runner:
         self.contact_messages += 1
         if msg.contacts:self.contacts.append(str(msg))
 
+    def on_alignment(self,msg):
+        self.alignment=json.loads(msg.data)
+        (self.run/'map_alignment.json').write_text(json.dumps(self.alignment,indent=2)+'\n')
+
     def record(self):
         now = time.monotonic()
         if now-self.last_record < 0.1:
@@ -89,6 +96,12 @@ class Runner:
                 row[key+'_rpy']=[math.atan2(2*(q.w*q.x+q.y*q.z),1-2*(q.x*q.x+q.y*q.y)),
                                 math.asin(max(-1,min(1,2*(q.w*q.y-q.z*q.x)))),yaw(q)]
                 row[key+'_age']=row['sim']-m.header.stamp.sec-m.header.stamp.nanosec/1e9
+                if key=='ekf' and m.header.frame_id=='odom':
+                    row['ekf_local']=row[key].copy()
+                    if self.alignment is not None:
+                        row[key][0]+=self.alignment['offset_xy_m'][0]
+                        row[key][1]+=self.alignment['offset_xy_m'][1]
+                        row['map_alignment_xy']=self.alignment['offset_xy_m']
         for topic,key in [('/usv/thrust_left','left_n'),('/usv/thrust_right','right_n'),('/usv/sitl_frame','frame'),('/usv/control_status','gate')]:
             if topic in self.data:row[key]=self.data[topic].data
         if '/usv/cmd_vel' in self.data:
@@ -99,7 +112,11 @@ class Runner:
             m=self.data['/scan'];row['scan_age']=row['sim']-m.header.stamp.sec-m.header.stamp.nanosec/1e9
         if 'truth' in row:
             p=row['truth'];row['clearance_m']=vessel_clearance(self.scene['footprint'],p[0],p[1],p[3],self.scene['obstacles'])
-        for name in ('GPS_RAW_INT','EKF_STATUS_REPORT','SERVO_OUTPUT_RAW'):
+        if '/mavros/state' in self.data:
+            state=self.data['/mavros/state']
+            row['fcu_state']={'connected':state.connected,'armed':state.armed,'mode':state.mode,
+                              'wall_age_s':now-self.received['/mavros/state']}
+        for name in ('GPS_RAW_INT','EKF_STATUS_REPORT','SERVO_OUTPUT_RAW','HEARTBEAT'):
             if name in self.telemetry:row[name]=self.telemetry[name]
         self.rows.append(row)
         self.log.write(json.dumps(row,allow_nan=False)+'\n');self.log.flush()
@@ -113,7 +130,7 @@ class Runner:
                 if not self.mav_available:break
                 message=self.mav.recv_match(blocking=False)
                 if message is None:break
-                if message.get_type() in ('GPS_RAW_INT','EKF_STATUS_REPORT','SERVO_OUTPUT_RAW'):
+                if message.get_type() in ('GPS_RAW_INT','EKF_STATUS_REPORT','SERVO_OUTPUT_RAW','HEARTBEAT') and message.get_srcSystem()==1 and message.get_srcComponent()==1:
                     self.telemetry[message.get_type()]=message.to_dict()
                 if message.get_type()=='STATUSTEXT':
                     self.log.write(json.dumps({'status_text':message.text,'wall':time.monotonic()})+'\n')

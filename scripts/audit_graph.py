@@ -32,9 +32,17 @@ def main():
         for t in message.transforms:edges[topic].add(t.header.frame_id+' -> '+t.child_frame_id)
     node.create_subscription(TFMessage,'/tf',lambda m:tf(m,'/tf'),100)
     node.create_subscription(TFMessage,'/tf_static',lambda m:tf(m,'/tf_static'),QoSProfile(depth=100,durability=DurabilityPolicy.TRANSIENT_LOCAL))
+    # A cold-start graph may exist before the FCU has produced usable EKF data.
+    deadline=time.monotonic()+45
+    while not all(stamps[topic] for topic in topics):
+        if time.monotonic()>deadline:raise TimeoutError('Audit requires live samples on every measured topic')
+        if Path((ROOT/'runs/latest.txt').read_text().strip())!=run:
+            raise RuntimeError('Session changed during graph audit; retry in a stable session')
+        rclpy.spin_once(node,timeout_sec=.05)
+    stamps.clear();ages.clear()
     end=time.monotonic()+10
     while time.monotonic()<end:rclpy.spin_once(node,timeout_sec=.05)
-    result={'tf_topics':{},'topics':{},'use_sim_time':{}}
+    result={'run_dir':str(run),'tf_topics':{},'topics':{},'use_sim_time':{}}
     for topic in ('/tf','/tf_static'):
         publishers=node.get_publishers_info_by_topic(topic)
         result['tf_topics'][topic]={'edges':sorted(edges[topic]),'publisher_count':len(publishers),
@@ -57,6 +65,8 @@ def main():
         if future.done() and future.result().values:
             value=future.result().values[0]
             result['use_sim_time'][full]=value.bool_value if value.type==1 else {'parameter_type':value.type,'note':'not a ROS bool parameter response'}
+    if Path((ROOT/'runs/latest.txt').read_text().strip())!=run:
+        raise RuntimeError('Session changed during graph audit; retry in a stable session')
     (run/'graph_audit.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result,indent=2));node.destroy_node();rclpy.shutdown()
 
