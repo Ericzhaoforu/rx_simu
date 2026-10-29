@@ -69,6 +69,7 @@ def navigation(out):
     controller['FollowPath']['critics'].insert(0,'Task1Rule')
     controller['FollowPath']['Task1Rule.class']='robotx_task1_nav::RuleCritic'
     controller['FollowPath']['Task1Rule.scale']=1.0
+    controller['FollowPath']['RotateToGoal.class']='robotx_task1_nav::RecoverableRotateCritic'
     controller['failure_tolerance']=.5
     for name in ('local_costmap','global_costmap'):
         costmap=params[name][name]['ros__parameters']

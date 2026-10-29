@@ -17,6 +17,7 @@ from rclpy.time import Time
 
 from .core import (BODY_NED_FRAME, VELOCITY_YAW_RATE_MASK, CommandGate,
                    bounded_command, normalise_quaternion, stamp_is_fresh, scan_ranges_valid)
+from .task_lease import TaskLease
 
 
 class RoverBridge(Node):
@@ -38,6 +39,7 @@ class RoverBridge(Node):
             'scan_timeout': 0.5,
             'state_timeout': 2.0,
             'publish_rate': 20.0,
+            'require_task_permission': False,
         }
         for name, value in defaults.items():
             self.declare_parameter(name, value)
@@ -48,6 +50,10 @@ class RoverBridge(Node):
         self.gate = CommandGate(**{key: self.p[key] for key in (
             'command_timeout', 'odom_timeout', 'scan_timeout', 'state_timeout')})
         self.sensor_headers = {}
+        self.task_lease = TaskLease()
+        if self.p['require_task_permission']:
+            from robotx_task1_interfaces.msg import MotionPermission
+            self.create_subscription(MotionPermission, '/task1/motion_permission', self.on_permission, 10)
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         # Preview is always available. No FCU output publisher in preview mode.
@@ -65,6 +71,10 @@ class RoverBridge(Node):
         self.last_status = None
 
     def on_command(self, msg):
+        if self.p['require_task_permission'] and not self.task_lease.valid(
+                self.get_clock().now().nanoseconds/1e9, time.monotonic()):
+            self.gate.invalidate('command')
+            return
         values = (msg.linear.x, msg.linear.y, msg.linear.z,
                   msg.angular.x, msg.angular.y, msg.angular.z)
         try:
@@ -74,6 +84,12 @@ class RoverBridge(Node):
             self.get_logger().error(str(error), throttle_duration_sec=2.0)
             return
         self.gate.update_command(command, time.monotonic())
+
+    def on_permission(self, msg):
+        stamp = msg.header.stamp.sec + msg.header.stamp.nanosec/1e9
+        if self.task_lease.update(msg.revision, msg.allow, stamp,
+                                  self.get_clock().now().nanoseconds/1e9, time.monotonic(), msg.reason):
+            self.gate.invalidate('command')
 
     def on_state(self, msg):
         self.gate.update_state(msg.connected, msg.armed, msg.mode, time.monotonic())
@@ -135,6 +151,10 @@ class RoverBridge(Node):
                     self.p['body_frame'], header.frame_id, Time.from_msg(header.stamp)):
                 self.gate.invalidate(source)
         command, reason = self.gate.evaluate(time.monotonic())
+        if self.p['require_task_permission'] and not self.task_lease.valid(
+                self.get_clock().now().nanoseconds/1e9, time.monotonic()):
+            command, reason = (0.0, 0.0), 'task stopped: ' + self.task_lease.reason
+            self.gate.invalidate('command')
         msg = self.setpoint(command)
         self.preview_pub.publish(msg)
         # Outside GUIDED / armed state, let the pilot / FCU mode own motion.

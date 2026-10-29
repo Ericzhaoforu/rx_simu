@@ -1,0 +1,166 @@
+#include "robotx_task1_nav/rules.hpp"
+#include <mutex>
+#include <nav2_core/global_planner.hpp>
+#include <nav2_costmap_2d/layer.hpp>
+#include <nav2_costmap_2d/footprint_collision_checker.hpp>
+#include <dwb_core/trajectory_critic.hpp>
+#include <dwb_core/exceptions.hpp>
+#include <dwb_critics/rotate_to_goal.hpp>
+#include <pluginlib/class_list_macros.hpp>
+#include <robotx_task1_interfaces/msg/buoy_array.hpp>
+#include <robotx_task1_interfaces/msg/mission_context.hpp>
+
+namespace robotx_task1_nav {
+using Observations=robotx_task1_interfaces::msg::BuoyArray;
+using Context=robotx_task1_interfaces::msg::MissionContext;
+double yaw(const geometry_msgs::msg::Quaternion &q){return std::atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z));}
+Pose pose(const geometry_msgs::msg::Pose &p){return {p.position.x,p.position.y,yaw(p.orientation)};}
+std::vector<Buoy> markers(const Observations &o){std::vector<Buoy> v;for(const auto &b:o.buoys)v.push_back({b.id,b.position.x,b.position.y,b.collision_radius,b.state});return v;}
+struct Input {
+  std::mutex mutex;Observations observations;Context context;
+  rclcpp::Subscription<Observations>::SharedPtr os;
+  rclcpp::Subscription<Context>::SharedPtr cs;
+  void attach(const rclcpp_lifecycle::LifecycleNode::SharedPtr &node) {
+    os=node->create_subscription<Observations>("/task1/observations",10,[this](const Observations::SharedPtr m){
+      std::lock_guard<std::mutex> l(mutex);if(m->header.frame_id=="map"&&m->revision>=observations.revision)observations=*m;});
+    cs=node->create_subscription<Context>("/task1/context",10,[this](const Context::SharedPtr m){
+      std::lock_guard<std::mutex> l(mutex);context=*m;});
+  }
+  bool read(const rclcpp::Time &now,Observations &o,Context &c) {
+    std::lock_guard<std::mutex> l(mutex);o=observations;c=context;
+    double oa=(now-rclcpp::Time(o.header.stamp)).seconds(),ca=(now-rclcpp::Time(c.header.stamp)).seconds();
+    return o.buoys.size()==10&&o.survey_complete&&o.revision==c.revision&&oa>=-.1&&oa<=.5&&ca>=-.1&&ca<=.5;
+  }
+};
+
+class RulePlanner : public nav2_core::GlobalPlanner {
+  rclcpp_lifecycle::LifecycleNode::SharedPtr node_;
+  std::shared_ptr<nav2_costmap_2d::Costmap2DROS> map_;
+  Input input_;
+ public:
+  void configure(const rclcpp_lifecycle::LifecycleNode::WeakPtr &node,std::string,
+                 std::shared_ptr<tf2_ros::Buffer>,std::shared_ptr<nav2_costmap_2d::Costmap2DROS> map) override {
+    node_=node.lock();map_=map;input_.attach(node_);
+  }
+  void cleanup()override{input_.os.reset();input_.cs.reset();map_.reset();node_.reset();}
+  void activate()override{}
+  void deactivate()override{}
+  nav_msgs::msg::Path createPlan(const geometry_msgs::msg::PoseStamped &start,
+                                 const geometry_msgs::msg::PoseStamped &goal) override {
+    Observations o;Context ctx;if(!input_.read(node_->now(),o,ctx))throw std::runtime_error("Task1 observation/context is stale or mismatched");
+    const auto buoys=markers(o);auto cm=map_->getCostmap();
+    std::unique_lock<nav2_costmap_2d::Costmap2D::mutex_t> lock(*cm->getMutex());
+    nav2_costmap_2d::FootprintCollisionChecker<nav2_costmap_2d::Costmap2D*> checker(cm);
+    auto footprint=map_->getRobotFootprint();
+    auto cost=[&](const Pose &p){
+      unsigned int mx,my;if(!cm->worldToMap(p.x,p.y,mx,my))return std::numeric_limits<double>::infinity();
+      if(cm->getCost(mx,my)>=253)return std::numeric_limits<double>::infinity();
+      double value=checker.footprintCostAtPose(p.x,p.y,p.h,footprint);
+      if(value>=254||value<0)return std::numeric_limits<double>::infinity();
+      // Edge-only grid collision checks miss a small marker entirely inside the hull.
+      for(const auto &b:buoys){auto xy=body(p,b);bool inside=false;double distance=1e9;
+        for(size_t i=0,j=footprint.size()-1;i<footprint.size();j=i++){
+          auto a=footprint[j],c=footprint[i];double dx=c.x-a.x,dy=c.y-a.y;
+          double t=std::clamp(((xy[0]-a.x)*dx+(xy[1]-a.y)*dy)/(dx*dx+dy*dy),0.,1.);
+          distance=std::min(distance,std::hypot(xy[0]-a.x-t*dx,xy[1]-a.y-t*dy));
+          if(((a.y>xy[1])!=(c.y>xy[1]))&&xy[0]<(c.x-a.x)*(xy[1]-a.y)/(c.y-a.y)+a.x)inside=!inside;
+        }if(inside||distance<b.r)return std::numeric_limits<double>::infinity();
+      }
+      return 1.5*cm->getCost(mx,my)/252.;
+    };
+    std::vector<Pose> path;
+    const Pose from=pose(start.pose),to=pose(goal.pose);
+    if(ctx.circle_direction!=0) {
+      double cx=ctx.circle_center.x,cy=ctx.circle_center.y;
+      double a0=std::atan2(from.y-cy,from.x-cx),a1=std::atan2(to.y-cy,to.x-cx);
+      double sweep=wrap(a1-a0);if(sweep*ctx.circle_direction<0)sweep+=ctx.circle_direction*2*pi;
+      if(std::abs(sweep)>pi)throw std::runtime_error("circle segment exceeds half turn");
+      int n=std::max(2,int(std::ceil(std::abs(sweep)*ctx.circle_radius/.12)));
+      path.push_back(from);
+      for(int i=1;i<=n;++i){double a=a0+sweep*i/n;
+        Pose q{cx+ctx.circle_radius*std::cos(a),cy+ctx.circle_radius*std::sin(a),wrap(a+ctx.circle_direction*pi/2)};
+        if(!std::isfinite(cost(q)))throw std::runtime_error("circle arc footprint blocked");
+        path.push_back(q);
+      }
+    } else {
+      auto result=search(from,to,buoys,ctx.enforce_passage,ctx.passed_colors,cost);
+      RCLCPP_INFO(node_->get_logger(),"Task1 search expanded %zu states",result.expanded);path=result.path;
+    }
+    nav_msgs::msg::Path result;result.header.frame_id="map";result.header.stamp=node_->now();
+    for(size_t i=0;i<path.size();++i){
+      int n=i==0?1:std::max(1,int(std::ceil(std::max(std::hypot(path[i].x-path[i-1].x,path[i].y-path[i-1].y)/.1,std::abs(wrap(path[i].h-path[i-1].h))/.1))));
+      for(int j=1;j<=n;++j){const auto p=i==0?path[i]:interpolate(path[i-1],path[i],double(j)/n);
+        geometry_msgs::msg::PoseStamped m;m.header=result.header;m.pose.position.x=p.x;m.pose.position.y=p.y;
+        m.pose.orientation.z=std::sin(p.h/2);m.pose.orientation.w=std::cos(p.h/2);result.poses.push_back(m);
+      }
+    }return result;
+  }
+};
+
+class RuleCritic : public dwb_core::TrajectoryCritic {
+  Input input_;std::vector<Buoy> buoys_;bool ready_=false,enforce_=false;
+ public:
+  void onInit() override {input_.attach(node_.lock());}
+  bool prepare(const geometry_msgs::msg::Pose2D &,const nav_2d_msgs::msg::Twist2D &,
+               const geometry_msgs::msg::Pose2D &,const nav_2d_msgs::msg::Path2D &) override {
+    Observations o;Context c;ready_=input_.read(node_.lock()->now(),o,c);
+    buoys_=markers(o);enforce_=c.enforce_passage;return true;
+  }
+  double scoreTrajectory(const dwb_msgs::msg::Trajectory2D &trajectory) override {
+    if(!ready_)throw dwb_core::IllegalTrajectoryException(name_,"stale Task1 context");
+    if(enforce_)for(size_t i=1;i<trajectory.poses.size();++i){const auto &a=trajectory.poses[i-1],&b=trajectory.poses[i];
+      if(passage({a.x,a.y,a.theta},{b.x,b.y,b.theta},buoys_)<0)
+        throw dwb_core::IllegalTrajectoryException(name_,"wrong-side nearest abeam buoy");
+    }
+    return 0.;
+  }
+};
+
+// Upstream 1.1.20 RotateToGoal permanently latches its window. A floating hull
+// can drift outside it while a non-stateful goal checker still requires position.
+// Reset that latch when position is outside; retain the upstream yaw/braking logic.
+class RecoverableRotateCritic : public dwb_critics::RotateToGoalCritic {
+  double tolerance_=.4;
+ public:
+  void onInit() override {
+    dwb_critics::RotateToGoalCritic::onInit();
+    node_.lock()->get_parameter(dwb_plugin_name_+".xy_goal_tolerance",tolerance_);
+  }
+  bool prepare(const geometry_msgs::msg::Pose2D &p,const nav_2d_msgs::msg::Twist2D &v,
+               const geometry_msgs::msg::Pose2D &g,const nav_2d_msgs::msg::Path2D &path) override {
+    if(std::hypot(p.x-g.x,p.y-g.y)>tolerance_)reset();
+    return dwb_critics::RotateToGoalCritic::prepare(p,v,g,path);
+  }
+};
+
+class KnownBuoys : public nav2_costmap_2d::Layer {
+  std::mutex mutex_;std::vector<Buoy> buoys_;
+  rclcpp::Subscription<Observations>::SharedPtr sub_;
+ public:
+  void onInitialize() override {
+    enabled_=true;current_=true;auto node=node_.lock();
+    sub_=node->create_subscription<Observations>("/task1/observations",10,[this](const Observations::SharedPtr m){
+      if(m->header.frame_id!="map")return;
+      std::lock_guard<std::mutex> lock(mutex_);buoys_=markers(*m);});
+  }
+  void reset() override {current_=true;}
+  bool isClearable() override{return false;}
+  void updateBounds(double,double,double,double *minx,double *miny,double *maxx,double *maxy) override {
+    std::lock_guard<std::mutex> lock(mutex_);
+    for(const auto &b:buoys_){*minx=std::min(*minx,b.x-b.r);*maxx=std::max(*maxx,b.x+b.r);
+      *miny=std::min(*miny,b.y-b.r);*maxy=std::max(*maxy,b.y+b.r);}
+  }
+  void updateCosts(nav2_costmap_2d::Costmap2D &map,int min_i,int min_j,int max_i,int max_j) override {
+    std::lock_guard<std::mutex> lock(mutex_);
+    for(const auto &b:buoys_){int x0,y0,x1,y1;map.worldToMapEnforceBounds(b.x-b.r,b.y-b.r,x0,y0);map.worldToMapEnforceBounds(b.x+b.r,b.y+b.r,x1,y1);
+      for(int y=std::max(y0,min_j);y<std::min(y1+1,max_j);++y)for(int x=std::max(x0,min_i);x<std::min(x1+1,max_i);++x){
+        double wx,wy;map.mapToWorld(x,y,wx,wy);if(std::hypot(wx-b.x,wy-b.y)<=b.r+map.getResolution()*.71)map.setCost(x,y,254);
+      }
+    }current_=true;
+  }
+};
+} // namespace
+PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::RulePlanner,nav2_core::GlobalPlanner)
+PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::RuleCritic,dwb_core::TrajectoryCritic)
+PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::RecoverableRotateCritic,dwb_core::TrajectoryCritic)
+PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::KnownBuoys,nav2_costmap_2d::Layer)

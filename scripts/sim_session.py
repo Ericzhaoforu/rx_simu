@@ -89,6 +89,9 @@ def start(args):
                  'external/ardupilot_gazebo/build/libArduPilotPlugin.so',
                  'patches/ardupilot_gazebo_rover44.patch','config/dependencies.lock.json'):
         provenance['files'][path]=hashlib.sha256((ROOT/path).read_bytes()).hexdigest()
+    if args.task1:
+        for path in ('build/task1_gazebo/libTask1Scene.so','install/robotx_task1_nav/lib/libtask1_nav.so'):
+            provenance['files'][path]=hashlib.sha256((ROOT/path).read_bytes()).hexdigest()
     (run/'provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
     generated = run/'generated'
     command = [sys.executable, str(ROOT/'scripts/generate_world.py'), '--output', str(generated),
@@ -96,6 +99,9 @@ def start(args):
     if args.lockstep:
         command.append('--lockstep')
     subprocess.run(command, check=True, stdout=(run/'generation.log').open('w'), stderr=subprocess.STDOUT)
+    if args.task1:
+        from prepare_task1 import prepare
+        prepare(generated,args.seed,args.changes,args.dynamic)
     state = {'run_dir': str(run), 'firmware_revision': actual, 'processes': []}
 
     def spawn(name, command, cwd=ROOT):
@@ -110,6 +116,13 @@ def start(args):
     try:
         spawn('gazebo', ['gz', 'sim', '--force-version', '7', '-s', '-r', '--headless-rendering', '-v', '3', str(generated/'usv_nav.sdf')])
         spawn('gz_bridge', ['ros2', 'run', 'ros_gz_bridge', 'parameter_bridge', '--ros-args', '-p', 'use_sim_time:=true', '-p', 'config_file:='+str(ROOT/'config/gz_bridge.yaml')])
+        if args.task1:
+            spawn('task1_gz_bridge',['ros2','run','ros_gz_bridge','parameter_bridge',
+                  '/task1/scene_state@std_msgs/msg/String[gz.msgs.StringMsg',
+                  '/task1/scene_command@std_msgs/msg/String]gz.msgs.StringMsg',
+                  '/task1/beacon_view@sensor_msgs/msg/Image[gz.msgs.Image',
+                  '--ros-args','-p','use_sim_time:=true'])
+            spawn('task1_observer',['ros2','run','robotx_task1','known_observer','--ros-args','-p','use_sim_time:=true'])
         sitl = run/'sitl'
         sitl.mkdir()
         parameters = (ROOT/'config/rover_wamv.parm').read_text()
@@ -146,7 +159,7 @@ def navigation(args):
     state = json.loads(PIDFILE.read_text())
     run = Path(state['run_dir'])
     generated = run/'generated'
-    names={'navigation','lidar_tf','cloud_filter','cloud_to_scan','map_origin'}
+    names={'navigation','lidar_tf','cloud_filter','cloud_to_scan','map_origin','task1_mission','task1_judge'}
     existing=[p for p in state['processes'] if p['name'] in names and process_start(p['pid'])==p['start']]
     if existing and not args.replace:
         raise RuntimeError('Navigation already attached; use --replace to restart that layer.')
@@ -155,6 +168,14 @@ def navigation(args):
         time.sleep(3)
         state['processes']=[p for p in state['processes'] if p['name'] not in names]
     subprocess.run([sys.executable, str(ROOT/'scripts/prepare_navigation.py'), str(generated/'scene.json')], check=True)
+    task1='task1' in json.loads((generated/'scene.json').read_text())
+    if task1:
+        from prepare_task1 import navigation as task_navigation
+        task_navigation(generated)
+    provenance=json.loads((run/'provenance.json').read_text())
+    provenance['generated_files']={str(path.relative_to(run)):hashlib.sha256(path.read_bytes()).hexdigest()
+                                   for path in generated.iterdir() if path.is_file()}
+    (run/'provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
     commands = {
         'map_origin': ['ros2','run','usv_sim','map_origin','--ros-args','-p','use_sim_time:=true'],
         'lidar_tf': ['ros2', 'run', 'tf2_ros', 'static_transform_publisher', '--x', '0.7', '--y', '-0.3', '--z', '1.8',
@@ -168,6 +189,9 @@ def navigation(args):
                        'params_file:='+str(generated/'nav2_wamv.yaml'), 'use_sim_time:=true', 'rviz:=false',
                        'enable_control:='+str(args.control).lower()],
     }
+    if task1:
+        commands['task1_mission']=['ros2','run','robotx_task1','mission','--ros-args','-p','use_sim_time:=true','-p','run_dir:='+str(run)]
+        commands['task1_judge']=['ros2','run','robotx_task1','judge','--ros-args','-p','use_sim_time:=true','-p','run_dir:='+str(run)]
     for name, command in commands.items():
         previous_log=run/(name+'.log')
         if previous_log.exists():
@@ -190,6 +214,10 @@ def main():
     parser.add_argument('--control', action='store_true')
     parser.add_argument('--gps-input', action='store_true')
     parser.add_argument('--replace', action='store_true')
+    parser.add_argument('--task1', action='store_true')
+    parser.add_argument('--seed', type=int, choices=(1,2,3), default=1)
+    parser.add_argument('--changes', type=int, choices=(0,1,2), default=0)
+    parser.add_argument('--dynamic', choices=('none','cross','block'), default='none')
     args = parser.parse_args()
     if args.action == 'start':
         start(args)
