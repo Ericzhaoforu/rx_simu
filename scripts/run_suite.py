@@ -3,6 +3,7 @@
 import argparse
 import json
 from pathlib import Path
+import signal
 import subprocess
 import sys
 import time
@@ -28,7 +29,9 @@ CASES=[
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--cases',nargs='*');args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--cases',nargs='*')
+    parser.add_argument('--record-navigation',action='store_true',help='Retain real Nav2 paths and costmap snapshots for visualization')
+    args=parser.parse_args()
     ledger=ROOT/'runs/suite_results.json'
     results=json.loads(ledger.read_text()) if ledger.exists() else []
     for case in CASES:
@@ -42,6 +45,7 @@ def main():
         latest=ROOT/'runs/latest.txt'
         previous=latest.read_text() if latest.exists() else ''
         process=subprocess.Popen(command,stdout=console.open('w'),stderr=subprocess.STDOUT)
+        recorder=None
         try:
             deadline=time.monotonic()+30;run=None
             while time.monotonic()<deadline:
@@ -52,6 +56,17 @@ def main():
                     if latest.read_text()!=previous and candidate.name.endswith('_'+name):run=candidate;break
                 time.sleep(.2)
             if run is None:raise TimeoutError('Session startup timeout')
+            if args.record_navigation:
+                if 'goals' in case:
+                    (run/'visualization_goals.json').write_text(json.dumps(case['goals'])+'\n')
+                recorder=subprocess.Popen([sys.executable,str(ROOT/'scripts/record_navigation.py'),
+                                           '--run-dir',str(run)],stdout=(run/'record_navigation.log').open('w'),
+                                          stderr=subprocess.STDOUT)
+                deadline=time.monotonic()+10
+                while not (run/'visualization/ready.json').exists():
+                    if recorder.poll() is not None:raise RuntimeError((run/'record_navigation.log').read_text())
+                    if time.monotonic()>deadline:raise TimeoutError('Visualization recorder startup timeout')
+                    time.sleep(.1)
             # Let the supervisor attach ROS nodes; validate also waits for fresh data and lifecycle state.
             if case.get('script'):
                 command=[sys.executable,str(ROOT/'scripts'/case['script'])]
@@ -72,6 +87,11 @@ def main():
             results.append(item);ledger.write_text(json.dumps(results,indent=2)+'\n')
             print(json.dumps(item),flush=True)
         finally:
+            if recorder is not None:
+                if recorder.poll() is None:
+                    recorder.send_signal(signal.SIGINT)
+                try:recorder.wait(timeout=10)
+                except subprocess.TimeoutExpired:recorder.terminate();recorder.wait(timeout=5)
             subprocess.run([sys.executable,str(ROOT/'scripts/sim_session.py'),'stop'],check=False)
             try:process.wait(timeout=10)
             except subprocess.TimeoutExpired:process.terminate();process.wait(timeout=5)

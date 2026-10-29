@@ -19,7 +19,7 @@
 | waves | 通过 / 4 | 0.368 | 0.044 | 1.571 | 0.181 | [20261029_060144_waves](../runs/20261029_060144_waves/waves_result.json) |
 | wind_waves | 通过 / 4 | 0.291 | 0.213 | 1.520 | 0.140 | [20261029_060308_wind_waves](../runs/20261029_060308_wind_waves/wind_waves_result.json) |
 | gps_input_fixed | 通过 / 4 | 0.377 | 0.116 | 1.489 | 0.205 | [20261029_060434_gps_input_fixed](../runs/20261029_060434_gps_input_fixed/gps_input_fixed_result.json) |
-| dynamic_navigation | 通过 / 4 | 0.393 | 0.169 | 2.235 | 0.056 | [20261029_060645_dynamic_navigation](../runs/20261029_060645_dynamic_navigation/dynamic_navigation_result.json) |
+| dynamic_navigation | 通过 / 4 | 0.387 | 0.167 | 1.847 | 0.018 | [20261029_105554_dynamic_navigation](../runs/20261029_105554_dynamic_navigation/dynamic_navigation_result.json) |
 | feedback_goal | 通过 / 4 | 0.371 | 0.038 | 1.570 | 0.205 | [20261029_062349_feedback_goal](../runs/20261029_062349_feedback_goal/feedback_goal_result.json) |
 
 action 4 = 成功，5 = 取消，6 = 中止。验收条件不只检查 action 状态，还检查真值误差、碰撞、途经点和零指令延迟。

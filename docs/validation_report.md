@@ -6,7 +6,7 @@
 
 本轮对象是约 **5.37 m × 2.54 m** 碰撞包络的现成 WAM-V，不是最终 1.2 m × 0.7 m 实船。结果只能说明当前软件链路及该模型、这些场景下的表现。
 
-最终导航参数下，单目标 **3/3**、多途经点 **3/3** 通过；单目标最大位置 / 航向误差为 **0.368 m / 0.047 rad**，多途经点终点最大误差为 **0.348 m / 0.161 rad**。静态绕障最小真值净空 **3.35 m**，最终动态障碍夹具最小净空 **2.24 m**，均无接触。取消、两类不可达目标、所测风浪组合及 GPS_INPUT 固定解到点均通过。
+最终导航参数下，单目标 **3/3**、多途经点 **3/3** 通过；单目标最大位置 / 航向误差为 **0.368 m / 0.047 rad**，多途经点终点最大误差为 **0.348 m / 0.161 rad**。静态绕障最小真值净空 **3.35 m**，动态障碍首次通过轮次最小净空 **2.24 m**，可视化补录轮次 **1.85 m**，均无接触。取消、两类不可达目标、所测风浪组合及 GPS_INPUT 固定解到点均通过。
 
 需要保留的结论是：直接 Gazebo 时间重置尚不能自动恢复；定位质量门控、定位恢复后的自动续航和到点持续定点保持均未新增。不能把这些项目归为已通过。
 
@@ -147,8 +147,9 @@ Float、普通定位及失锁初期仍可能产生导航指令，因为桥检查
 - [规划预览（控制关闭）](../runs/20261029_041737_motion/preview_plan_result.json)：175 个路径点，绕障侧向偏移约 4.14 m。
 - [基础运动方向及速度](../runs/20261029_041737_motion/motion_direct_result.json)。
 - [原始移动障碍碰撞](../runs/20261029_053027_dynamic_navigation/dynamic_navigation_result.json) 与 [录屏](../runs/20261029_053027_dynamic_navigation/overview.mp4)。
-- [最终动态障碍结果](../runs/20261029_060645_dynamic_navigation/dynamic_navigation_result.json)、[轨迹与最近通过时的船体轮廓](../runs/20261029_060645_dynamic_navigation/trajectory.png) 与 [录屏片段](../runs/20261029_060645_dynamic_navigation/overview.mp4)。
+- [动态障碍首次通过结果](../runs/20261029_060645_dynamic_navigation/dynamic_navigation_result.json)、[轨迹与最近通过时的船体轮廓](../runs/20261029_060645_dynamic_navigation/trajectory.png) 与 [录屏片段](../runs/20261029_060645_dynamic_navigation/overview.mp4)。
+- [可视化补录结果](../runs/20261029_105554_dynamic_navigation/dynamic_navigation_result.json)、[规划/实际/末端对照](../runs/20261029_105554_dynamic_navigation/visualization/trajectory_comparison.png)、[静态地图与代价地图](../runs/20261029_105554_dynamic_navigation/visualization/maps.png)、[动态回放](../runs/20261029_105554_dynamic_navigation/visualization/navigation_replay.mp4)。本次捕获 78 条全局路径、309 条 DWB 局部预测、77 帧全局 costmap、180 帧局部 costmap。目标 `(12, 8, 0)`，任务结束真值 `(11.8524, 8.3573, -0.16654)`，位置误差 0.38661 m、最小净空 1.84676 m、无碰撞。捕获的 `/map` 与生成 PGM 的逐格占据值一致，所有路径与地图均为 `map` 坐标；飞控/导航参数未改动。新的采样与绘图实现已做语法检查，22 项导航和 7 项仿真单元测试通过。
 - [GPU 无窗口场景截图](../runs/20261029_054642_single_2/overview.png) 与 [短视频](../runs/20261029_054642_single_2/overview.mp4)。
 - [直接重置失败](../runs/20261029_052248_reset/reset_result.json)。
 
-共保留 67 次批测尝试，覆盖 27 个用例名称；历史失败未删除。最终实现提交为 `33e7566`，逐次运行的源码差异和校验值见对应快照。代码由本地 Git 管理，没有配置远端或公开发布。原始附件及导入校验仍保留，WAM-V 参数与原包实船参数分开维护。
+共保留 68 次批测尝试，覆盖 27 个用例名称；历史失败未删除。控制与导航实现基线为 `33e7566`，后续补充了被动路径/地图采样和可视化工具，逐次运行的源码差异和校验值见对应快照。代码由本地 Git 管理，没有配置远端或公开发布。原始附件及导入校验仍保留，WAM-V 参数与原包实船参数分开维护。

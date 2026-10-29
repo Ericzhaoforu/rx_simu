@@ -3169,6 +3169,54 @@
         "final_native_mode": 4,
         "passed": true
       }
+    },
+    {
+      "case": {
+        "name": "dynamic_navigation",
+        "environment_case": "dynamic_navigation"
+      },
+      "run_dir": "/home/zjy/usv_nav/runs/20261029_105554_dynamic_navigation",
+      "exit_code": 0,
+      "result": {
+        "status": 4,
+        "elapsed_wall_s": 79.63418606703635,
+        "true_position_error_m": 0.38660981252142707,
+        "true_yaw_error_rad": 0.16653956867404163,
+        "at_goal": [
+          11.852379675702508,
+          8.357316927939548,
+          -0.16653956867404163
+        ],
+        "drift_10s_m": 0.01810214866376151,
+        "zero_command_delay_s": 0.05344865197548643,
+        "min_planar_clearance_m": 1.8467636591633914,
+        "expected_status": 4,
+        "contact_messages": 0,
+        "collision_messages": 0,
+        "via_points": [],
+        "passed": true,
+        "target": [
+          12,
+          8,
+          0
+        ],
+        "obstacle_inserted": true,
+        "obstacle_removed": true,
+        "obstacle_profile": {
+          "clock": "Gazebo simulation time",
+          "appearance_s": 3,
+          "removal_s": 28,
+          "initial_xy_m": [
+            6,
+            7
+          ],
+          "velocity_xy_mps": [
+            0,
+            -0.14
+          ],
+          "pose_update_period_s": 0.5
+        }
+      }
     }
   ],
   "latest": {
@@ -4258,21 +4306,21 @@
         "name": "dynamic_navigation",
         "environment_case": "dynamic_navigation"
       },
-      "run_dir": "/home/zjy/usv_nav/runs/20261029_060645_dynamic_navigation",
+      "run_dir": "/home/zjy/usv_nav/runs/20261029_105554_dynamic_navigation",
       "exit_code": 0,
       "result": {
         "status": 4,
-        "elapsed_wall_s": 79.28885212499881,
-        "true_position_error_m": 0.39289478223879304,
-        "true_yaw_error_rad": 0.168747614680909,
+        "elapsed_wall_s": 79.63418606703635,
+        "true_position_error_m": 0.38660981252142707,
+        "true_yaw_error_rad": 0.16653956867404163,
         "at_goal": [
-          12.091595096756462,
-          8.382068904990504,
-          -0.168747614680909
+          11.852379675702508,
+          8.357316927939548,
+          -0.16653956867404163
         ],
-        "drift_10s_m": 0.055675579224157584,
-        "zero_command_delay_s": 0.05020283901831135,
-        "min_planar_clearance_m": 2.235318588802674,
+        "drift_10s_m": 0.01810214866376151,
+        "zero_command_delay_s": 0.05344865197548643,
+        "min_planar_clearance_m": 1.8467636591633914,
         "expected_status": 4,
         "contact_messages": 0,
         "collision_messages": 0,
@@ -4301,44 +4349,45 @@
         }
       },
       "metrics": {
-        "samples": 673,
-        "ekf_position_rmse_m": 0.024321476537205636,
-        "peak_true_speed_mps": 0.3787830322271357,
-        "real_time_factor": 0.933213097330979,
-        "true_heave_peak_to_peak_m": 0.00044577692957194215,
-        "max_scan_source_age_s": 0.16399999999999293,
+        "samples": 640,
+        "ekf_position_rmse_m": 0.023255538837314134,
+        "peak_true_speed_mps": 0.3788780417416775,
+        "real_time_factor": 0.8720469283678755,
+        "true_heave_peak_to_peak_m": 0.00041865658452053256,
+        "max_scan_source_age_s": 0.2560000000000059,
         "true_roll_pitch_peak_to_peak_rad": [
-          0.0009332989919727588,
-          0.0012763571699845712
+          0.0005621182221612496,
+          0.001204387897047167
         ],
         "post_goal": {
           "thrust_measurement": [
-            "command_topic_only"
+            "thruster_feedback"
           ],
-          "stable_exact_zero_thrust_delay_s": 1.8132089189602993,
-          "stable_speed_below_002_delay_s": 0.905492368969135,
+          "stable_exact_zero_thrust_delay_s": 1.6250968890381046,
+          "stable_speed_below_002_delay_s": 1.0180986230261624,
           "final_thrust_n": [
             -0.6000000000000005,
             0.6000000000000005
           ],
-          "travel_distance_m": 0.0589974170196673
+          "travel_distance_m": 0.02846437347390904
         }
       },
       "evidence_sha256": {
-        "dynamic_navigation.jsonl": "529be74f2aea097751d89ef14aaa347b672db35b2c050a661460479548c8efde",
-        "dynamic_navigation_result.json": "7b2cde94dbb7897d3f9a71bd890c78893e89ce508cceee6645c352ed386fe232",
+        "dynamic_navigation.jsonl": "72f852de86868e77d52b143935fd068377cc7c6fcba847af439ed0cbf11ff682",
+        "dynamic_navigation_result.json": "101a75c97c15cbc2bc10e8aaf53c7ee783b7cd38a9a2d81d530bff79d3bd42cd",
         "generated/usv_nav.sdf": "9d7994325e2a6d73644427248b145c0339b188664f5444031497ed493a2dfc44",
         "generated/nav2_wamv.yaml": "29871d7a729558ddb7b3bababe2d2b4ca0a1d32baede91a875efad1f56b5dbdf",
-        "provenance.json": "890c2f3008a884262af899285e2f0cb74a838ad37f75f35430244de16d5303cd",
-        "source_snapshot.tar.gz": "450b90c701cdc3adb71b8661013d3f3bada11f801b5f4e7e4f47e8e76eeb886c",
+        "provenance.json": "45bc8f40524409ad887b85e0af55997074bfbbbd6465349addbd0c81919b052c",
+        "source_snapshot.tar.gz": "8f54332fc3d803db0077c6f0e01be5adbbd5114dc51d34508ae761df8b4e5a34",
         "map_alignment.json": "f2819f6d142bba8bd7df990a37ce0bc22ac13d84aa51adecdabdf6d7a9118f18",
         "rover.parm": "16d5068f7cdf0257e1a37a5ba6a77a05b7c7ec2346b9a9769896364c8c43db56",
+        "thrust_observation.json": "c0b573de1ae6788be3fedd15a60aded4482dfd257fa7ad34cbb1b09c41e0f207",
         "generated/scene.json": "9218afb47b99f4a28486e015e1286d7b69edac86925f75ccbef4227ec588b8ea",
         "generated/water.pgm": "c4df8c89a52a2682faf4d95ca95e55d148aa25dfa3154fa077f4c6e372382b72",
         "generated/water.yaml": "3b738bcb77fe8a68f1971a5610ed5d2328034f4f26e06feabca323854fc98b31",
-        "overview.png": "bab93f9d780a2099c440fff37ce92e2a2c858f86916fc72cad4d8dc34d8e046b",
-        "overview.mp4": "7fe806be956ac51f982eb19a0762d309526773dd4bd11b61290a137fbe24bd57",
-        "trajectory.png": "51836c55fd03305e0dd30fe1a248ac6b472e91a62815caf442d2d70db336fcd2"
+        "visualization/manifest.json": "d07505160f3e217eff1a5cbd1f58c4ebfad342edabe7ef758e15afb6080a3476",
+        "visualization/recording.json": "b6b9597f2335223708847d1a0d21e41c8080a2d1c90777ea9f9dd16f1df1ba0e",
+        "trajectory.png": "51a2965b301e8efee1d05a546c52fc6196c199c09e771e27117532e8ed1d6b01"
       }
     },
     "pause": {

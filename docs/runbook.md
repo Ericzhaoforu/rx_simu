@@ -76,6 +76,30 @@ python3 scripts/validate_environment.py gnss
 
 ## 结果解释
 
+### 规划、实际航迹、目标位姿与地图可视化
+
+被动记录器会订阅真实 `/plan`、`/local_plan`、`/transformed_global_plan`、`/map` 和全局/局部 costmap，保留消息源时间戳、接收时间及坐标系。它不发送控制指令。运行前先停止已有手动会话：
+
+```bash
+source scripts/env.sh
+python3 scripts/run_suite.py --cases dynamic_navigation --record-navigation
+python3 scripts/plot_navigation.py "$(cat runs/latest.txt)" --animate
+python3 scripts/summarize_results.py
+```
+
+单目标等其他用例也可加 `--record-navigation`；绘图时用 `--label single_1` 等对应名称。原始路径和地图保存在当次运行的 `visualization/raw/`，输出如下：
+
+- `trajectory_comparison.png`：首次规划、避障阶段规划、障碍移开后重规划、VRX 真值轨迹、飞控 EKF 轨迹，以及末端位置/航向放大图。末端测量取任务完成瞬间，后续漂移另行显示。
+- `maps.png`：100 m × 100 m 静态导航地图、最近通过时的全局和局部代价地图，以及 DWB 局部预测。
+- `navigation_replay.mp4` / `.gif`：每 1 仿真秒取一帧，6 帧/秒回放；保留任务结束后的漂移观测。每帧仅使用该时刻以前已接收的路径和地图，并标注地图源时间年龄。
+- `manifest.json`：输入记录、地图、生成图像和视频的 SHA256、坐标配准说明与结果。`recording.json` 记录订阅消息计数。
+
+Nav2 全局路径是持续重规划的空间参考，DWB 局部轨迹是短时预测；两者都不是整段固定的带时间约束的期望船体轨迹。静态地图是预设可航区域及禁航区，并非 SLAM 建图；LiDAR 障碍及其膨胀区在实时 costmap 中。全程航迹图只叠加静态底图，避免把过去的动态障碍膨胀区误认为整段航程都有效。
+
+2026-10-29 补录示例：[轨迹与末端对照](../runs/20261029_105554_dynamic_navigation/visualization/trajectory_comparison.png)、[地图](../runs/20261029_105554_dynamic_navigation/visualization/maps.png)、[动态回放](../runs/20261029_105554_dynamic_navigation/visualization/navigation_replay.mp4)。此轮无碰撞，位置误差 0.387 m、航向误差 0.167 rad、最小净空 1.847 m；不能与此前录屏轮次的数值混用。
+
+### 测量与判定
+
 `*_result.json` 提供结果，`*.jsonl` 保留独立真值、EKF、指令、推力、时间戳、输入状态和净空。动作状态 4/5/6 分别为成功/取消/中止。测试进程退出 0 只代表记录成功写出，是否达标以 JSON 的 `passed` 为准；失败不会删除或覆盖旧运行。
 
 `runs/suite_results.json` 追加保存尝试，`scripts/summarize_results.py` 生成 Git 管理的 `docs/results.json` 和 `docs/results_summary.md`，并在各导航运行目录生成 `trajectory.png`。`provenance.json` 保存固件、插件、补丁和依赖锁校验值；后期运行还包含 Git 提交、工作树补丁及 `source_snapshot.tar.gz`，因此调试期间的未提交代码也可追溯。原始记录、飞控 DataFlash 日志和视频留在忽略目录，复制项目时需要另外保存这些证据。

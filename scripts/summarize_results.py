@@ -120,6 +120,7 @@ def main():
              run/'provenance.json',run/'source_snapshot.tar.gz',run/'map_alignment.json',
              run/'rover.parm',run/'thrust_observation.json',run/'generated/scene.json',
              run/'generated/water.pgm',run/'generated/water.yaml',
+             run/'visualization/manifest.json',run/'visualization/recording.json',
              run/'overview.png',run/'overview.mp4'] if p.exists()}
         if path.exists() and ('goals' in item['case'] or name=='dynamic_navigation'):
             plot(item)
