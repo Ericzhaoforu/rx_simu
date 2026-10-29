@@ -1,0 +1,23 @@
+{
+  "handbook": "2026-10-23",
+  "tier": "disruptive",
+  "observation_hz": 10.0,
+  "observation_timeout_s": 0.5,
+  "circle_radius_m": 6.0,
+  "stop_speed_mps": 0.05,
+  "stop_yaw_rate_rps": 0.05,
+  "stop_dwell_s": 1.0,
+  "timeout_sim_s": 1200,
+  "boundary": [[-25,-50],[75,-50],[75,50],[-25,50]],
+  "model_assumptions": {
+    "mooring": "fixed pose, calm-water first validation; no buoy hydrodynamics",
+    "frame_outer_width_m": 0.508,
+    "waterline": "flotation tube centers at water level",
+    "panel_base_width_m": 0.4318,
+    "panel_top_width_m": 0.18415,
+    "panel_height_m": 0.3048,
+    "beacon_pipe_outer_diameter_m": 0.0889,
+    "beacon_pipe_length_m": 0.13335,
+    "sunhat_diameter_m": 0.254
+  }
+}

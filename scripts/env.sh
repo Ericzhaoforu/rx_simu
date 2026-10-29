@@ -14,8 +14,8 @@ export PYTHONPATH="$USV_ROS_PREFIX/local/lib/python3.10/dist-packages:$USV_ROS_P
 export PATH="$USV_ROS_PREFIX/bin:$USV_DEPS/usr/bin:$PATH"
 export GEOGRAPHICLIB_GEOID_PATH="$USV_DEPS/usr/share/GeographicLib/geoids"
 export GZ_VERSION=garden
-export GZ_SIM_SYSTEM_PLUGIN_PATH="$USV_NAV_ROOT/external/ardupilot_gazebo/build:$VRX_ROOT/install/vrx_gz/lib:${GZ_SIM_SYSTEM_PLUGIN_PATH:-}"
-export GZ_SIM_RESOURCE_PATH="$USV_NAV_ROOT/runs/generated:$VRX_ROOT/vrx_urdf:$VRX_ROOT/vrx_gz/models:$VRX_ROOT/vrx_urdf/vrx_gazebo/models:${GZ_SIM_RESOURCE_PATH:-}"
+export GZ_SIM_SYSTEM_PLUGIN_PATH="$USV_NAV_ROOT/build/task1_gazebo:$USV_NAV_ROOT/external/ardupilot_gazebo/build:$VRX_ROOT/install/vrx_gz/lib:${GZ_SIM_SYSTEM_PLUGIN_PATH:-}"
+export GZ_SIM_RESOURCE_PATH="$USV_NAV_ROOT/models:$USV_NAV_ROOT/runs/generated:$VRX_ROOT/vrx_urdf:$VRX_ROOT/vrx_gz/models:$VRX_ROOT/vrx_urdf/vrx_gazebo/models:${GZ_SIM_RESOURCE_PATH:-}"
 if [[ -f /usr/share/glvnd/egl_vendor.d/10_nvidia.json ]]; then
     export __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json
 fi
