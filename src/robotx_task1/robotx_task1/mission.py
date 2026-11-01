@@ -31,6 +31,10 @@ class Mission(Node):
         self.declare_parameter('stop_speed',.04);self.declare_parameter('stop_yaw_rate',.04)
         self.declare_parameter('stop_dwell',1.5)
         self.declare_parameter('circle_completion_margin',.05)
+        # Reserve time for the 10 Hz mission tick, bridge forwarding and the
+        # independent recorder within the 0.6 s interruption response budget.
+        self.declare_parameter('observation_timeout',.35)
+        self.observation_timeout=self.get_parameter('observation_timeout').value
         self.radius=self.get_parameter('circle_radius').value
         self.circle_minimum=2*math.pi+self.get_parameter('circle_completion_margin').value
         self.stop_speed=self.get_parameter('stop_speed').value
@@ -96,7 +100,7 @@ class Mission(Node):
     def on_observation(self,msg):
         t=seconds(msg.header.stamp)
         if t<=self.last_source_stamp or msg.revision<self.last_revision:return
-        if msg.header.frame_id!='map' or not -.1<=self.now()-t<=.5:return
+        if msg.header.frame_id!='map' or not -.1<=self.now()-t<=self.observation_timeout:return
         data=[dict(id=b.id,x=b.position.x,y=b.position.y,state=b.state,radius=b.collision_radius) for b in msg.buoys]
         if len(data)!=10 or len({b['id'] for b in data})!=10:return
         if any(b['state'] not in range(5) or b['radius']<=0 or not all(math.isfinite(b[k]) for k in ('x','y','radius')) for b in data):return
@@ -150,7 +154,8 @@ class Mission(Node):
 
     def inputs_valid(self):
         return (self.obs is not None and self.obs.survey_complete and self.pose is not None and
-                -.1<=self.now()-self.last_source_stamp<=.5 and time.monotonic()-self.obs_wall<=.5 and
+                -.1<=self.now()-self.last_source_stamp<=self.observation_timeout and
+                time.monotonic()-self.obs_wall<=self.observation_timeout and
                 -.1<=self.now()-self.pose_stamp<=.5 and time.monotonic()-self.pose_wall<=.5)
 
     def select_target(self):
