@@ -6,6 +6,15 @@ import tarfile
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
+RUNTIME_SOURCES=[
+    'scripts/prepare_task1.py','scripts/prepare_navigation.py','scripts/generate_world.py',
+    'src/robotx_task1/robotx_task1/mission.py','src/robotx_task1/robotx_task1/core.py',
+    'src/robotx_task1/robotx_task1/observer.py','src/usv_nav2/usv_nav2/rover_bridge.py',
+    'src/usv_nav2/usv_nav2/task_lease.py',
+    'src/robotx_task1_nav/src/plugins.cpp','src/robotx_task1_nav/src/rotate.cpp',
+    'src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp',
+    'src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp',
+    'tools/task1_gazebo/Task1Scene.cc','models/robotx_2026_robobuoy/model.sdf']
 
 
 def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -75,10 +84,16 @@ def main():
         snapshot=run/'source_snapshot.tar.gz'
         if snapshot.exists():
             with tarfile.open(snapshot) as archive:
-                item['runtime_source_sha256']={name:hashlib.sha256(archive.extractfile(name).read()).hexdigest() for name in
-                    ['src/robotx_task1/robotx_task1/mission.py','src/robotx_task1/robotx_task1/core.py',
-                     'src/robotx_task1/robotx_task1/observer.py','src/usv_nav2/usv_nav2/rover_bridge.py',
-                     'models/robotx_2026_robobuoy/model.sdf'] if name in archive.getnames()}
+                item['runtime_source_sha256']={name:hashlib.sha256(archive.extractfile(name).read()).hexdigest()
+                                               for name in RUNTIME_SOURCES if name in archive.getnames()}
+        item['changed_runtime_sources']=[name for name in RUNTIME_SOURCES if (ROOT/name).exists() and
+                                        item.get('runtime_source_sha256',{}).get(name)!=digest(ROOT/name)]
+        item['matches_current_runtime_sources']=not item['changed_runtime_sources']
+        parameters=run/'generated/nav2_wamv.yaml'
+        if parameters.exists():
+            controller=json.loads(parameters.read_text())['controller_server']['ros__parameters']
+            item['controller_parameters']={key:controller['FollowPath'].get(key) for key in
+                                           ('sim_time','decel_lim_x','decel_lim_theta','max_vel_x','max_vel_theta')}
         attempts.append(item);latest[key]=item
     expected=[f's{s}_c{c}_{d}' for s in (1,2,3) for c,d in [(0,'none'),(1,'none'),(2,'none'),(0,'cross'),(0,'block'),(2,'cross')]]
     expected+=['fault_'+f for f in ('observation_gap','reordered_observation','mission_exit','cancel','role_change','no_path','late_change')]
@@ -89,16 +104,17 @@ def main():
            '由 `scripts/report_task1.py` 根据保留的独立裁判结果生成。完整历史（包括调试失败）见 [results.json](results.json)。',
            '每项展示最近一次已完成的尝试，可能来自较早提交；运行目录的 provenance.json 与源码快照标识当时版本。新修改不能继承旧运行的通过结论。',
            '正常任务与故障测试分开判定；程序报告 COMPLETE 不等于独立验收通过。尚未运行的组合明确列出。','',
-           '| 用例 | 判定 | 位置 / 航向误差 | 最小净空 | 证据 |',
-           '|---|---|---|---|---|']
+           '| 用例 | 判定 | 行为源码版本 | 位置 / 航向误差 | 最小净空 | 证据 |',
+           '|---|---|---|---|---|---|']
     for key in expected:
         r=latest.get(key)
-        if not r:lines.append(f'| {key} | 未验证 | — | — | — |');continue
+        if not r:lines.append(f'| {key} | 未验证 | — | — | — | — |');continue
         endpoint=r.get('endpoint')
         errors=f"{endpoint['position_m']:.3f} m / {endpoint['yaw_rad']:.3f} rad" if endpoint else '不适用／未完成'
         clearance='—' if r['clearance_m'] is None else f"{r['clearance_m']:.3f} m"
         file='task1_fault_result.json' if r['fault'] else 'task1_result.json'
-        lines.append(f"| {key} | {'通过' if r['passed'] else '失败'} | {errors} | {clearance} | [{Path(r['run']).name}](../../{r['run']}/{file}) |")
+        version='当前' if r['matches_current_runtime_sources'] else '较早；需回归'
+        lines.append(f"| {key} | {'通过' if r['passed'] else '失败'} | {version} | {errors} | {clearance} | [{Path(r['run']).name}](../../{r['run']}/{file}) |")
     lines+=['','模型和感知检查：']
     for name,items,file in [('相机灯态/实体',models,'model_validation.json'),('LiDAR 三层回波',lidars,'lidar_validation.json')]:
         if items:
@@ -108,6 +124,7 @@ def main():
             'WAM-V、固定系泊模型和本地报告不能代表正式 UAV 协同、RoboCommand 接入或实船比赛得分。']
     (out/'validation.md').write_text('\n'.join(lines)+'\n')
     print(json.dumps({'normal_passed':sum(latest[k]['passed'] for k in expected[:18] if k in latest),
+                      'current_normal_passed':sum(latest[k]['passed'] and latest[k]['matches_current_runtime_sources'] for k in expected[:18] if k in latest),
                       'fault_passed':sum(latest[k]['passed'] for k in expected[18:] if k in latest),
                       'unverified':[k for k in expected if k not in latest],'attempts':len(attempts)},ensure_ascii=False))
 

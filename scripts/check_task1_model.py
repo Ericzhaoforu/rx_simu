@@ -12,6 +12,7 @@ from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 from mavros_msgs.msg import State
+from robotx_task1.beacon_evidence import blink_evidence
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -82,8 +83,9 @@ def main():
         if semantic in (1,2,3):
             transitions=[b['stamp'] for a,b in zip(samples,samples[1:]) if (a['dominant_rgb_pixels'][channel]>10)!=(b['dominant_rgb_pixels'][channel]>10)]
             durations=[b-a for a,b in zip(transitions,transitions[1:])]
-            result[str(semantic)]['phase_durations_s']=durations
-            result[str(semantic)]['passed'] &= len(durations)>=3 and all(abs(d-1.)<=.25 for d in durations)
+            result[str(semantic)]['received_transition_intervals_s']=durations
+            result[str(semantic)]['phase_evidence']=blink_evidence(samples,channel)
+            result[str(semantic)]['passed'] &= result[str(semantic)]['phase_evidence']['passed']
     side=[r for r in rows if r['view']=='side'];side_ok=len(side)>=10 and all(max(r['dominant_rgb_pixels'])<=10 for r in side)
     off_body=[r['white_body_pixels'] for r in rows if r['view']=='top' and r['requested']==0]
     body_ok=bool(off_body and min(off_body)>1000)

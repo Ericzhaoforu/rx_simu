@@ -75,6 +75,26 @@ def analyze(run):
                 clear_delay_s=cleared['stamp']-left if cleared else None,
                 min_moving_obstacle_clearance_m=min(distances) if distances else None,samples=counts,
                 criterion='Actual global costmap marks the moving body at its crossing, then clears its former region after it leaves.')
+    if scene['task1']['dynamic']=='block':
+        mission=[json.loads(l) for l in (run/'task1_mission.jsonl').read_text().splitlines()]
+        transit=next((e['sim'] for e in mission if e['event']=='stage_target' and e['stage']=='TRANSIT'),None)
+        plan=next((e for e in events if e['topic']=='/plan' and e.get('poses') and transit is not None and e['stamp']>transit),None)
+        held=[s['stamp'] for s in states if abs(s['data']['dynamic_pose'][1])<1e-6]
+        if plan and held:
+            parameters=json.loads((run/'generated/nav2_wamv.yaml').read_text())
+            padding=parameters['local_costmap']['local_costmap']['ros__parameters']['footprint_padding']
+            padded=[[math.copysign(abs(v)+padding,v) for v in p] for p in scene['footprint']]
+            obstacle=[dict(x=x,y=0.,size=[2.,3.])]
+            minimum=lambda footprint:min(vessel_clearance(footprint,*p,obstacle) for p in plan['poses'])
+            pad_clearance=minimum(padded)
+            result=json.loads((run/'task1_result.json').read_text())
+            report['block_response']={
+                'initial_transit_plan_sim':plan['stamp'],'observed_hold_sim':[min(held),max(held)],
+                'initial_plan_physical_clearance_m':minimum(scene['footprint']),
+                'initial_plan_padded_clearance_m':pad_clearance,
+                'initial_plan_requires_avoidance':pad_clearance<=0.,
+                'mission_stops_while_held':[s for s in result['stops'] if min(held)<=s['start_sim']<=max(held)],
+                'interpretation':'Holding an obstacle nearby does not prove wait/resume behavior. The initial planned footprint must actually intersect the later held obstacle to establish a blocked-route challenge.'}
     (run/'dynamic_map_result.json').write_text(json.dumps(report,indent=2)+'\n')
     return report
 

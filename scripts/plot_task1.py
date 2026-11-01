@@ -40,6 +40,13 @@ class TaskEvidence(Evidence):
         if not self.plans:raise ValueError('No recorded reference paths')
         self.target=np.asarray((self.result.get('completion') or self.result.get('mission_status') or {})['target'])
         self.focus=min(self.rows,key=lambda r:r.get('clearance_m',math.inf))
+        self.dynamic_focus=None
+        if self.scene['task1']['dynamic']!='none':
+            from usv_sim.geometry import vessel_clearance
+            def moving_distance(row):
+                xy=self.semantic(row['sim'])['dynamic_pose'];p=row['truth']
+                return vessel_clearance(self.scene['footprint'],p[0],p[1],p[3],[dict(x=xy[0],y=xy[1],size=[2.,3.])])
+            self.dynamic_focus=min(self.rows,key=moving_distance);self.focus=self.dynamic_focus
         self.bounds=[-4,69,-17,17]
 
     def semantic(self,t):
@@ -131,11 +138,24 @@ def replay(data):
             fig.canvas.draw();process.stdin.write(fig.canvas.buffer_rgba())
     finally:process.stdin.close();code=process.wait(timeout=30);plt.close(fig)
     if code:raise RuntimeError('Video encoding failed')
-    change=next((e['sim'] for e in data.mission if e['event']=='semantic_update_reported'),data.t0+30.)
-    start=max(0.,(change-data.t0-10)/2.5)
-    subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-ss',str(start),'-t','18','-i',str(output),
-                    '-filter_complex','[0:v]scale=768:-1,split[a][b];[a]palettegen[p];[b][p]paletteuse',
-                    '-loop','0',str(data.output/'task1_excerpt.gif')],check=True)
+    excerpts(data)
+
+
+def excerpts(data):
+    output=data.output/'task1_replay.mp4'
+    fallback=data.dynamic_focus['sim'] if data.dynamic_focus else data.t0+30.
+    change=next((e['sim'] for e in data.mission if e['event']=='semantic_update_reported'),fallback)
+    excerpts={'task1_excerpt.gif':change}
+    if data.dynamic_focus:excerpts['task1_dynamic.gif']=data.dynamic_focus['sim']
+    if not data.result['passed']:
+        failure=next((e['sim'] for e in data.mission if e['event']=='stop_requested' and
+                      'controller failed' in e.get('reason','')),data.rows[-1]['sim']-15.)
+        excerpts['task1_failure.gif']=failure
+    for name,at in excerpts.items():
+        start=max(0.,(at-data.t0-10)/2.5)
+        subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-ss',str(start),'-t','18','-i',str(output),
+                        '-filter_complex','[0:v]scale=768:-1,split[a][b];[a]palettegen[p];[b][p]paletteuse',
+                        '-loop','0',str(data.output/name)],check=True)
 
 
 def camera_video(data):

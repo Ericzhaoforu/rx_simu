@@ -93,6 +93,8 @@ def start(args):
         for path in ('build/task1_gazebo/libTask1Scene.so','install/robotx_task1_nav/lib/libtask1_nav.so',
                      'install/robotx_task1_nav/lib/libtask1_rotate.so'):
             provenance['files'][path]=hashlib.sha256((ROOT/path).read_bytes()).hexdigest()
+        provenance['system_libraries']={str(path):hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in sorted(Path('/opt/ros/humble/lib/x86_64-linux-gnu').glob('libompl.so.*')) if not path.is_symlink()}
     (run/'provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
     generated = run/'generated'
     command = [sys.executable, str(ROOT/'scripts/generate_world.py'), '--output', str(generated),
