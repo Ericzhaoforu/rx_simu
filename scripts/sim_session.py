@@ -90,7 +90,8 @@ def start(args):
                  'patches/ardupilot_gazebo_rover44.patch','config/dependencies.lock.json'):
         provenance['files'][path]=hashlib.sha256((ROOT/path).read_bytes()).hexdigest()
     if args.task1:
-        for path in ('build/task1_gazebo/libTask1Scene.so','install/robotx_task1_nav/lib/libtask1_nav.so'):
+        for path in ('build/task1_gazebo/libTask1Scene.so','install/robotx_task1_nav/lib/libtask1_nav.so',
+                     'install/robotx_task1_nav/lib/libtask1_rotate.so'):
             provenance['files'][path]=hashlib.sha256((ROOT/path).read_bytes()).hexdigest()
     (run/'provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
     generated = run/'generated'
@@ -101,7 +102,7 @@ def start(args):
     subprocess.run(command, check=True, stdout=(run/'generation.log').open('w'), stderr=subprocess.STDOUT)
     if args.task1:
         from prepare_task1 import prepare
-        prepare(generated,args.seed,args.changes,args.dynamic)
+        prepare(generated,args.seed,args.changes,args.dynamic,args.task1_blocked)
     state = {'run_dir': str(run), 'firmware_revision': actual, 'processes': []}
 
     def spawn(name, command, cwd=ROOT):
@@ -215,6 +216,7 @@ def main():
     parser.add_argument('--gps-input', action='store_true')
     parser.add_argument('--replace', action='store_true')
     parser.add_argument('--task1', action='store_true')
+    parser.add_argument('--task1-blocked', action='store_true', help='Synthetic full-width wall for the no-path safety test')
     parser.add_argument('--seed', type=int, choices=(1,2,3), default=1)
     parser.add_argument('--changes', type=int, choices=(0,1,2), default=0)
     parser.add_argument('--dynamic', choices=('none','cross','block'), default='none')

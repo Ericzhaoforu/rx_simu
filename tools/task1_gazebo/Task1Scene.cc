@@ -34,11 +34,15 @@ class Task1Scene final : public gz::sim::System,
   std::map<std::string,gz::rendering::VisualPtr> visuals_;
   gz::rendering::ScenePtr scene_;
   bool described_=false;
+  void SaveSemantic(double t) {
+    state_["semantic_history"].push_back({{"stamp",t},{"revision",revision_},{"buoys",state_["buoys"]}});
+  }
  public:
   void Configure(const gz::sim::Entity &, const std::shared_ptr<const sdf::Element> &s,
                  gz::sim::EntityComponentManager &, gz::sim::EventManager &events) override {
     std::ifstream in(s->Get<std::string>("scenario"));in>>config_;
     state_=config_;
+    state_["semantic_history"]=json::array();SaveSemantic(0.);
     pub_=node_.Advertise<gz::msgs::StringMsg>("/task1/scene_state");
     node_.Subscribe("/task1/scene_command",&Task1Scene::Command,this);
     render_=events.Connect<gz::sim::events::SceneUpdate>([this]{Render();});
@@ -65,7 +69,7 @@ class Task1Scene final : public gz::sim::System,
             if(v>=0&&v<=4&&v!=b["state"].get<int>()){b["state"]=v;changed=true;}
           }
         }
-        if(changed)++revision_;
+        if(changed){++revision_;SaveSemantic(t);}
       }
     }
     if(transit_>=0) {
@@ -74,6 +78,7 @@ class Task1Scene final : public gz::sim::System,
         const auto &ev=events[applied_++];
         for(auto &b:state_["buoys"])if(b["id"]==ev["id"])b["state"]=ev["state"];
         ++revision_;
+        SaveSemantic(t);
       }
     }
     const auto mode=config_.value("dynamic",std::string("none"));
@@ -88,7 +93,7 @@ class Task1Scene final : public gz::sim::System,
         else if(elapsed<150)y=0;
         else y=std::min(14.,.175*(elapsed-150));
       }
-      const double x=32.;
+      const double x=28.; // Cross between marker columns, never through a fixed buoy.
       state_["dynamic_pose"]={x,y};
       if(moving_!=gz::sim::kNullEntity)
         gz::sim::Model(moving_).SetWorldPoseCmd(ecm,gz::math::Pose3d(x,y,.45,0,0,0));

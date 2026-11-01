@@ -38,8 +38,9 @@ def passage_events(before, after, buoys):
 
 
 class CircleTracker:
-    def __init__(self,center,direction,radius=6.):
+    def __init__(self,center,direction,radius=6.,minimum_angle=2*math.pi):
         self.center=center;self.direction=direction;self.radius=radius
+        self.minimum_angle=minimum_angle
         self.last=None;self.first=None;self.angle=0.;self.complete=False;self.wrong_way=0.
 
     def update(self,position):
@@ -51,7 +52,7 @@ class CircleTracker:
             self.angle+=delta
             if delta<0:self.wrong_way-=delta
         self.last=a
-        if self.angle>=2*math.pi and math.dist(position[:2],self.first)<=.5 and abs(math.hypot(x,y)-self.radius)<=1.:
+        if self.angle>=self.minimum_angle and math.dist(position[:2],self.first)<=.5 and abs(math.hypot(x,y)-self.radius)<=1.:
             self.complete=True
         return self.complete
 

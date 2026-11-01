@@ -46,20 +46,24 @@ def ring(name, inner, outer, bottom, top, segments=64):
 
 def main():
     (OUT/'meshes').mkdir(parents=True,exist_ok=True)
+    # 12 inches is the cut panel's slant height, not its assembled vertical height.
+    height=math.sqrt(.3048**2-(.2159-.092075)**2)
+    top=.10+height;pipe_bottom=top+.03;pipe_top=pipe_bottom+.13335
     panels=[]; diamonds=[]
     for k in range(4):
         def point(x,z,offset=0):
-            f=(z-.10)/.3048; y=-(.2159+(.092075-.2159)*f)-offset
+            f=(z-.10)/height; y=-(.2159+(.092075-.2159)*f)-offset
             a=k*math.pi/2
             return [x*math.cos(a)-y*math.sin(a), x*math.sin(a)+y*math.cos(a), z]
-        panels += [point(-.2159,.10),point(.2159,.10),point(.092075,.4048),point(-.092075,.4048)]
+        panels += [point(-.2159,.10),point(.2159,.10),point(.092075,top),point(-.092075,top)]
         # Official mark: approx 8 inches high, bottom 2.5 inches above panel base.
-        diamonds += [point(0,.1635,.001),point(.065,.2651,.001),point(0,.3667,.001),point(-.065,.2651,.001)]
+        diamonds += [point(0,.10+.0635*height/.3048,.001),point(.1016,.10+.1651*height/.3048,.001),
+                     point(0,.10+.2667*height/.3048,.001),point(-.1016,.10+.1651*height/.3048,.001)]
     faces=[f for k in range(4) for f in [(4*k,4*k+1,4*k+2),(4*k,4*k+2,4*k+3),
                                        (4*k+2,4*k+1,4*k),(4*k+3,4*k+2,4*k)]]
     mesh('panels',panels,faces);mesh('diamonds',diamonds,faces)
-    ring('beacon_pipe',.040,.04445,.435,.56835)
-    ring('sunhat',.045,.127,.56835,.57310)
+    ring('beacon_pipe',.040,.04445,pipe_bottom,pipe_top)
+    ring('sunhat',.045,.127,pipe_top,pipe_top+.00475)
     root=E.Element('sdf',version='1.9');m=add(root,'model',name='robotx_2026_robobuoy')
     add(m,'static','true');link=add(m,'link',name='body')
     def part(name,geometry,pose='0 0 0 0 0 0',color='.95 .95 .95 1',collision=False):
@@ -82,15 +86,15 @@ def main():
         x,y=.2159*math.cos(angle),.2159*math.sin(angle)
         part(f'float_{k}',('cylinder',{'radius':.0381,'length':.4318}),
              f'{x} {y} 0 1.57079632679 0 {angle}',color='.45 .12 .65 1',collision=True)
-    part('top_mount',('box',{'size':'.18 .18 .03'}),'0 0 .42 0 0 0',collision=True)
+    part('top_mount',('box',{'size':'.18 .18 .03'}),f'0 0 {top+.015} 0 0 0',collision=True)
     for k in range(4):
-        c=add(link,'collision',name=f'panel_{k}');add(c,'pose',f'0 0 .25 0 0 {k*math.pi/2}')
-        add(add(add(c,'geometry'),'box'),'size','.4318 .4318 .3048')
+        c=add(link,'collision',name=f'panel_{k}');add(c,'pose',f'0 0 {.10+height/2} 0 0 {k*math.pi/2}')
+        add(add(add(c,'geometry'),'box'),'size',f'.4318 .4318 {height}')
         break  # Conservative hull envelope; visible panels retain the official taper.
-    part('light_top',('cylinder',{'radius':.039,'length':.003}),'0 0 .558 0 0 0',color='0 0 0 1')
-    part('light_side',('cylinder',{'radius':.045,'length':.036}),'0 0 .49 0 0 0',color='0 0 0 1')
+    part('light_top',('cylinder',{'radius':.039,'length':.003}),f'0 0 {pipe_top-.01035} 0 0 0',color='0 0 0 1')
+    part('light_side',('cylinder',{'radius':.045,'length':.036}),f'0 0 {pipe_bottom+.055} 0 0 0',color='0 0 0 1')
     part('beacon_collision',('cylinder',{'radius':.04445,'length':.13335}),
-         '0 0 .501675 0 0 0',collision=True)
+         f'0 0 {pipe_bottom+.066675} 0 0 0',collision=True)
     # Its visual would occlude the emissive aperture; retain only the collision.
     link.remove(link.find("visual[@name='beacon_collision']"))
     E.indent(root);E.ElementTree(root).write(OUT/'model.sdf',encoding='utf-8',xml_declaration=True)

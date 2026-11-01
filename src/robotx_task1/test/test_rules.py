@@ -36,6 +36,14 @@ class OracleTests(unittest.TestCase):
         data['buoys'][0]['state']=3;data['buoys'][1]['state']=4
         self.assertTrue(valid_snapshot(data));data['buoys'][2]['id']='0';self.assertFalse(valid_snapshot(data))
 
+    def test_navigation_margin_does_not_relax_judge(self):
+        judge=CircleTracker([0,0],1);mission=CircleTracker([0,0],1,minimum_angle=2*math.pi+.05)
+        for i in range(630):
+            p=[6*math.cos(i*.01),6*math.sin(i*.01)];judge.update(p);mission.update(p)
+        self.assertTrue(judge.complete);self.assertFalse(mission.complete)
+        for i in range(630,636):mission.update([6*math.cos(i*.01),6*math.sin(i*.01)])
+        self.assertTrue(mission.complete)
+
     def test_nearest_tie_not_credited(self):
         self.b.append(dict(id='tie',x=0.,y=-3.,state=0,radius=.36))
         r=next(e for e in passage_events([-1,0,0],[1,0,0],self.b) if e['id']=='r')

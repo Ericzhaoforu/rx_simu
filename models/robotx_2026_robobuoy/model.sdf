@@ -140,7 +140,7 @@
         </geometry>
       </collision>
       <visual name="top_mount">
-        <pose>0 0 .42 0 0 0</pose>
+        <pose>0 0 0.39351464840291617 0 0 0</pose>
         <geometry>
           <box>
             <size>.18 .18 .03</size>
@@ -152,7 +152,7 @@
         </material>
       </visual>
       <collision name="top_mount_collision">
-        <pose>0 0 .42 0 0 0</pose>
+        <pose>0 0 0.39351464840291617 0 0 0</pose>
         <geometry>
           <box>
             <size>.18 .18 .03</size>
@@ -160,15 +160,15 @@
         </geometry>
       </collision>
       <collision name="panel_0">
-        <pose>0 0 .25 0 0 0.0</pose>
+        <pose>0 0 0.2392573242014581 0 0 0.0</pose>
         <geometry>
           <box>
-            <size>.4318 .4318 .3048</size>
+            <size>.4318 .4318 0.2785146484029162</size>
           </box>
         </geometry>
       </collision>
       <visual name="light_top">
-        <pose>0 0 .558 0 0 0</pose>
+        <pose>0 0 0.5315146484029162 0 0 0</pose>
         <geometry>
           <cylinder>
             <radius>0.039</radius>
@@ -182,7 +182,7 @@
         </material>
       </visual>
       <visual name="light_side">
-        <pose>0 0 .49 0 0 0</pose>
+        <pose>0 0 0.4635146484029162 0 0 0</pose>
         <geometry>
           <cylinder>
             <radius>0.045</radius>
@@ -196,7 +196,7 @@
         </material>
       </visual>
       <collision name="beacon_collision_collision">
-        <pose>0 0 .501675 0 0 0</pose>
+        <pose>0 0 0.47518964840291616 0 0 0</pose>
         <geometry>
           <cylinder>
             <radius>0.04445</radius>

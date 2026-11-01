@@ -16,6 +16,7 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--group',choices=('base','dynamic','all'),default='base')
     p.add_argument('--seed',type=int,choices=(1,2,3));p.add_argument('--changes',type=int,choices=(0,1,2))
     p.add_argument('--dynamic',choices=('none','cross','block'));p.add_argument('--record-maps',action='store_true')
+    p.add_argument('--fault',choices=('observation_gap','reordered_observation','mission_exit','cancel','role_change','no_path'))
     p.add_argument('--no-video',action='store_true');a=p.parse_args()
     if (ROOT/'runs/session.json').exists():raise RuntimeError('Stop the current managed session before running a cold-start suite')
     cases=[]
@@ -24,13 +25,16 @@ def main():
     if a.group in ('dynamic','all'):
         cases += [dict(seed=s,changes=c,dynamic=d) for s in (1,2,3) for c,d in ((0,'cross'),(0,'block'),(2,'cross'))]
     cases=[c for c in cases if all(getattr(a,k) is None or c[k]==getattr(a,k) for k in ('seed','changes','dynamic'))]
+    if a.fault:cases=[dict(seed=1,changes=0,dynamic='none',fault=a.fault)]
     if not cases:raise ValueError('No matching cases')
     ledger=ROOT/'runs'/('task1_suite_'+datetime.datetime.now().strftime('%Y%m%d_%H%M%S')+'.json')
     results=[]
     for case in cases:
         name=f"task1_s{case['seed']}_c{case['changes']}_{case['dynamic']}"
+        if a.fault:name+='_'+a.fault
         command=[sys.executable,str(ROOT/'scripts/sim_session.py'),'start','--task1','--navigation','--control',
                  '--name',name,'--seed',str(case['seed']),'--changes',str(case['changes']),'--dynamic',case['dynamic']]
+        if a.fault=='no_path':command.append('--task1-blocked')
         old=(ROOT/'runs/latest.txt').read_text().strip() if (ROOT/'runs/latest.txt').exists() else None
         supervisor=subprocess.Popen(command,stdout=(ROOT/'log'/f'{name}_supervisor.log').open('w'),stderr=subprocess.STDOUT)
         recorder=None;run=None;item={'case':case}
@@ -47,7 +51,8 @@ def main():
                 recorder=subprocess.Popen([sys.executable,str(ROOT/'scripts/record_navigation.py'),'--run-dir',str(run)],
                                            stdout=(run/'record_navigation.log').open('w'),stderr=subprocess.STDOUT)
             command=[sys.executable,str(ROOT/'scripts/validate_task1.py')]
-            if a.no_video:command.append('--no-video')
+            if a.fault:command=[sys.executable,str(ROOT/'scripts/validate_task1_fault.py'),a.fault]
+            elif a.no_video:command.append('--no-video')
             result=subprocess.run(command,stdout=(run/'test_console.log').open('w'),stderr=subprocess.STDOUT,timeout=2500)
             item['exit_code']=result.returncode
         except Exception as error:item['error']=repr(error)
@@ -63,9 +68,11 @@ def main():
             from robotx_task1.judge import evaluate
             try:item['result']=evaluate(run)
             except Exception as error:item['judge_error']=repr(error)
+        if a.fault and run and (run/'task1_fault_result.json').exists():
+            item['fault_result']=json.loads((run/'task1_fault_result.json').read_text())
         results.append(item);ledger.write_text(json.dumps(results,indent=2)+'\n');print(json.dumps(item),flush=True)
     print('Ledger:',ledger,flush=True)
-    if not all(r.get('result',{}).get('passed',False) for r in results):raise SystemExit(1)
+    if not all(r.get('fault_result' if a.fault else 'result',{}).get('passed',False) for r in results):raise SystemExit(1)
 
 
 if __name__=='__main__':main()

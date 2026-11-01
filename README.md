@@ -8,6 +8,8 @@
 
 到点和取消后的十秒观测中仍有约 ±0.6 N 的小幅差动推力；发出零速度不能等同于推进器停机。disarm 和进程故障的反馈测量单独记录在报告中。
 
+RobotX 2026 Task 1 使用独立的新 RoboBuoy 模型、已知 UAV 观测替身、规则规划和本地独立裁判。使用方法见 [Task 1 运行说明](docs/task1/runbook.md)，失败根因见 [调试记录](docs/task1/debug_log.md)。正式 UAV 感知和 RoboCommand 上报不在本轮实现范围。
+
 ## 启动
 
 本服务器的 Ubuntu 22.04、ROS 2 Humble、Garden 7.9 与既有 VRX 安装是环境基础。新增依赖安装在仓库的 `external/`，不要求 sudo，不覆盖既有工程。详细依赖和排障见 [运行说明](docs/runbook.md)。

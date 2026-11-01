@@ -24,5 +24,7 @@ int main(){
   try{search({-5,0,0},{5,0,0},{},false,0,[](const Pose &p){return std::abs(p.x)<.4||std::abs(p.x)>8||std::abs(p.y)>1?
       std::numeric_limits<double>::infinity():0.;},.5);}catch(const std::runtime_error&){blocked=true;}
   check(blocked,"blocked corridor returns failure");
-  std::cout<<"11 rule/search checks passed; states="<<result.expanded<<"\n";
+  check(!rule_clearance({0,0,pi},{{"red",0,-3,.3,1}}),"wrong-side abeam has planning margin");
+  check(rule_clearance({-2,0,pi},{{"red",0,-3,.3,1}}),"margin is local to abeam");
+  std::cout<<"13 rule/search checks passed; states="<<result.expanded<<"\n";
 }

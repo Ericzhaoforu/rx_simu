@@ -53,6 +53,20 @@ inline int passage(const Pose &a,const Pose &b,const std::vector<Buoy> &buoys) {
   return bits;
 }
 
+// Keep the planned trajectory away from a forbidden abeam crossing. This is a
+// planning margin only; the independent judge still evaluates the exact rule.
+inline bool rule_clearance(const Pose &p,const std::vector<Buoy> &buoys) {
+  for(const auto &b:buoys) {
+    if(b.state!=1&&b.state!=2)continue;
+    const auto rel=body(p,b);
+    if(std::abs(rel[0])>1.0||(b.state==1?rel[1]<0:rel[1]>0))continue;
+    const double d=std::hypot(b.x-p.x,b.y-p.y);bool shielded=false;
+    for(const auto &other:buoys)if(other.id!=b.id&&body(p,other)[1]*rel[1]>0&&
+        std::hypot(other.x-p.x,other.y-p.y)<d-.3){shielded=true;break;}
+    if(!shielded)return false;
+  }return true;
+}
+
 struct SearchResult {std::vector<Pose> path;size_t expanded=0;};
 // Collision callback returns nonnegative traversal cost, infinity for forbidden hull poses.
 inline SearchResult search(const Pose &start,const Pose &goal,const std::vector<Buoy> &buoys,
@@ -64,13 +78,15 @@ inline SearchResult search(const Pose &start,const Pose &goal,const std::vector<
   std::unordered_map<std::string,double> best;
   auto key=[](const Pose &p,int bits){return std::to_string(std::lround(p.x/.4))+","+
       std::to_string(std::lround(p.y/.4))+","+std::to_string(int(std::lround(wrap(p.h)*36/(2*pi))+36)%36)+","+std::to_string(bits);};
-  auto heuristic=[&](const Pose &p){return std::hypot(goal.x-p.x,goal.y-p.y)+.25*std::abs(wrap(goal.h-p.h));};
+  // Weighted A*: favor timely legal routes over optimal length. Collision and
+  // passage constraints remain hard checks on every interpolated edge.
+  auto heuristic=[&](const Pose &p){return 1.4*(std::hypot(goal.x-p.x,goal.y-p.y)+.25*std::abs(wrap(goal.h-p.h)));};
   auto edge=[&](const Pose &a,const Pose &b,int &bits,double &penalty){
     int n=std::max(2,int(std::ceil(std::max(std::hypot(b.x-a.x,b.y-a.y)/.1,std::abs(wrap(b.h-a.h))/.06))));
     Pose previous=a;penalty=0;
     for(int j=1;j<=n;++j){const Pose q=interpolate(a,b,double(j)/n);double v=cost(q);
       if(!std::isfinite(v))return false;
-      if(enforce){int result=passage(previous,q,buoys);if(result<0)return false;bits|=result;}
+      if(enforce){if(!rule_clearance(q,buoys))return false;int result=passage(previous,q,buoys);if(result<0)return false;bits|=result;}
       penalty+=v/n;previous=q;
     }return true;
   };
@@ -96,9 +112,11 @@ inline SearchResult search(const Pose &start,const Pose &goal,const std::vector<
         std::reverse(result.path.begin(),result.path.end());return result;
       }
     }
-    for(int action=0;action<5;++action) {
-      const bool pivot=action>=3;
-      const double turn=(pivot?(action==3?-1:1):action-1)*2*pi/36;
+    for(int action=0;action<(enforce?5:7);++action) {
+      // DWB tracks forward curves; a mid-course pivot is unsafe on a drifting
+      // vessel near an abeam boundary. Pivots remain available for approach.
+      const bool pivot=action>=5;
+      const double turn=(pivot?(action==5?-1:1):action-2)*2*pi/36;
       const double length=pivot?0:.6;
       Pose next{current.p.x+length*std::cos(current.p.h+turn/2),
                 current.p.y+length*std::sin(current.p.h+turn/2),wrap(current.p.h+turn)};

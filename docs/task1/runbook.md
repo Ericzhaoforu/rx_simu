@@ -1,0 +1,75 @@
+# Task 1 复现流程
+
+工作目录 `/home/zjy/usv_nav`。先读 `implementation.md` 的规则边界和 `validation.md` 的实际通过/失败记录。首次环境安装、固定固件及原始导航流程沿用仓库主 README。
+
+## 构建与检查
+
+```bash
+source scripts/env.sh
+colcon build --symlink-install --base-paths src --cmake-args -DCMAKE_BUILD_TYPE=Release
+cmake -S tools/task1_gazebo -B build/task1_gazebo -DCMAKE_BUILD_TYPE=Release
+cmake --build build/task1_gazebo -j4
+(cd src/usv_nav2 && python3 -m unittest discover -s test -v)
+python3 -m unittest discover -s src/robotx_task1/test -v
+ROS_DOMAIN_ID=43 python3 -m unittest discover -s src/robotx_task1/test_ros -v
+build/robotx_task1_nav/test_rules
+git diff --check
+```
+
+运行过程中不要覆盖已加载的共享库。运行文件由 `sim_session.py` 创建在忽略目录 runs 中；每次保存本仓库源码快照、固件/插件哈希、生成世界与参数，不覆盖既有工程。
+
+## 场景及任务
+
+只看模型，控制保持关闭：
+
+```bash
+source scripts/env.sh
+python3 scripts/sim_session.py start --task1 --navigation --name task1_preview
+```
+
+另一个已 source 的终端运行 `python3 scripts/check_task1_model.py` 检查真实相机五种灯态、1 s 亮/1 s 暗、OFF 实体和侧视遮光；`python3 scripts/check_task1_lidar.py` 记录原始点云、过滤点云和扫描回波。模型检查要求 SITL 未解锁，会改变测试浮标的灯态。结束用 `python3 scripts/sim_session.py stop`。
+
+完整任务由以下命令执行正常解锁、任务开始、证据记录、10 s 末端漂移记录和清理：
+
+```bash
+python3 scripts/run_task1_suite.py --seed 1 --changes 2 --record-maps
+```
+
+`--group all --record-maps` 共 18 项：3 种固定布局 × 0/1/2 次语义变化，以及各布局的横穿、临时阻挡、横穿加两次灯变。seed 3 含一个 OFF 实体。`--group dynamic --seed 1 --changes 0 --dynamic cross` 可单独选例。无匹配时脚本报错，失败运行保留，结果按独立裁判判定，不以进程退出码代替任务成功。
+
+人工观察时，可先 `sim_session.py start --task1 --navigation --control ...`，再运行 `validate_task1.py`；控制开启只面向脚本核验过的本次固定版本 SITL。不要同时运行其他速度控制器。
+
+异常场景分别冷启动：
+
+```bash
+python3 scripts/run_task1_suite.py --fault observation_gap
+python3 scripts/run_task1_suite.py --fault reordered_observation
+python3 scripts/run_task1_suite.py --fault mission_exit
+python3 scripts/run_task1_suite.py --fault cancel
+python3 scripts/run_task1_suite.py --fault role_change
+python3 scripts/run_task1_suite.py --fault no_path
+```
+
+异常测试的“通过”表示按预期停车/拒绝任务，和正常 Task1 完成分开存储。重放观测保留原时间戳。任务进程退出时，飞控、MAVROS 和物理仿真继续运行。
+
+## 数据和图像
+
+每次目录包含 task1_mission.jsonl（事件）、task1_judge.jsonl（独立真值、场景、接触）、task1.jsonl（指令、EKF、推力反馈、真值）、task1_result.json（独立判定）、task1_execution.json（动作执行）、两个实际相机 MP4。推进器力由 Gazebo Thruster 反馈角速度和固定配置反算，详见 thrust_observation.json，不是实体测力计或轴动力学模型。
+
+启动时选择 `--record-maps` 才能生成地图回放：
+
+```bash
+python3 scripts/plot_task1.py runs/实际运行目录 --animate
+```
+
+visualization 中提供参考路径/真值/EKF 航迹、期望末端与误差、实际静态/全局/局部地图、MP4 和 GIF。参考是空间路径，不是带时序的速度轨迹；GIF 是全视频节选。所有浮标实体持续绘制；空心灯标为闪烁暗相位，深灰为语义 OFF。
+
+## 已知观察接口与规则规划
+
+`/task1/observations` 为 BuoyArray：map 坐标、源时间戳、完整十个 ID、碰撞半径、语义状态、revision、survey_complete。已知 UAV 替身从 Gazebo 场景取得这些信息；没有读取船体真值定位。将来接视觉时保持此契约和来源时间，不把旧观测改成新时间戳。
+
+任务机先检查全部调查记录，再依次接近入口、顺时针完整绕圈、合法穿越、逆时针完整绕出口。全局规划含位置、航向和红/绿通过标志；使用权重 1.4 的 A*、0.4 m 状态格、36 航向、0.6 m 前向运动边、逐 0.1 m 碰撞/规则检查、3 s 搜索预算。穿越段仅生成可前向跟踪的曲线，不生成原地转向段；错误侧正横边界留 1 m 纵向余量，判断更近的遮挡浮标时留 0.3 m 余量。独立裁判仍按原始正横规则计量。局部 DWB 增加硬性规则 critic 和可恢复的末端转向 critic。动态障碍由物理 LiDAR 感知，未向规划器发布障碍物真值轨迹。
+
+语义变化时版本作废并取消动作；运动许可为 0.5 s 租约。EKF 平动低于 0.04 m/s、角速低于 0.04 rad/s，持续 1.5 s 后才重新规划。该余量来自实测 EKF 与真值速度的短时差异。独立裁判另外用真值低于 0.05 m/s / 0.05 rad/s、持续 1 s 检查停车；发零、推进器反馈、停车距离和仿真帧推进分别报告。闪烁暗相位不增加版本，也不触发重规划。
+
+入口/出口身份中途重分配按不支持场景中止；无合法路径保持停车重试，整场 1200 仿真秒超时。没有新增 RTK/EKF 质量策略或持续定点保持。新模型用固定系泊和保守碰撞外廓，适合本轮船端规则测试，尚不代表波浪中的浮标运动或真实相机识别精度。

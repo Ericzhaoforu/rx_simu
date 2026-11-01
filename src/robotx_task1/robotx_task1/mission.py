@@ -28,7 +28,13 @@ class Mission(Node):
     def __init__(self):
         super().__init__('task1_mission')
         self.declare_parameter('run_dir','');self.declare_parameter('circle_radius',6.)
+        self.declare_parameter('stop_speed',.04);self.declare_parameter('stop_yaw_rate',.04)
+        self.declare_parameter('stop_dwell',1.5)
+        self.declare_parameter('circle_completion_margin',.05)
         self.radius=self.get_parameter('circle_radius').value
+        self.circle_minimum=2*math.pi+self.get_parameter('circle_completion_margin').value
+        self.stop_speed=self.get_parameter('stop_speed').value
+        self.stop_yaw=self.get_parameter('stop_yaw_rate').value;self.stop_dwell=self.get_parameter('stop_dwell').value
         run=self.get_parameter('run_dir').value
         self.log=(Path(run)/'task1_mission.jsonl').open('w') if run else None
         self.obs=None;self.buoys=[];self.pose=None;self.odom=None;self.pose_stamp=-1.;self.pose_wall=0.
@@ -84,6 +90,7 @@ class Mission(Node):
         self.permission(False);self.event('stop_requested',reason=reason)
 
     def abort(self,reason):
+        if self.stage=='ABORTED':return
         self.interrupt(reason);self.stage='ABORTED';self.motion='ABORTED';self.event('aborted',reason=reason)
 
     def on_observation(self,msg):
@@ -158,7 +165,7 @@ class Mission(Node):
 
     def advance(self):
         if self.stage=='APPROACH_ENTRY':
-            self.stage='CIRCLE_ENTRY';self.arc_index=1;self.circle=CircleTracker([self.entry['x'],self.entry['y']],-1,self.radius);self.circle.update(self.pose)
+            self.stage='CIRCLE_ENTRY';self.arc_index=1;self.circle=CircleTracker([self.entry['x'],self.entry['y']],-1,self.radius,self.circle_minimum);self.circle.update(self.pose)
         elif self.stage in ('CIRCLE_ENTRY','CIRCLE_EXIT'):
             if self.circle.complete:
                 if self.stage=='CIRCLE_ENTRY':
@@ -172,8 +179,8 @@ class Mission(Node):
                 if self.arc_index>10:self.abort('full circle closure was not achieved');return
         elif self.stage=='TRANSIT':
             if self.bits!=3:self.abort('transit finished without both valid colors');return
-            self.stage='CIRCLE_EXIT';self.arc_index=1;self.circle=CircleTracker([self.exit['x'],self.exit['y']],1,self.radius);self.circle.update(self.pose)
-        self.select_target();self.motion='STOPPING';self.still_since=None
+            self.stage='CIRCLE_EXIT';self.arc_index=1;self.circle=CircleTracker([self.exit['x'],self.exit['y']],1,self.radius,self.circle_minimum);self.circle.update(self.pose)
+        self.select_target();self.motion='STOPPING';self.still_since=None;self.reason='stage transition; wait for vessel stop'
         self.event('stage_target',target=self.target)
 
     def request_plan(self):
@@ -232,11 +239,11 @@ class Mission(Node):
                     self.stage='APPROACH_ENTRY';self.select_target();self.event('survey_accepted',target=self.target)
                 if self.motion in ('STOPPING','WAIT_CLEAR'):
                     v=self.odom.twist.twist.linear;w=self.odom.twist.twist.angular
-                    if math.hypot(v.x,v.y)<.05 and abs(w.z)<.05:
+                    if math.hypot(v.x,v.y)<self.stop_speed and abs(w.z)<self.stop_yaw:
                         if self.still_since is None:self.still_since=self.now()
                     else:self.still_since=None
                     free=not any((self.follow_handle,self.send_future,self.plan_future,getattr(self,'plan_result',None)))
-                    if free and self.still_since is not None and self.now()-self.still_since>=1. and self.now()-self.last_retry>=2.:
+                    if free and self.still_since is not None and self.now()-self.still_since>=self.stop_dwell and self.now()-self.last_retry>=2.:
                         self.request_plan()
         allow=self.motion=='EXECUTING' and self.inputs_valid() and self.stage not in ('COMPLETE','ABORTED')
         self.permission(allow)
@@ -249,7 +256,8 @@ class Mission(Node):
 def main():
     rclpy.init();node=Mission()
     try:rclpy.spin(node)
-    except KeyboardInterrupt:node.permission(False)
+    except KeyboardInterrupt:
+        if rclpy.ok():node.permission(False)
     finally:
         if node.log:node.log.close()
         node.destroy_node();rclpy.try_shutdown()

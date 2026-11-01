@@ -1,11 +1,11 @@
 #include "robotx_task1_nav/rules.hpp"
 #include <mutex>
+#include <set>
 #include <nav2_core/global_planner.hpp>
 #include <nav2_costmap_2d/layer.hpp>
 #include <nav2_costmap_2d/footprint_collision_checker.hpp>
 #include <dwb_core/trajectory_critic.hpp>
 #include <dwb_core/exceptions.hpp>
-#include <dwb_critics/rotate_to_goal.hpp>
 #include <pluginlib/class_list_macros.hpp>
 #include <robotx_task1_interfaces/msg/buoy_array.hpp>
 #include <robotx_task1_interfaces/msg/mission_context.hpp>
@@ -16,15 +16,26 @@ using Context=robotx_task1_interfaces::msg::MissionContext;
 double yaw(const geometry_msgs::msg::Quaternion &q){return std::atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z));}
 Pose pose(const geometry_msgs::msg::Pose &p){return {p.position.x,p.position.y,yaw(p.orientation)};}
 std::vector<Buoy> markers(const Observations &o){std::vector<Buoy> v;for(const auto &b:o.buoys)v.push_back({b.id,b.position.x,b.position.y,b.collision_radius,b.state});return v;}
+bool valid(const Observations &o) {
+  if(o.header.frame_id!="map"||o.buoys.size()!=10)return false;
+  std::set<std::string> ids;int entry=0,exit=0;
+  for(const auto &b:o.buoys){
+    if(b.id.empty()||!ids.insert(b.id).second||b.state>4||!std::isfinite(b.position.x)||
+       !std::isfinite(b.position.y)||!std::isfinite(b.collision_radius)||b.collision_radius<=0)return false;
+    entry+=b.state==3;exit+=b.state==4;
+  }return entry==1&&exit==1;
+}
 struct Input {
   std::mutex mutex;Observations observations;Context context;
   rclcpp::Subscription<Observations>::SharedPtr os;
   rclcpp::Subscription<Context>::SharedPtr cs;
   void attach(const rclcpp_lifecycle::LifecycleNode::SharedPtr &node) {
     os=node->create_subscription<Observations>("/task1/observations",10,[this](const Observations::SharedPtr m){
-      std::lock_guard<std::mutex> l(mutex);if(m->header.frame_id=="map"&&m->revision>=observations.revision)observations=*m;});
+      std::lock_guard<std::mutex> l(mutex);
+      if(valid(*m)&&m->revision>=observations.revision&&rclcpp::Time(m->header.stamp)>rclcpp::Time(observations.header.stamp))observations=*m;});
     cs=node->create_subscription<Context>("/task1/context",10,[this](const Context::SharedPtr m){
-      std::lock_guard<std::mutex> l(mutex);context=*m;});
+      std::lock_guard<std::mutex> l(mutex);
+      if(m->header.frame_id=="map"&&m->revision>=context.revision&&rclcpp::Time(m->header.stamp)>rclcpp::Time(context.header.stamp))context=*m;});
   }
   bool read(const rclcpp::Time &now,Observations &o,Context &c) {
     std::lock_guard<std::mutex> l(mutex);o=observations;c=context;
@@ -116,32 +127,19 @@ class RuleCritic : public dwb_core::TrajectoryCritic {
   }
 };
 
-// Upstream 1.1.20 RotateToGoal permanently latches its window. A floating hull
-// can drift outside it while a non-stateful goal checker still requires position.
-// Reset that latch when position is outside; retain the upstream yaw/braking logic.
-class RecoverableRotateCritic : public dwb_critics::RotateToGoalCritic {
-  double tolerance_=.4;
- public:
-  void onInit() override {
-    dwb_critics::RotateToGoalCritic::onInit();
-    node_.lock()->get_parameter(dwb_plugin_name_+".xy_goal_tolerance",tolerance_);
-  }
-  bool prepare(const geometry_msgs::msg::Pose2D &p,const nav_2d_msgs::msg::Twist2D &v,
-               const geometry_msgs::msg::Pose2D &g,const nav_2d_msgs::msg::Path2D &path) override {
-    if(std::hypot(p.x-g.x,p.y-g.y)>tolerance_)reset();
-    return dwb_critics::RotateToGoalCritic::prepare(p,v,g,path);
-  }
-};
 
 class KnownBuoys : public nav2_costmap_2d::Layer {
   std::mutex mutex_;std::vector<Buoy> buoys_;
+  uint64_t revision_=0;int64_t stamp_=0;
   rclcpp::Subscription<Observations>::SharedPtr sub_;
  public:
   void onInitialize() override {
     enabled_=true;current_=true;auto node=node_.lock();
     sub_=node->create_subscription<Observations>("/task1/observations",10,[this](const Observations::SharedPtr m){
-      if(m->header.frame_id!="map")return;
-      std::lock_guard<std::mutex> lock(mutex_);buoys_=markers(*m);});
+      if(!valid(*m))return;
+      std::lock_guard<std::mutex> lock(mutex_);auto t=rclcpp::Time(m->header.stamp).nanoseconds();
+      if(t<=stamp_||m->revision<revision_)return;
+      buoys_=markers(*m);stamp_=t;revision_=m->revision;});
   }
   void reset() override {current_=true;}
   bool isClearable() override{return false;}
@@ -162,5 +160,4 @@ class KnownBuoys : public nav2_costmap_2d::Layer {
 } // namespace
 PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::RulePlanner,nav2_core::GlobalPlanner)
 PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::RuleCritic,dwb_core::TrajectoryCritic)
-PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::RecoverableRotateCritic,dwb_core::TrajectoryCritic)
 PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::KnownBuoys,nav2_costmap_2d::Layer)
