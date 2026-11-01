@@ -15,6 +15,8 @@ cmake --build build/task1_gazebo -j4
 python3 -m unittest discover -s src/robotx_task1/test -v
 ROS_DOMAIN_ID=43 python3 -m unittest discover -s src/robotx_task1/test_ros -v
 build/robotx_task1_nav/test_rules
+build/robotx_task1_nav/test_hull
+python3 -m unittest discover -s src/usv_sim/test -v
 git diff --check
 ```
 
@@ -40,6 +42,10 @@ python3 scripts/run_task1_suite.py --seed 1 --changes 2 --record-maps
 ```
 
 `--group all --record-maps` 共 18 项：3 种固定布局 × 0/1/2 次语义变化，以及各布局的横穿、临时阻挡、横穿加两次灯变。seed 3 含一个 OFF 实体。`--group dynamic --seed 1 --changes 0 --dynamic cross` 可单独选例。无匹配时脚本报错，失败运行保留，结果按独立裁判判定，不以进程退出码代替任务成功。
+
+排查感知问题时加 `--record-sensors`，在 `sensors/` 保存原始/过滤/标记/清除点云、扫描、TF、时钟、EKF 和指令。测试脚本检测到实际接触后请求任务取消并继续记录 10 s；这是测试端中止，不能算作导航本身主动避碰。
+
+额外观测距离候选未能解决恢复问题，默认关闭。仅复现这个候选时添加 `run_task1_suite.py --visibility-guard`，或手动启动时加 `sim_session.py --task1-visibility-guard`；不要将它当作已经通过的动态避障策略。
 
 人工观察时，可先 `sim_session.py start --task1 --navigation --control ...`，再运行 `validate_task1.py`；控制开启只面向脚本核验过的本次固定版本 SITL。不要同时运行其他速度控制器。
 
@@ -103,6 +109,8 @@ visualization 中提供参考路径/真值/EKF 航迹、期望末端与误差、
 | 全局地图 | 100 m × 100 m 水域，0.2 m 栅格，2 Hz 更新 |
 | 局部地图 | 30 m × 30 m 滚动窗口，0.05 m 栅格，5 Hz 更新 |
 | LaserScan 投影 | `pointcloud_to_laserscan`，`base_stabilized`，高度 0.25–3 m，角分辨率 0.5°，距离 0.3–20 m |
+| Task1 障碍层候选 | VoxelLayer：16 层 × 0.2 m，起点 z = −0.2 m；真实返回标记、三维射线清除，不清空 padded footprint |
+| 额外观测距离 | 默认 0（关闭）；实验开关启用时约 5.98 m，按 `(1.8−0.25)/tan(15°)+0.2` 计算；已知浮标只豁免此额外距离，仍做实体碰撞检查 |
 | 障碍标记 / 射线清除 | 15 m / 20 m；已知浮标层持续保留 OFF 实体 |
 | 桥输入超时 | 指令、odom、scan 各 0.5 s，飞控 state 2 s；桥发布 20 Hz |
 

@@ -19,13 +19,18 @@ flowchart LR
     Obs --> Bodies[已知浮标占据层：包括 OFF]
     Lidar[VRX 16 线 LiDAR] --> Filter[船体点过滤]
     Filter --> Scan[pointcloud_to_laserscan / scan_guard]
-    Scan --> Cost[Nav2 costmap]
+    Filter --> Mark[按稳定船体高度过滤真实返回]
+    Lidar --> Rays[保留三维方向的清除射线]
+    Mark --> Voxel[VoxelLayer 三维占据和清除]
+    Rays --> Voxel
+    Voxel --> Cost[Nav2 costmap]
     Bodies --> Cost
     Cost --> Rules
     Mission --> Actions[ComputePathToPose / FollowPath]
     Actions --> Rules
     Rules --> Cmd["/usv/cmd_vel"]
     Cmd --> Bridge[rover_bridge]
+    Scan -->|源数据有效性检查| Bridge
     Mission --> Lease[0.5 s 运动许可租约]
     Lease --> Bridge
     Bridge --> MAVROS
@@ -46,3 +51,5 @@ flowchart LR
 “已知 UAV”目前直接读取场景的浮标配置与灯态，未从相机图像识别；摄像头用于检查新模型及保存证据。Task1 不订阅船体真值作为导航定位，动态障碍轨迹也不注入规划器。独立裁判读取真实运动、接触和灯变生效时间，分别检查规则和停车。
 
 控制器以 EKF 判断绕圈时额外要求 0.05 rad 的累计角度余量；独立裁判仍要求真值完整 2π 和回到绕圈起点附近。该余量用于吸收 EKF 与真值的小差异，不能作为降低完整绕圈标准的理由。
+
+Task1 新候选使用三维 VoxelLayer，避免从低矮障碍上方穿过的射线在二维投影中清空整列。`pointcloud_to_laserscan` 和 `/scan` 仍保留，桥继续检查扫描有效性；原导航场景仍使用原扫描地图。全局规划与 DWB 增加完整凸船体内部占据检查。此处描述实现，是否通过动态碰撞测试以验证报告为准。

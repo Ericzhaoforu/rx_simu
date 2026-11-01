@@ -39,8 +39,10 @@ def main():
         for xy in fp:f.write(' '.join(map(str,xy))+'\n')
         np.savetxt(f,grid,fmt='%d')
     results={}
+    task=config['planner_server']['ros__parameters']['Task1']
+    visibility=[str(task.get(k,0.)) for k in ('visibility_clearance','lidar_x','lidar_y')]
     for mode in ('euclidean','dubins'):
-        r=subprocess.run([str(ROOT/'build/task1_search/replay'),str(data),mode],capture_output=True,text=True,check=True)
+        r=subprocess.run([str(ROOT/'build/task1_search/replay'),str(data),mode,*visibility],capture_output=True,text=True,check=True)
         results[mode]=r.stdout.strip()
     results.update(map_stamp=event['stamp'],requested_stamp=t,source=str(run),limitation='Recorded OccupancyGrid quantizes nonlethal costs; offline search only.')
     (out/f'{t:.3f}.json').write_text(json.dumps(results,indent=2)+'\n');print(json.dumps(results))

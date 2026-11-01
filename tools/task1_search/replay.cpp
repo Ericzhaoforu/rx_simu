@@ -2,13 +2,15 @@
 // this diagnoses search, and never substitutes for a live planning test.
 #include "robotx_task1_nav/rules.hpp"
 #include "robotx_task1_nav/dubins_estimate.hpp"
+#include "robotx_task1_nav/hull_grid.hpp"
 #include <nav2_costmap_2d/footprint_collision_checker.hpp>
 #include <ompl/base/spaces/DubinsStateSpace.h>
 #include <fstream>
 #include <iostream>
 using namespace robotx_task1_nav;
 int main(int argc,char **argv) {
-  if(argc!=3)throw std::runtime_error("replay INPUT euclidean|dubins");
+  if(argc!=3&&argc!=6)throw std::runtime_error("replay INPUT euclidean|dubins [visibility_range lidar_x lidar_y]");
+  const double visibility=argc==6?std::stod(argv[3]):0.,lx=argc==6?std::stod(argv[4]):0.,ly=argc==6?std::stod(argv[5]):0.;
   std::ifstream in(argv[1]);unsigned w,h,n;double res,ox,oy;
   in>>w>>h>>res>>ox>>oy;
   Pose start,goal;int bits;
@@ -19,10 +21,14 @@ int main(int argc,char **argv) {
   for(unsigned y=0;y<h;++y)for(unsigned x=0;x<w;++x){int v;in>>v;map.setCost(x,y,v);}
   if(!in)throw std::runtime_error("Incomplete input");
   nav2_costmap_2d::FootprintCollisionChecker<nav2_costmap_2d::Costmap2D*> checker(&map);
+  HullGrid occupied;occupied.reset(map,footprint,buoys);
   auto cost=[&](const Pose &p){
     unsigned mx,my;if(!map.worldToMap(p.x,p.y,mx,my)||map.getCost(mx,my)>=253)return INFINITY;
     double v=checker.footprintCostAtPose(p.x,p.y,p.h,footprint);
     if(v>=254||v<0)return INFINITY;
+    if(occupied.collides(p))return INFINITY;
+    if(occupied.unknownWithin(p.x+std::cos(p.h)*lx-std::sin(p.h)*ly,
+                             p.y+std::sin(p.h)*lx+std::cos(p.h)*ly,visibility))return INFINITY;
     for(const auto &b:buoys){auto xy=body(p,b);bool inside=false;double d=1e9;
       for(size_t i=0,j=footprint.size()-1;i<footprint.size();j=i++){
         auto a=footprint[j],c=footprint[i];double dx=c.x-a.x,dy=c.y-a.y;

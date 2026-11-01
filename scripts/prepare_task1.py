@@ -13,7 +13,7 @@ sys.path.insert(0,str(ROOT/'src/usv_nav2'))
 from usv_nav2.make_water_map import write_map
 
 
-def prepare(out, seed=1, changes=0, dynamic='none', blocked=False):
+def prepare(out, seed=1, changes=0, dynamic='none', blocked=False, visibility_guard=False):
     from generate_world import element, set_text, box
     out=Path(out);rng=random.Random(seed)
     defaults=json.loads((ROOT/'config/task1/defaults.json').read_text())
@@ -28,7 +28,8 @@ def prepare(out, seed=1, changes=0, dynamic='none', blocked=False):
     if seed==3:next(b for b in buoys if b['id']=='buoy_07')['state']=0
     events=[{'after_s':20.,'id':'buoy_03','state':1}, {'after_s':65.,'id':'buoy_06','state':2}][:changes]
     scenario={'seed':seed,'tier':'disruptive','buoys':buoys,'changes':events,'dynamic':dynamic,
-              'boundary':defaults['boundary'],'circle_radius':defaults['circle_radius_m'],'blocked_fixture':blocked}
+              'boundary':defaults['boundary'],'circle_radius':defaults['circle_radius_m'],'blocked_fixture':blocked,
+              'experimental_visibility_guard':visibility_guard}
     (out/'task1_scenario.json').write_text(json.dumps(scenario,indent=2)+'\n')
     tree=E.parse(out/'usv_nav.sdf');world=tree.getroot().find('world')
     for n in list(world.findall('include')):
@@ -86,7 +87,9 @@ def navigation(out):
     planner['Task1']={'plugin':'robotx_task1_nav/RulePlanner'}
     # Remain outside the near-field blind zone for the lowest marking height.
     # Fixed surveyed buoy bodies still use their normal physical collision checks.
-    clearance=(scene['lidar_xyz'][2]-.25)/math.tan(abs(scene['lidar_vertical_min_rad']))+.2
+    clearance=0.
+    if scenario.get('experimental_visibility_guard',False):
+        clearance=(scene['lidar_xyz'][2]-.25)/math.tan(abs(scene['lidar_vertical_min_rad']))+.2
     visibility=dict(visibility_clearance=clearance,lidar_x=scene['lidar_xyz'][0],lidar_y=scene['lidar_xyz'][1])
     planner['Task1'].update(visibility)
     controller=params['controller_server']['ros__parameters']

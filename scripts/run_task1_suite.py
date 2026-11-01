@@ -16,6 +16,8 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--group',choices=('base','dynamic','all'),default='base')
     p.add_argument('--seed',type=int,choices=(1,2,3));p.add_argument('--changes',type=int,choices=(0,1,2))
     p.add_argument('--dynamic',choices=('none','cross','block'));p.add_argument('--record-maps',action='store_true')
+    p.add_argument('--record-sensors',action='store_true',help='Retain source clouds, scan, TF and odometry in a rosbag')
+    p.add_argument('--visibility-guard',action='store_true',help='Test the experimental lidar stand-off separately')
     p.add_argument('--fault',choices=('observation_gap','reordered_observation','mission_exit','cancel','role_change','no_path','late_change'))
     p.add_argument('--stop-on-failure',action='store_true')
     p.add_argument('--no-video',action='store_true');a=p.parse_args()
@@ -36,9 +38,10 @@ def main():
         command=[sys.executable,str(ROOT/'scripts/sim_session.py'),'start','--task1','--navigation','--control',
                  '--name',name,'--seed',str(case['seed']),'--changes',str(case['changes']),'--dynamic',case['dynamic']]
         if a.fault=='no_path':command.append('--task1-blocked')
+        if a.visibility_guard:command.append('--task1-visibility-guard')
         old=(ROOT/'runs/latest.txt').read_text().strip() if (ROOT/'runs/latest.txt').exists() else None
         supervisor=subprocess.Popen(command,stdout=(ROOT/'log'/f'{name}_supervisor.log').open('w'),stderr=subprocess.STDOUT)
-        recorder=None;run=None;item={'case':case}
+        recorders=[];run=None;item={'case':case}
         try:
             deadline=time.monotonic()+90
             while time.monotonic()<deadline:
@@ -49,8 +52,12 @@ def main():
             if run is None:raise TimeoutError('Simulation startup')
             item['run_dir']=str(run);print(json.dumps(item),flush=True)
             if a.record_maps:
-                recorder=subprocess.Popen([sys.executable,str(ROOT/'scripts/record_navigation.py'),'--run-dir',str(run)],
-                                           stdout=(run/'record_navigation.log').open('w'),stderr=subprocess.STDOUT)
+                recorders.append(subprocess.Popen([sys.executable,str(ROOT/'scripts/record_navigation.py'),'--run-dir',str(run)],
+                                           stdout=(run/'record_navigation.log').open('w'),stderr=subprocess.STDOUT))
+            if a.record_sensors:
+                recorders.append(subprocess.Popen(['ros2','bag','record','--use-sim-time','--storage','sqlite3',
+                    '--output',str(run/'sensors'),'/usv/lidar/points','/usv/lidar/filtered','/usv/lidar/marking','/usv/lidar/clearing','/scan','/tf','/tf_static',
+                    '/clock','/usv/odom','/usv/cmd_vel'],stdout=(run/'record_sensors.log').open('w'),stderr=subprocess.STDOUT))
             command=[sys.executable,str(ROOT/'scripts/validate_task1.py')]
             if a.fault:command=[sys.executable,str(ROOT/'scripts/validate_task1_fault.py'),a.fault]
             elif a.no_video:command.append('--no-video')
@@ -58,7 +65,7 @@ def main():
             item['exit_code']=result.returncode
         except Exception as error:item['error']=repr(error)
         finally:
-            if recorder:
+            for recorder in recorders:
                 recorder.send_signal(signal.SIGINT)
                 try:recorder.wait(timeout=10)
                 except subprocess.TimeoutExpired:recorder.terminate();recorder.wait(timeout=5)

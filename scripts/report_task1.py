@@ -8,12 +8,15 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 RUNTIME_SOURCES=[
     'scripts/prepare_task1.py','scripts/prepare_navigation.py','scripts/generate_world.py',
+    'scripts/sim_session.py','src/usv_sim/usv_sim/cloud_filter.py','src/usv_sim/usv_sim/clearing_cloud.py',
     'src/robotx_task1/robotx_task1/mission.py','src/robotx_task1/robotx_task1/core.py',
     'src/robotx_task1/robotx_task1/observer.py','src/usv_nav2/usv_nav2/rover_bridge.py',
+    'src/usv_nav2/launch/navigation.launch.py','src/usv_nav2/usv_nav2/launch_config.py',
     'src/usv_nav2/usv_nav2/task_lease.py',
     'src/robotx_task1_nav/src/plugins.cpp','src/robotx_task1_nav/src/rotate.cpp',
     'src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp',
     'src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp',
+    'src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp',
     'tools/task1_gazebo/Task1Scene.cc','models/robotx_2026_robobuoy/model.sdf']
 
 
@@ -32,6 +35,9 @@ def main():
         if not source.exists() or not result.exists():continue
         scenario=json.loads(source.read_text());j=json.loads(result.read_text());fault=run/'task1_fault_result.json'
         key=f"s{scenario['seed']}_c{len(scenario['changes'])}_{scenario['dynamic']}"
+        parameters=run/'generated/nav2_wamv.yaml'
+        config=json.loads(parameters.read_text()) if parameters.exists() else {}
+        guard=config.get('controller_server',{}).get('ros__parameters',{}).get('FollowPath',{}).get('Task1Hull.visibility_clearance',0.)
         verdict=j.get('passed',False);f=None
         map_result=None
         buoy_map=None
@@ -51,6 +57,7 @@ def main():
             verdict=verdict and map_result.get('passed',False)
         if fault.exists():
             f=json.loads(fault.read_text());key='fault_'+f['fault'];verdict=f.get('passed',False)
+        if guard>0:key+='_visibility_guard'
         item=dict(case=key,run=str(run.relative_to(ROOT)),passed=verdict,normal_task_passed=j.get('passed',False),
                   endpoint=j.get('endpoint_error'),clearance_m=j.get('min_clearance_m'),collisions=j.get('collision_contacts'),
                   circles=j.get('circles'),stops=j.get('stops'),fault=f,
@@ -89,11 +96,12 @@ def main():
         item['changed_runtime_sources']=[name for name in RUNTIME_SOURCES if (ROOT/name).exists() and
                                         item.get('runtime_source_sha256',{}).get(name)!=digest(ROOT/name)]
         item['matches_current_runtime_sources']=not item['changed_runtime_sources']
-        parameters=run/'generated/nav2_wamv.yaml'
         if parameters.exists():
-            controller=json.loads(parameters.read_text())['controller_server']['ros__parameters']
+            controller=config['controller_server']['ros__parameters']
             item['controller_parameters']={key:controller['FollowPath'].get(key) for key in
                                            ('sim_time','decel_lim_x','decel_lim_theta','max_vel_x','max_vel_theta')}
+            item['controller_parameters']['visibility_clearance_m']=controller['FollowPath'].get('Task1Hull.visibility_clearance',0.)
+            item['obstacle_layer_plugin']=config['local_costmap']['local_costmap']['ros__parameters']['obstacle_layer']['plugin']
         attempts.append(item);latest[key]=item
     expected=[f's{s}_c{c}_{d}' for s in (1,2,3) for c,d in [(0,'none'),(1,'none'),(2,'none'),(0,'cross'),(0,'block'),(2,'cross')]]
     expected+=['fault_'+f for f in ('observation_gap','reordered_observation','mission_exit','cancel','role_change','no_path','late_change')]
@@ -115,6 +123,11 @@ def main():
         file='task1_fault_result.json' if r['fault'] else 'task1_result.json'
         version='当前' if r['matches_current_runtime_sources'] else '较早；需回归'
         lines.append(f"| {key} | {'通过' if r['passed'] else '失败'} | {version} | {errors} | {clearance} | [{Path(r['run']).name}](../../{r['run']}/{file}) |")
+    experiments=[r for key,r in latest.items() if key.endswith('_visibility_guard')]
+    if experiments:
+        lines+=['','额外观测距离为非默认实验，不替代上面的默认配置验收：','']
+        for r in experiments:
+            lines.append(f"- `{r['case']}`：{'通过' if r['passed'] else '失败'}；[独立结果](../../{r['run']}/task1_result.json)。")
     late=latest.get('fault_late_change',{}).get('fault')
     if late:
         motion=late.get('status_after_fault',{}).get('motion','未知')

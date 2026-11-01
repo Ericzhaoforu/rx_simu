@@ -89,6 +89,9 @@ def main():
             sim=runner.node.get_clock().now().nanoseconds/1e9
             if sim-last_print>=10:
                 print(json.dumps({'sim':sim,'status':runner.status}),flush=True);last_print=sim
+            if runner.contacts and not cancelled:
+                print(json.dumps({'test_harness_abort':'physical contact','sim':sim}),flush=True)
+                cancel=runner.node.create_client(Trigger,'/task1/cancel');cancel.call_async(Trigger.Request());cancelled=True
             if a.cancel_after and sim-sim_start>a.cancel_after and not cancelled:
                 cancel=runner.node.create_client(Trigger,'/task1/cancel');cancel.call_async(Trigger.Request());cancelled=True
             if runner.status and runner.status['stage'] in ('COMPLETE','ABORTED'):break

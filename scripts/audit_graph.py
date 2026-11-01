@@ -27,6 +27,8 @@ def main():
         stamps[topic].add(stamp);ages[topic].append((now-stamp)/1e9)
     topics={'/usv/lidar/points':PointCloud2,'/usv/lidar/filtered':PointCloud2,'/scan':LaserScan,
             '/mavros/local_position/odom':Odometry,'/usv/odom':Odometry}
+    if 'task1' in json.loads((run/'generated/scene.json').read_text()):
+        topics.update({'/usv/lidar/marking':PointCloud2,'/usv/lidar/clearing':PointCloud2})
     for topic,cls in topics.items():node.create_subscription(cls,topic,lambda m,t=topic:receive(t,m),qos_profile_sensor_data)
     def tf(message,topic):
         for t in message.transforms:edges[topic].add(t.header.frame_id+' -> '+t.child_frame_id)
@@ -51,7 +53,9 @@ def main():
         infos=node.get_publishers_info_by_topic(topic)
         result['topics'][topic]={'publishers':[{'node':p.node_namespace+'/'+p.node_name,'reliability':str(p.qos_profile.reliability)} for p in infos],
                                  'samples':len(stamps[topic]),'max_source_age_s':max(ages[topic],default=None)}
-    for out,source in [('/scan','/usv/lidar/points'),('/usv/lidar/filtered','/usv/lidar/points'),('/usv/odom','/mavros/local_position/odom')]:
+    derived=[('/scan','/usv/lidar/points'),('/usv/lidar/filtered','/usv/lidar/points'),('/usv/odom','/mavros/local_position/odom')]
+    derived.extend((topic,'/usv/lidar/points') for topic in ('/usv/lidar/marking','/usv/lidar/clearing') if topic in topics)
+    for out,source in derived:
         observed=stamps[out]
         result['topics'][out]['source_stamps_matched']=len(observed&stamps[source])
         result['topics'][out]['source_stamps_unmatched']=len(observed-stamps[source])

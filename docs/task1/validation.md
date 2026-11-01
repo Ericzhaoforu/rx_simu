@@ -11,7 +11,7 @@
 | s1_c2_none | 通过 | 较早；需回归 | 0.378 m / 0.049 rad | 1.021 m | [20261101_182043_task1_s1_c2_none](../../runs/20261101_182043_task1_s1_c2_none/task1_result.json) |
 | s1_c0_cross | 通过 | 较早；需回归 | 0.362 m / 0.055 rad | 0.540 m | [20261101_193013_task1_s1_c0_cross](../../runs/20261101_193013_task1_s1_c0_cross/task1_result.json) |
 | s1_c0_block | 通过 | 较早；需回归 | 0.379 m / 0.049 rad | 0.726 m | [20261101_194014_task1_s1_c0_block](../../runs/20261101_194014_task1_s1_c0_block/task1_result.json) |
-| s1_c2_cross | 通过 | 较早；需回归 | 0.369 m / 0.043 rad | 0.716 m | [20261101_200940_task1_s1_c2_cross](../../runs/20261101_200940_task1_s1_c2_cross/task1_result.json) |
+| s1_c2_cross | 失败 | 较早；需回归 | 不适用／未完成 | 0.720 m | [20261101_213330_task1_s1_c2_cross](../../runs/20261101_213330_task1_s1_c2_cross/task1_result.json) |
 | s2_c0_none | 通过 | 较早；需回归 | 0.374 m / 0.071 rad | 1.188 m | [20261101_183035_task1_s2_c0_none](../../runs/20261101_183035_task1_s2_c0_none/task1_result.json) |
 | s2_c1_none | 通过 | 较早；需回归 | 0.366 m / 0.054 rad | 1.198 m | [20261101_184021_task1_s2_c1_none](../../runs/20261101_184021_task1_s2_c1_none/task1_result.json) |
 | s2_c2_none | 通过 | 较早；需回归 | 0.373 m / 0.051 rad | 1.216 m | [20261101_185028_task1_s2_c2_none](../../runs/20261101_185028_task1_s2_c2_none/task1_result.json) |
@@ -24,13 +24,17 @@
 | s3_c0_cross | 未验证 | — | — | — | — |
 | s3_c0_block | 未验证 | — | — | — | — |
 | s3_c2_cross | 未验证 | — | — | — | — |
-| fault_observation_gap | 通过 | 当前 | 不适用／未完成 | 6.364 m | [20261101_202759_task1_s1_c0_none_observation_gap](../../runs/20261101_202759_task1_s1_c0_none_observation_gap/task1_fault_result.json) |
-| fault_reordered_observation | 通过 | 当前 | 不适用／未完成 | 6.309 m | [20261101_202914_task1_s1_c0_none_reordered_observation](../../runs/20261101_202914_task1_s1_c0_none_reordered_observation/task1_fault_result.json) |
-| fault_mission_exit | 通过 | 当前 | 不适用／未完成 | 6.341 m | [20261101_203029_task1_s1_c0_none_mission_exit](../../runs/20261101_203029_task1_s1_c0_none_mission_exit/task1_fault_result.json) |
-| fault_cancel | 通过 | 当前 | 不适用／未完成 | 6.570 m | [20261101_203143_task1_s1_c0_none_cancel](../../runs/20261101_203143_task1_s1_c0_none_cancel/task1_fault_result.json) |
-| fault_role_change | 通过 | 当前 | 不适用／未完成 | 6.440 m | [20261101_203255_task1_s1_c0_none_role_change](../../runs/20261101_203255_task1_s1_c0_none_role_change/task1_fault_result.json) |
-| fault_no_path | 通过 | 当前 | 不适用／未完成 | 7.164 m | [20261101_203408_task1_s1_c0_none_no_path](../../runs/20261101_203408_task1_s1_c0_none_no_path/task1_fault_result.json) |
-| fault_late_change | 通过 | 当前 | 不适用／未完成 | 1.153 m | [20261101_203521_task1_s1_c0_none_late_change](../../runs/20261101_203521_task1_s1_c0_none_late_change/task1_fault_result.json) |
+| fault_observation_gap | 通过 | 较早；需回归 | 不适用／未完成 | 6.364 m | [20261101_202759_task1_s1_c0_none_observation_gap](../../runs/20261101_202759_task1_s1_c0_none_observation_gap/task1_fault_result.json) |
+| fault_reordered_observation | 通过 | 较早；需回归 | 不适用／未完成 | 6.309 m | [20261101_202914_task1_s1_c0_none_reordered_observation](../../runs/20261101_202914_task1_s1_c0_none_reordered_observation/task1_fault_result.json) |
+| fault_mission_exit | 通过 | 较早；需回归 | 不适用／未完成 | 6.341 m | [20261101_203029_task1_s1_c0_none_mission_exit](../../runs/20261101_203029_task1_s1_c0_none_mission_exit/task1_fault_result.json) |
+| fault_cancel | 通过 | 较早；需回归 | 不适用／未完成 | 6.570 m | [20261101_203143_task1_s1_c0_none_cancel](../../runs/20261101_203143_task1_s1_c0_none_cancel/task1_fault_result.json) |
+| fault_role_change | 通过 | 较早；需回归 | 不适用／未完成 | 6.440 m | [20261101_203255_task1_s1_c0_none_role_change](../../runs/20261101_203255_task1_s1_c0_none_role_change/task1_fault_result.json) |
+| fault_no_path | 通过 | 较早；需回归 | 不适用／未完成 | 7.164 m | [20261101_203408_task1_s1_c0_none_no_path](../../runs/20261101_203408_task1_s1_c0_none_no_path/task1_fault_result.json) |
+| fault_late_change | 通过 | 较早；需回归 | 不适用／未完成 | 1.153 m | [20261101_203521_task1_s1_c0_none_late_change](../../runs/20261101_203521_task1_s1_c0_none_late_change/task1_fault_result.json) |
+
+额外观测距离为非默认实验，不替代上面的默认配置验收：
+
+- `s1_c2_cross_visibility_guard`：失败；[独立结果](../../runs/20261101_214702_task1_s1_c2_cross/task1_result.json)。
 
 临近浮标灯变测试只测注入后 10 s 的停止和规则响应；记录末端运动状态为 `PLANNING`。若为 STOPPING / PLANNING / WAIT_CLEAR，只能证明安全停等，不能声称已恢复航行或完成整场。
 
