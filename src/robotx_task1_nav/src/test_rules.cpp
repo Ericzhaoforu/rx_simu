@@ -1,4 +1,5 @@
 #include "robotx_task1_nav/rules.hpp"
+#include "robotx_task1_nav/dubins_estimate.hpp"
 #include <iostream>
 using namespace robotx_task1_nav;
 void check(bool value,const char *label){if(!value)throw std::runtime_error(label);}
@@ -26,5 +27,11 @@ int main(){
   check(blocked,"blocked corridor returns failure");
   check(!rule_clearance({0,0,pi},{{"red",0,-3,.3,1}}),"wrong-side abeam has planning margin");
   check(rule_clearance({-2,0,pi},{{"red",0,-3,.3,1}}),"margin is local to abeam");
-  std::cout<<"13 rule/search checks passed; states="<<result.expanded<<"\n";
+  DubinsEstimate heading_goal({5,0,-pi/2});
+  check(heading_goal({5,0,pi/2})>5.,"opposite final heading requires a forward loop");
+  auto curved=search({-5,0,0},{5,0,-pi/2},{},true,3,cost,3.,[&](const Pose &p){return heading_goal(p);});
+  check(std::abs(wrap(curved.path.back().h+pi/2))<1e-9,"forward search satisfies final heading");
+  for(size_t i=1;i<curved.path.size();++i){const auto &a=curved.path[i-1],&b=curved.path[i];
+    check((b.x-a.x)*std::cos(a.h)+(b.y-a.y)*std::sin(a.h)>-1e-6,"heuristic cannot introduce reverse motion");}
+  std::cout<<"16 rule/search checks passed; states="<<result.expanded<<"\n";
 }

@@ -1,0 +1,46 @@
+// Offline replay of recorded costmaps. OccupancyGrid loses some cost precision;
+// this diagnoses search, and never substitutes for a live planning test.
+#include "robotx_task1_nav/rules.hpp"
+#include "robotx_task1_nav/dubins_estimate.hpp"
+#include <nav2_costmap_2d/footprint_collision_checker.hpp>
+#include <ompl/base/spaces/DubinsStateSpace.h>
+#include <fstream>
+#include <iostream>
+using namespace robotx_task1_nav;
+int main(int argc,char **argv) {
+  if(argc!=3)throw std::runtime_error("replay INPUT euclidean|dubins");
+  std::ifstream in(argv[1]);unsigned w,h,n;double res,ox,oy;
+  in>>w>>h>>res>>ox>>oy;
+  Pose start,goal;int bits;
+  in>>start.x>>start.y>>start.h>>goal.x>>goal.y>>goal.h>>bits;
+  in>>n;std::vector<Buoy> buoys(n);for(auto &b:buoys)in>>b.id>>b.x>>b.y>>b.r>>b.state;
+  in>>n;std::vector<geometry_msgs::msg::Point> footprint(n);for(auto &p:footprint)in>>p.x>>p.y;
+  nav2_costmap_2d::Costmap2D map(w,h,res,ox,oy);
+  for(unsigned y=0;y<h;++y)for(unsigned x=0;x<w;++x){int v;in>>v;map.setCost(x,y,v);}
+  if(!in)throw std::runtime_error("Incomplete input");
+  nav2_costmap_2d::FootprintCollisionChecker<nav2_costmap_2d::Costmap2D*> checker(&map);
+  auto cost=[&](const Pose &p){
+    unsigned mx,my;if(!map.worldToMap(p.x,p.y,mx,my)||map.getCost(mx,my)>=253)return INFINITY;
+    double v=checker.footprintCostAtPose(p.x,p.y,p.h,footprint);
+    if(v>=254||v<0)return INFINITY;
+    for(const auto &b:buoys){auto xy=body(p,b);bool inside=false;double d=1e9;
+      for(size_t i=0,j=footprint.size()-1;i<footprint.size();j=i++){
+        auto a=footprint[j],c=footprint[i];double dx=c.x-a.x,dy=c.y-a.y;
+        double t=std::clamp(((xy[0]-a.x)*dx+(xy[1]-a.y)*dy)/(dx*dx+dy*dy),0.,1.);
+        d=std::min(d,std::hypot(xy[0]-a.x-t*dx,xy[1]-a.y-t*dy));
+        if(((a.y>xy[1])!=(c.y>xy[1]))&&xy[0]<(c.x-a.x)*(xy[1]-a.y)/(c.y-a.y)+a.x)inside=!inside;
+      }if(inside||d<b.r)return INFINITY;
+    }return float(1.5*map.getCost(mx,my)/252.);
+  };
+  DubinsEstimate dubins(goal);
+  std::function<double(const Pose&)> estimate;
+  if(std::string(argv[2])=="dubins")estimate=[&](const Pose &p){return dubins(p);};
+  auto begin=std::chrono::steady_clock::now();
+  try{
+    auto result=search(start,goal,buoys,true,bits,cost,3.,estimate);
+    std::cout<<"passed states="<<result.expanded<<" poses="<<result.path.size();
+    std::ofstream path(std::string(argv[1])+"."+argv[2]+".path");
+    for(const auto &p:result.path)path<<p.x<<' '<<p.y<<' '<<p.h<<'\n';
+  }catch(const std::exception &e){std::cout<<"failed "<<e.what();}
+  std::cout<<" seconds="<<std::chrono::duration<double>(std::chrono::steady_clock::now()-begin).count()<<'\n';
+}

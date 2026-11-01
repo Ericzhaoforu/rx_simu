@@ -71,7 +71,8 @@ struct SearchResult {std::vector<Pose> path;size_t expanded=0;};
 // Collision callback returns nonnegative traversal cost, infinity for forbidden hull poses.
 inline SearchResult search(const Pose &start,const Pose &goal,const std::vector<Buoy> &buoys,
                            bool enforce,int initial_bits,const std::function<double(const Pose&)> &cost,
-                           double timeout=3.) {
+                           double timeout=3.,
+                           const std::function<double(const Pose&)> &estimate={}) {
   struct Node {Pose p;double g;int parent,bits;};
   struct Q {double f;int i;bool operator<(const Q &o)const{return f>o.f;}};
   std::vector<Node> nodes;nodes.reserve(100000);std::priority_queue<Q> open;
@@ -80,7 +81,8 @@ inline SearchResult search(const Pose &start,const Pose &goal,const std::vector<
       std::to_string(std::lround(p.y/.4))+","+std::to_string(int(std::lround(wrap(p.h)*36/(2*pi))+36)%36)+","+std::to_string(bits);};
   // Weighted A*: favor timely legal routes over optimal length. Collision and
   // passage constraints remain hard checks on every interpolated edge.
-  auto heuristic=[&](const Pose &p){return 1.4*(std::hypot(goal.x-p.x,goal.y-p.y)+.25*std::abs(wrap(goal.h-p.h)));};
+  auto heuristic=[&](const Pose &p){return 1.4*(estimate?estimate(p):
+      std::hypot(goal.x-p.x,goal.y-p.y)+.25*std::abs(wrap(goal.h-p.h)));};
   auto edge=[&](const Pose &a,const Pose &b,int &bits,double &penalty){
     int n=std::max(2,int(std::ceil(std::max(std::hypot(b.x-a.x,b.y-a.y)/.1,std::abs(wrap(b.h-a.h))/.06))));
     Pose previous=a;penalty=0;

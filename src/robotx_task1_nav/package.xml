@@ -9,5 +9,6 @@
   <depend>dwb_critics</depend>
   <depend>dwb_msgs</depend><depend>nav_2d_msgs</depend><depend>pluginlib</depend>
   <depend>robotx_task1_interfaces</depend>
+  <depend>ompl</depend>
   <export><build_type>ament_cmake</build_type></export>
 </package>

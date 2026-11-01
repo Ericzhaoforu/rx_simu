@@ -1,4 +1,5 @@
 #include "robotx_task1_nav/rules.hpp"
+#include "robotx_task1_nav/dubins_estimate.hpp"
 #include <mutex>
 #include <set>
 #include <nav2_core/global_planner.hpp>
@@ -94,7 +95,10 @@ class RulePlanner : public nav2_core::GlobalPlanner {
         path.push_back(q);
       }
     } else {
-      auto result=search(from,to,buoys,ctx.enforce_passage,ctx.passed_colors,cost);
+      DubinsEstimate dubins(to);
+      std::function<double(const Pose&)> estimate;
+      if(ctx.enforce_passage)estimate=[&](const Pose &p){return dubins(p);};
+      auto result=search(from,to,buoys,ctx.enforce_passage,ctx.passed_colors,cost,3.,estimate);
       RCLCPP_INFO(node_->get_logger(),"Task1 search expanded %zu states",result.expanded);path=result.path;
     }
     nav_msgs::msg::Path result;result.header.frame_id="map";result.header.stamp=node_->now();

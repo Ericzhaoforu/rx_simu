@@ -70,6 +70,14 @@ def navigation(out):
     planner['planner_plugins']=['GridBased','Task1']
     planner['Task1']={'plugin':'robotx_task1_nav/RulePlanner'}
     controller=params['controller_server']['ros__parameters']
+    # The boat still drifts below 0.03 m/s. Preserve that motion in DWB's
+    # initial state and allow for the measured, slower braking response.
+    controller['min_x_velocity_threshold']=.005
+    controller['min_y_velocity_threshold']=.005
+    controller['min_theta_velocity_threshold']=.005
+    controller['FollowPath']['decel_lim_x']=-.08
+    controller['FollowPath']['decel_lim_theta']=-.2
+    controller['FollowPath']['sim_time']=5.
     controller['FollowPath']['critics'].insert(0,'Task1Rule')
     controller['FollowPath']['Task1Rule.class']='robotx_task1_nav::RuleCritic'
     controller['FollowPath']['Task1Rule.scale']=1.0
