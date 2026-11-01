@@ -10,7 +10,7 @@
 
 RobotX 2026 Task 1 使用独立的新 RoboBuoy 模型、已知 UAV 观测替身、规则规划和本地独立裁判。使用方法见 [Task 1 运行说明](docs/task1/runbook.md)，失败根因见 [调试记录](docs/task1/debug_log.md)。正式 UAV 感知和 RoboCommand 上报不在本轮实现范围。
 
-增加错位浮标、码头和横穿交通的港区测试，以及明确标注灯色、规划路径和实际航迹的 MP4，见 [2026-11-02 港区实验记录](docs/task1/experiments/20261102_harbor.md)。静态完整任务通过，横穿交通出现实体接触；成功和失败视频均保留。
+增加错位浮标、码头和横穿交通的港区测试，以及明确标注灯色、规划路径和实际航迹的 MP4，见 [2026-11-02 港区实验记录](docs/task1/experiments/20261102_harbor.md)。首轮横穿交通曾出现实体接触；后续交通预测、让行与恢复修复、冷启动复测和新视频见 [碰撞修复实验](docs/task1/experiments/20261102_collision_fix.md)。原成功和失败记录均保留。
 
 ## 启动
 
