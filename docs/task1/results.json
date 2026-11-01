@@ -1,23 +1,23 @@
 {
   "expected": [
-    "s1_c0_none",
     "s1_c1_none",
-    "s1_c2_none",
+    "s1_c1_cross",
+    "s1_c1_block",
+    "s2_c1_none",
+    "s2_c1_cross",
+    "s2_c1_block",
+    "s3_c1_none",
+    "s3_c1_cross",
+    "s3_c1_block",
+    "s1_c0_none",
     "s1_c0_cross",
     "s1_c0_block",
-    "s1_c2_cross",
     "s2_c0_none",
-    "s2_c1_none",
-    "s2_c2_none",
     "s2_c0_cross",
     "s2_c0_block",
-    "s2_c2_cross",
     "s3_c0_none",
-    "s3_c1_none",
-    "s3_c2_none",
     "s3_c0_cross",
     "s3_c0_block",
-    "s3_c2_cross",
     "fault_observation_gap",
     "fault_reordered_observation",
     "fault_mission_exit",
@@ -26,76 +26,106 @@
     "fault_no_path",
     "fault_late_change"
   ],
+  "competition_cases": [
+    "s1_c1_none",
+    "s1_c1_cross",
+    "s1_c1_block",
+    "s2_c1_none",
+    "s2_c1_cross",
+    "s2_c1_block",
+    "s3_c1_none",
+    "s3_c1_cross",
+    "s3_c1_block"
+  ],
+  "baseline_cases": [
+    "s1_c0_none",
+    "s1_c0_cross",
+    "s1_c0_block",
+    "s2_c0_none",
+    "s2_c0_cross",
+    "s2_c0_block",
+    "s3_c0_none",
+    "s3_c0_cross",
+    "s3_c0_block"
+  ],
+  "recorded_stress_cases": [
+    "s1_c2_none",
+    "s1_c2_cross",
+    "s2_c2_none",
+    "s3_c2_none"
+  ],
+  "competition_change_count": 1,
+  "constraint_source": "User confirmation on 2026-11-01; blinking phases are not semantic changes.",
   "latest": {
     "s1_c0_none": {
       "case": "s1_c0_none",
-      "run": "runs/20261101_180105_task1_s1_c0_none",
+      "run": "runs/20261101_220059_task1_s1_c0_none",
       "passed": true,
       "normal_task_passed": true,
       "endpoint": {
-        "position_m": 0.3911777803594695,
-        "yaw_rad": 0.03900444164894812
+        "position_m": 0.3956200450927516,
+        "yaw_rad": 0.03421204830002966
       },
-      "clearance_m": 1.0554428705918806,
+      "clearance_m": 1.236071237598865,
       "collisions": 0,
       "circles": {
         "CIRCLE_ENTRY": {
           "complete": true,
-          "angle_rad": 6.360758790054663,
-          "wrong_way_rad": 0.008986413859473963
+          "angle_rad": 6.452527818484823,
+          "wrong_way_rad": 0.0024087373274057633
         },
         "CIRCLE_EXIT": {
           "complete": true,
-          "angle_rad": 6.394882784456685,
-          "wrong_way_rad": 0.0
+          "angle_rad": 6.394573451593733,
+          "wrong_way_rad": 3.514548930239059e-05
         }
       },
       "stops": [],
       "fault": null,
       "semantic_timing": "physics effective history",
-      "drift_m": 0.297605542177819,
-      "post_completion_record_s": 11.0,
+      "drift_m": 0.12724232471157904,
+      "post_completion_record_s": 11.700000000000045,
       "buoy_map": {
         "passed": true,
         "buoys": {
           "entry": {
-            "observed": 345,
+            "observed": 377,
             "missing": 0
           },
           "exit": {
-            "observed": 345,
+            "observed": 377,
             "missing": 0
           },
           "buoy_01": {
-            "observed": 345,
+            "observed": 377,
             "missing": 0
           },
           "buoy_02": {
-            "observed": 345,
+            "observed": 377,
             "missing": 0
           },
           "buoy_03": {
-            "observed": 345,
+            "observed": 377,
             "missing": 0
           },
           "buoy_04": {
-            "observed": 345,
+            "observed": 377,
             "missing": 0
           },
           "buoy_05": {
-            "observed": 345,
+            "observed": 377,
             "missing": 0
           },
           "buoy_06": {
-            "observed": 345,
+            "observed": 377,
             "missing": 0
           },
           "buoy_07": {
-            "observed": 345,
+            "observed": 377,
             "missing": 0
           },
           "buoy_08": {
-            "observed": 345,
+            "observed": 377,
             "missing": 0
           }
         },
@@ -105,13 +135,13 @@
       },
       "dynamic_map": null,
       "evidence_sha256": {
-        "task1_result.json": "6543e03c7b16c8f08485b751bba721080ae5411b42d9d20ba2b1863b135958fe",
-        "task1_scenario.json": "fdf93660e3ab14b0471ab4b17b0311b2332c8fa629e9773014a0cff52406263f",
-        "provenance.json": "d41b6ceb6ee63e236bbc9ec8b65121cc364d4bd1404681bb366d027545f08834",
-        "buoy_map_result.json": "c4f752fc9ce90192809ac4b99431e440f7b3303c22903e8e1405e8eb75e9a1dc"
+        "task1_result.json": "15550ad13083a31ff4126151666b3a60e8392f2ffd2102ecd3a8248bbb8510de",
+        "task1_scenario.json": "eaa46e232d8d569ccfe1ea00b6a43f4f8e5104c6959ce55cc6be1cd321c81808",
+        "provenance.json": "fab9e6de875323d92198f6de0a1a0877ae7cfad2b2dcb9dad00dfefd1122fa11",
+        "buoy_map_result.json": "2e77be0de7e8b100d0767098b5dee7cf9c3e62dbef7cc71aef746ba392df7181"
       },
       "execution_metrics": {
-        "planning_attempts": 12,
+        "planning_attempts": 13,
         "planning_failures": 0,
         "controller_failures": 0,
         "reported_semantic_changes": 0,
@@ -119,110 +149,106 @@
           {
             "outcome": "path_ready",
             "sim_s": 0.19999999999999574,
-            "wall_s": 0.2037893789820373
+            "wall_s": 0.20151789602823555
           },
           {
             "outcome": "path_ready",
             "sim_s": 0.20000000000000284,
-            "wall_s": 0.20361467800103128
+            "wall_s": 0.20252388797234744
           },
           {
             "outcome": "path_ready",
             "sim_s": 0.20000000000000284,
-            "wall_s": 0.20201823697425425
+            "wall_s": 0.20273581496439874
           },
           {
             "outcome": "path_ready",
             "sim_s": 0.19999999999998863,
-            "wall_s": 0.20537972799502313
+            "wall_s": 0.20315294398460537
           },
           {
             "outcome": "path_ready",
             "sim_s": 0.20000000000001705,
-            "wall_s": 0.20171220693737268
+            "wall_s": 0.20153122604824603
           },
           {
             "outcome": "path_ready",
             "sim_s": 0.19999999999998863,
-            "wall_s": 0.20114621799439192
-          },
-          {
-            "outcome": "path_ready",
-            "sim_s": 1.5,
-            "wall_s": 1.510253079002723
+            "wall_s": 0.20073706901166588
           },
           {
             "outcome": "path_ready",
             "sim_s": 0.19999999999998863,
-            "wall_s": 0.20463472802657634
+            "wall_s": 0.20163184602279216
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20784197805915028
           },
           {
             "outcome": "path_ready",
             "sim_s": 0.19999999999998863,
-            "wall_s": 0.20565254299435765
+            "wall_s": 0.20411977590993047
           },
           {
             "outcome": "path_ready",
             "sim_s": 0.19999999999998863,
-            "wall_s": 0.2037388680037111
+            "wall_s": 0.202647804049775
           },
           {
             "outcome": "path_ready",
             "sim_s": 0.19999999999998863,
-            "wall_s": 0.20152552099898458
+            "wall_s": 0.2030223859474063
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.20165354607161134
           },
           {
             "outcome": "path_ready",
             "sim_s": 0.20000000000004547,
-            "wall_s": 0.20221575791947544
+            "wall_s": 0.20140814292244613
           }
         ],
-        "total_planning_wall_s": 3.7456809438299388,
-        "max_planning_wall_s": 1.510253079002723,
+        "total_planning_wall_s": 2.6345243169926107,
+        "max_planning_wall_s": 0.20784197805915028,
         "semantic_pause_sim_s": []
       },
       "runtime_source_sha256": {
-        "scripts/prepare_task1.py": "a08f4892c549730faf083205be8fa3c5aef59d7fc51b45bafc5cf30f8d3924e6",
+        "scripts/prepare_task1.py": "84e1a1c4f30ccc83c335b40563f3dbf44fdc2219e6a96cdc3b77a523bd7e34c5",
         "scripts/prepare_navigation.py": "44097cef02e6d0ea2e55b30cae23aa6b1660b6640c5bef424fa2f4c27af2b80a",
-        "scripts/generate_world.py": "615643d19cd55cb16c4801e057059488e1e867f48b70bf9577bdfe87fcb82d91",
-        "scripts/sim_session.py": "aeebd83d79ecbb7562234374eb516b64a4598e3ff69abd508769364522610977",
-        "src/usv_sim/usv_sim/cloud_filter.py": "ce4032e2271f42fc7bd494b4efa70ba2b2ece7e294d7ae71fbfbcc23a7495dd7",
-        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "scripts/generate_world.py": "770952a6a502d9dd73629e693dd2de51d3e7a69e3c7416c708209984c3b29786",
+        "scripts/sim_session.py": "d0fd9584485f8801e4d191961cba1d7cb9b416eef058a14ec46e655dbbdcd976",
+        "src/usv_sim/usv_sim/cloud_filter.py": "796312fcef2ad50d48584dfe4994ae9a0466c347153551009ad2892b2d8e0225",
+        "src/usv_sim/usv_sim/clearing_cloud.py": "f1112cdc38db626217979985eb32240ac9750827153c979101e328667b7bdb8e",
+        "src/robotx_task1/robotx_task1/mission.py": "d6f6b08d5bc93b42a065890c9317cde8397bb824737eb851279a1273e6b2a033",
         "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
         "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
         "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
-        "src/usv_nav2/launch/navigation.launch.py": "3eacf7e968efc249ff34dc94190d235025d21defabaa344a2b4da5d6d19df2e7",
+        "src/usv_nav2/launch/navigation.launch.py": "eb005cbb8af7211267bf22a883a9b369d67c1880e551e215bf6db8b881c2bdf5",
+        "src/usv_nav2/usv_nav2/launch_config.py": "442aeaf075c7f0c56ba59e94524e9f2d5599812ddd8e22ad7d85d21eea9425bc",
         "src/usv_nav2/usv_nav2/task_lease.py": "796dadee4633f78f797e19c525a9346d43b10966e4a78bfc681024e250781391",
-        "src/robotx_task1_nav/src/plugins.cpp": "e9906322d8080eaf64a0342ae2b21aeab5eb7f2f9b112b18fef6ea96f69294a0",
+        "src/robotx_task1_nav/src/plugins.cpp": "b7e10686ca12c22c9b25c1f34cbbd99c4ba511b2e413da996cf95931343757cf",
         "src/robotx_task1_nav/src/rotate.cpp": "057ae4e432221347610d70826ded22be68ef2a057afaef1284274fe07f7542b2",
-        "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp": "edfa7008d1e94d593fcfd075620083328562461f70dac2194e828d14e46306b5",
+        "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp": "d8d2ef07714a71df525b5e025b8c0d708c36f9ee39d5698aba4c8afb75706c95",
+        "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp": "30ce7be51db271ec7bb3a60659ac9e23cbe7f42a7bbd75955ac2eeef371278f9",
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp": "84c959f1003bad4d0986d7d3c8152d4fecd4fe310abf99f86756f7f34f12516c",
         "tools/task1_gazebo/Task1Scene.cc": "2dbbebfcffe16d47cf02c9d02f899f7325f9f79a0e177d8f249e83d381a57e9e",
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
-      "changed_runtime_sources": [
-        "scripts/prepare_task1.py",
-        "scripts/generate_world.py",
-        "scripts/sim_session.py",
-        "src/usv_sim/usv_sim/cloud_filter.py",
-        "src/usv_sim/usv_sim/clearing_cloud.py",
-        "src/robotx_task1/robotx_task1/mission.py",
-        "src/usv_nav2/launch/navigation.launch.py",
-        "src/usv_nav2/usv_nav2/launch_config.py",
-        "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
-      ],
-      "matches_current_runtime_sources": false,
+      "changed_runtime_sources": [],
+      "matches_current_runtime_sources": true,
       "controller_parameters": {
-        "sim_time": 3.0,
-        "decel_lim_x": -0.2,
-        "decel_lim_theta": -0.4,
+        "sim_time": 5.0,
+        "decel_lim_x": -0.08,
+        "decel_lim_theta": -0.2,
         "max_vel_x": 0.3,
         "max_vel_theta": 0.4,
         "visibility_clearance_m": 0.0
       },
-      "obstacle_layer_plugin": "nav2_costmap_2d::ObstacleLayer"
+      "obstacle_layer_plugin": "nav2_costmap_2d::VoxelLayer"
     },
     "s1_c2_none": {
       "case": "s1_c2_none",
@@ -14114,6 +14140,199 @@
         "max_vel_x": 0.3,
         "max_vel_theta": 0.4,
         "visibility_clearance_m": 5.98467875173176
+      },
+      "obstacle_layer_plugin": "nav2_costmap_2d::VoxelLayer"
+    },
+    {
+      "case": "s1_c0_none",
+      "run": "runs/20261101_220059_task1_s1_c0_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.3956200450927516,
+        "yaw_rad": 0.03421204830002966
+      },
+      "clearance_m": 1.236071237598865,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.452527818484823,
+          "wrong_way_rad": 0.0024087373274057633
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.394573451593733,
+          "wrong_way_rad": 3.514548930239059e-05
+        }
+      },
+      "stops": [],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.12724232471157904,
+      "post_completion_record_s": 11.700000000000045,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 377,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 377,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 377,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 377,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 377,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 377,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 377,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 377,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 377,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 377,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "15550ad13083a31ff4126151666b3a60e8392f2ffd2102ecd3a8248bbb8510de",
+        "task1_scenario.json": "eaa46e232d8d569ccfe1ea00b6a43f4f8e5104c6959ce55cc6be1cd321c81808",
+        "provenance.json": "fab9e6de875323d92198f6de0a1a0877ae7cfad2b2dcb9dad00dfefd1122fa11",
+        "buoy_map_result.json": "2e77be0de7e8b100d0767098b5dee7cf9c3e62dbef7cc71aef746ba392df7181"
+      },
+      "execution_metrics": {
+        "planning_attempts": 13,
+        "planning_failures": 0,
+        "controller_failures": 0,
+        "reported_semantic_changes": 0,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.20151789602823555
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20252388797234744
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20273581496439874
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20315294398460537
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20153122604824603
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20073706901166588
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20163184602279216
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20784197805915028
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20411977590993047
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.202647804049775
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2030223859474063
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.20165354607161134
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20140814292244613
+          }
+        ],
+        "total_planning_wall_s": 2.6345243169926107,
+        "max_planning_wall_s": 0.20784197805915028,
+        "semantic_pause_sim_s": []
+      },
+      "runtime_source_sha256": {
+        "scripts/prepare_task1.py": "84e1a1c4f30ccc83c335b40563f3dbf44fdc2219e6a96cdc3b77a523bd7e34c5",
+        "scripts/prepare_navigation.py": "44097cef02e6d0ea2e55b30cae23aa6b1660b6640c5bef424fa2f4c27af2b80a",
+        "scripts/generate_world.py": "770952a6a502d9dd73629e693dd2de51d3e7a69e3c7416c708209984c3b29786",
+        "scripts/sim_session.py": "d0fd9584485f8801e4d191961cba1d7cb9b416eef058a14ec46e655dbbdcd976",
+        "src/usv_sim/usv_sim/cloud_filter.py": "796312fcef2ad50d48584dfe4994ae9a0466c347153551009ad2892b2d8e0225",
+        "src/usv_sim/usv_sim/clearing_cloud.py": "f1112cdc38db626217979985eb32240ac9750827153c979101e328667b7bdb8e",
+        "src/robotx_task1/robotx_task1/mission.py": "d6f6b08d5bc93b42a065890c9317cde8397bb824737eb851279a1273e6b2a033",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "src/usv_nav2/launch/navigation.launch.py": "eb005cbb8af7211267bf22a883a9b369d67c1880e551e215bf6db8b881c2bdf5",
+        "src/usv_nav2/usv_nav2/launch_config.py": "442aeaf075c7f0c56ba59e94524e9f2d5599812ddd8e22ad7d85d21eea9425bc",
+        "src/usv_nav2/usv_nav2/task_lease.py": "796dadee4633f78f797e19c525a9346d43b10966e4a78bfc681024e250781391",
+        "src/robotx_task1_nav/src/plugins.cpp": "b7e10686ca12c22c9b25c1f34cbbd99c4ba511b2e413da996cf95931343757cf",
+        "src/robotx_task1_nav/src/rotate.cpp": "057ae4e432221347610d70826ded22be68ef2a057afaef1284274fe07f7542b2",
+        "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp": "d8d2ef07714a71df525b5e025b8c0d708c36f9ee39d5698aba4c8afb75706c95",
+        "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp": "30ce7be51db271ec7bb3a60659ac9e23cbe7f42a7bbd75955ac2eeef371278f9",
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp": "84c959f1003bad4d0986d7d3c8152d4fecd4fe310abf99f86756f7f34f12516c",
+        "tools/task1_gazebo/Task1Scene.cc": "2dbbebfcffe16d47cf02c9d02f899f7325f9f79a0e177d8f249e83d381a57e9e",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      },
+      "changed_runtime_sources": [],
+      "matches_current_runtime_sources": true,
+      "controller_parameters": {
+        "sim_time": 5.0,
+        "decel_lim_x": -0.08,
+        "decel_lim_theta": -0.2,
+        "max_vel_x": 0.3,
+        "max_vel_theta": 0.4,
+        "visibility_clearance_m": 0.0
       },
       "obstacle_layer_plugin": "nav2_costmap_2d::VoxelLayer"
     }

@@ -38,10 +38,12 @@ python3 scripts/sim_session.py start --task1 --navigation --name task1_preview
 完整任务由以下命令执行正常解锁、任务开始、证据记录、10 s 末端漂移记录和清理：
 
 ```bash
-python3 scripts/run_task1_suite.py --seed 1 --changes 2 --record-maps
+python3 scripts/run_task1_suite.py --seed 1 --changes 1 --record-maps
 ```
 
-`--group all --record-maps` 共 18 项：3 种固定布局 × 0/1/2 次语义变化，以及各布局的横穿、临时阻挡、横穿加两次灯变。seed 3 含一个 OFF 实体。`--group dynamic --seed 1 --changes 0 --dynamic cross` 可单独选例。无匹配时脚本报错，失败运行保留，结果按独立裁判判定，不以进程退出码代替任务成功。
+根据用户 2026-11-01 确认，正式比赛仅一次语义灯态切换，闪烁亮灭不计次数。`--group all --record-maps` 先运行 9 项比赛主验收：3 种布局 × 一次切换 × 无动态障碍/横穿/临时阻挡；再运行对应的 9 项零切换对照。`--group all --changes 1 --record-maps` 只运行这 9 项主验收。seed 3 含一个 OFF 实体。`--group dynamic --seed 1 --changes 1 --dynamic cross` 可单独选择一次切换加横穿。
+
+两次切换仅在显式 `--stress` 下运行，例如 `--group dynamic --seed 1 --changes 2 --dynamic cross --stress`。它的结果列为额外压力测试，不进入比赛主验收计数。`--skip-case s1_c0_none` 可在续跑时跳过已归档的用例；跳过不代表通过，报告仍读取该例的实际记录。无匹配或无效筛选时脚本报错，失败运行保留，结果按独立裁判判定，不以进程退出码代替任务成功。
 
 排查感知问题时加 `--record-sensors`，在 `sensors/` 保存原始/过滤/标记/清除点云、扫描、TF、时钟、EKF 和指令。测试脚本检测到实际接触后请求任务取消并继续记录 10 s；这是测试端中止，不能算作导航本身主动避碰。
 

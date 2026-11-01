@@ -8,6 +8,7 @@ import signal
 import subprocess
 import sys
 import time
+from task1_cases import cases as selected_cases,case_key
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -18,17 +19,20 @@ def main():
     p.add_argument('--dynamic',choices=('none','cross','block'));p.add_argument('--record-maps',action='store_true')
     p.add_argument('--record-sensors',action='store_true',help='Retain source clouds, scan, TF and odometry in a rosbag')
     p.add_argument('--visibility-guard',action='store_true',help='Test the experimental lidar stand-off separately')
+    p.add_argument('--stress',action='store_true',help='Run two-change stress cases outside the confirmed match setting')
+    p.add_argument('--skip-case',action='append',default=[],help='Omit an already recorded case ID, e.g. s1_c0_none')
     p.add_argument('--fault',choices=('observation_gap','reordered_observation','mission_exit','cancel','role_change','no_path','late_change'))
     p.add_argument('--stop-on-failure',action='store_true')
     p.add_argument('--no-video',action='store_true');a=p.parse_args()
     if (ROOT/'runs/session.json').exists():raise RuntimeError('Stop the current managed session before running a cold-start suite')
-    cases=[]
-    if a.group in ('base','all'):
-        cases += [dict(seed=s,changes=c,dynamic='none') for s in (1,2,3) for c in (0,1,2)]
-    if a.group in ('dynamic','all'):
-        cases += [dict(seed=s,changes=c,dynamic=d) for s in (1,2,3) for c,d in ((0,'cross'),(0,'block'),(2,'cross'))]
+    if a.changes==2 and not a.stress:p.error('--changes 2 requires --stress; competition cases change once')
+    if a.stress and (a.fault or a.changes in (0,1)):p.error('--stress is only for two-change normal tasks')
+    cases=selected_cases(a.group,a.stress)
     cases=[c for c in cases if all(getattr(a,k) is None or c[k]==getattr(a,k) for k in ('seed','changes','dynamic'))]
     if a.fault:cases=[dict(seed=1,changes=0,dynamic='none',fault=a.fault)]
+    known={case_key(c) for c in cases}
+    if set(a.skip_case)-known:p.error('Unknown or filtered --skip-case: '+', '.join(sorted(set(a.skip_case)-known)))
+    cases=[c for c in cases if case_key(c) not in a.skip_case]
     if not cases:raise ValueError('No matching cases')
     ledger=ROOT/'runs'/('task1_suite_'+datetime.datetime.now().strftime('%Y%m%d_%H%M%S')+'.json')
     results=[]
