@@ -17,7 +17,7 @@ from scipy.spatial.transform import Rotation
 from tf2_ros import Buffer, TransformListener, TransformException
 from robotx_task1_interfaces.msg import TrafficSafety, BuoyArray
 from usv_sim.cloud_filter import xyz_view
-from .traffic import Tracker, StaticMap, corridor, conflict, exclude_surveyed_markers, traffic_grid
+from .traffic import Tracker, StaticMap, corridor, conflict, exclude_surveyed_markers, traffic_grid, tracking_points
 
 
 def seconds(stamp):
@@ -37,10 +37,12 @@ class TrafficGuard(Node):
         self.declare_parameter('horizon', 20.)
         self.declare_parameter('speed_bound', .3)
         self.declare_parameter('margin', .6)
+        self.declare_parameter('continuation_range', 40.)
         self.footprint = np.asarray(json.loads(self.get_parameter('footprint').value))
         self.horizon = self.get_parameter('horizon').value
         self.speed = self.get_parameter('speed_bound').value
         self.margin = self.get_parameter('margin').value
+        self.continuation_range = self.get_parameter('continuation_range').value
         run = self.get_parameter('run_dir').value
         self.log = (Path(run)/'traffic_guard.jsonl').open('w') if run else None
         self.tracker = Tracker(horizon=self.horizon)
@@ -136,10 +138,11 @@ class TrafficGuard(Node):
         p, q = transform.translation, transform.rotation
         points = xyz_view(msg).reshape(-1, 3)
         points = points[np.isfinite(points).all(axis=1)]
-        points = points[np.linalg.norm(points[:,:2],axis=1) <= self.tracker.observation_range]
         points = Rotation.from_quat([q.x, q.y, q.z, q.w]).apply(points) + [p.x, p.y, p.z]
         points = self.static_map.unmapped(points)
         points = exclude_surveyed_markers(points,self.markers)
+        points = tracking_points(points,[p.x,p.y],self.tracker.tracks,stamp,
+                                 self.tracker.observation_range,self.continuation_range)
         pose = pose_xyyaw(boat)
         tracks = self.tracker.update(points, stamp, np.asarray(pose[:2]))
         swept = corridor(self.footprint, pose, self.path, self.horizon * self.speed)
@@ -156,6 +159,7 @@ class TrafficGuard(Node):
         self.publisher.publish(result)
         row = dict(source_stamp=stamp, evaluated_at=now, path_stamp=seconds(self.path_stamp),
                    horizon=self.horizon,speed_bound=self.speed,margin=self.margin,
+                   acquisition_range=self.tracker.observation_range,continuation_range=self.continuation_range,
                    clear=result.clear, risk=risk, pose=pose, corridor=swept.tolist(),
                    merged_tracks=self.tracker.merges, retired_tracks=self.tracker.retired,
                    tracks=[dict(id=t.id, stamp=t.stamp, bounds=t.bounds.tolist(),

@@ -2,7 +2,7 @@
 import math
 import unittest
 import numpy as np
-from robotx_task1.traffic import Tracker, Track, TrafficLease, StaticMap, clusters, corridor, conflict, traffic_grid
+from robotx_task1.traffic import Tracker, Track, TrafficLease, StaticMap, clusters, corridor, conflict, traffic_grid, tracking_points
 
 
 def surface(x=8., y=-6.):
@@ -23,6 +23,19 @@ class TrafficTests(unittest.TestCase):
         tracker = Tracker()
         for t in np.arange(0,4,.1):tracker.update(surface(),float(t))
         self.assertFalse(tracker.tracks[0].moving)
+
+    def test_far_returns_only_continue_confirmed_near_field_tracks(self):
+        track=Track(1,10.,np.array([[25.,-2.],[27.,1.]]),np.zeros(2),True)
+        points=np.array([[10.,5.,1.],[26.,0.,1.],[30.,4.,1.],[45.,0.,1.]])
+        np.testing.assert_equal(tracking_points(points,[0.,0.],[track],10.1),points[:2])
+        track.moving=False
+        np.testing.assert_equal(tracking_points(points,[0.,0.],[track],10.1),points[:1])
+
+    def test_continuation_does_not_create_returns_or_clear_a_lost_target(self):
+        track=Track(1,10.,np.array([[4.,-2.],[6.,1.]]),np.array([0.,.25]),True)
+        self.assertEqual(len(tracking_points(np.empty((0,3)),[0.,0.],[track],40.)),0)
+        swept=corridor(self.hull,[0.,0.,0.],self.path,6.)
+        self.assertIsNotNone(conflict([track],40.,swept))
 
     def test_sliding_partial_view_of_static_wall_is_not_translation(self):
         track=Track(1,0.,np.array([[0.,0.],[3.,1.]]))

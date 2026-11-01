@@ -104,7 +104,7 @@ def navigation(out):
     params=json.loads((out/'nav2_wamv.yaml').read_text())
     planner=params['planner_server']['ros__parameters']
     planner['planner_plugins']=['GridBased','Task1']
-    planner['Task1']={'plugin':'robotx_task1_nav/RulePlanner'}
+    planner['Task1']={'plugin':'robotx_task1_nav/RulePlanner','search_time_limit':10.}
     # Remain outside the near-field blind zone for the lowest marking height.
     # Fixed surveyed buoy bodies still use their normal physical collision checks.
     clearance=0.
@@ -135,6 +135,14 @@ def navigation(out):
     controller['failure_tolerance']=.5
     for name in ('local_costmap','global_costmap'):
         costmap=params[name][name]['ros__parameters']
+        if name=='global_costmap':
+            # Leave room for tracking/braking before the controller's hard
+            # hull limit. Measured stops use ~0.33 m; the 0.2 m vs 0.05 m
+            # grids add ~0.11 m of cell-radius discrepancy. The extra 0.5 m
+            # planning reserve prevents a legal local stop from trapping the
+            # coarser global planner at an occupied start near a fixed buoy.
+            local_padding=params['local_costmap']['local_costmap']['ros__parameters']['footprint_padding']
+            costmap['footprint_padding']=max(costmap['footprint_padding'],local_padding+.5)
         # Self returns are removed by cloud_filter using the physical hull.
         # Clearing the padded footprint here erases external returns before
         # physical contact, including a moving obstacle entering the margin.

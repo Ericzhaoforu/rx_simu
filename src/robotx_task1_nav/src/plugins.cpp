@@ -69,10 +69,16 @@ class RulePlanner : public nav2_core::GlobalPlanner {
   std::shared_ptr<nav2_costmap_2d::Costmap2DROS> map_;
   Input input_;
   Visibility visibility_;
+  double search_time_limit_=3.;
  public:
   void configure(const rclcpp_lifecycle::LifecycleNode::WeakPtr &node,std::string name,
                  std::shared_ptr<tf2_ros::Buffer>,std::shared_ptr<nav2_costmap_2d::Costmap2DROS> map) override {
     node_=node.lock();map_=map;input_.attach(node_);visibility_.configure(node_,name+".");
+    const auto key=name+".search_time_limit";
+    if(!node_->has_parameter(key))node_->declare_parameter(key,search_time_limit_);
+    node_->get_parameter(key,search_time_limit_);
+    if(!std::isfinite(search_time_limit_)||search_time_limit_<=0.)
+      throw std::runtime_error("invalid Task1 search time limit");
   }
   void cleanup()override{input_.os.reset();input_.cs.reset();map_.reset();node_.reset();}
   void activate()override{}
@@ -121,7 +127,7 @@ class RulePlanner : public nav2_core::GlobalPlanner {
       DubinsEstimate dubins(to);
       std::function<double(const Pose&)> estimate;
       if(ctx.enforce_passage)estimate=[&](const Pose &p){return dubins(p);};
-      auto result=search(from,to,buoys,ctx.enforce_passage,ctx.passed_colors,cost,3.,estimate);
+      auto result=search(from,to,buoys,ctx.enforce_passage,ctx.passed_colors,cost,search_time_limit_,estimate);
       RCLCPP_INFO(node_->get_logger(),"Task1 search expanded %zu states",result.expanded);path=result.path;
     }
     nav_msgs::msg::Path result;result.header.frame_id="map";result.header.stamp=node_->now();

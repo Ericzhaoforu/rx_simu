@@ -92,6 +92,28 @@ def clusters(points, radius=.55, minimum=5):
             for label in range(count) if len(p := points[labels == label]) >= minimum]
 
 
+def tracking_points(points, sensor_position, tracks, stamp, acquisition_range=20., continuation_range=40.):
+    """Use distant measured surfaces only to continue an established object.
+
+    LaserScan's navigation range is not the raw LiDAR's range. Cutting an
+    established object at that boundary creates a needless loss, while using
+    all distant partial quay faces to acquire tracks creates false motion.
+    Keep the original acquisition window and admit actual farther returns
+    only inside the association envelope of a confirmed moving track.
+    """
+    points=np.asarray(points)
+    ranges=np.linalg.norm(points[:,:2]-np.asarray(sensor_position)[:2],axis=1)
+    keep=ranges<=acquisition_range
+    for track in tracks:
+        if not track.moving:continue
+        padding=.6+.15*min(max(stamp-track.stamp,0.),3.)
+        box=track.at(stamp)
+        keep |= ((ranges<=continuation_range)&
+                 np.all(points[:,:2]>=box[0]-padding,axis=1)&
+                 np.all(points[:,:2]<=box[1]+padding,axis=1))
+    return points[keep]
+
+
 @dataclass
 class Track:
     id: int
