@@ -23,7 +23,7 @@ class TaskRunner(Runner):
         super().__init__('task1')
         # The evaluation process observes navigation; it never publishes velocity/setpoints.
         self.node.destroy_publisher(self.raw);self.node.destroy_publisher(self.twist)
-        self.status=None;self.events=[];self.scene_state=None;self.writers={};self.frame_counts={}
+        self.status=None;self.events=[];self.scene_state=None;self.writers={};self.frame_counts={};self.frame_stamps={}
         self.node.create_subscription(String,'/task1/status',self.on_status,10)
         self.node.create_subscription(String,'/task1/events',lambda m:self.events.append(json.loads(m.data)),10)
         self.node.create_subscription(String,'/task1/scene_state',self.on_scene,10)
@@ -48,8 +48,8 @@ class TaskRunner(Runner):
         cv2.putText(bgr,f'Simulation {stamp:.1f}s | {self.phase}',(16,30),cv2.FONT_HERSHEY_SIMPLEX,.65,(255,255,255),2)
         if name not in self.writers:
             self.writers[name]=cv2.VideoWriter(str(self.run/(name+'.mp4')),cv2.VideoWriter_fourcc(*'mp4v'),5,(msg.width,msg.height))
-            self.frame_counts[name]=0;cv2.imwrite(str(self.run/(name+'.png')),bgr)
-        self.writers[name].write(bgr);self.frame_counts[name]+=1
+            self.frame_counts[name]=0;self.frame_stamps[name]=[];cv2.imwrite(str(self.run/(name+'.png')),bgr)
+        self.writers[name].write(bgr);self.frame_counts[name]+=1;self.frame_stamps[name].append(stamp)
 
     def record(self):
         super().record()
@@ -65,7 +65,10 @@ class TaskRunner(Runner):
         self.mav.mav.command_long_send(1,1,mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM,0,0,0,0,0,0,0,0)
         self.spin(.3)
         for writer in self.writers.values():writer.release()
-        (self.run/'task1_video.json').write_text(json.dumps({'frames':self.frame_counts,'source_sim_rate_hz':5},indent=2)+'\n')
+        (self.run/'task1_video.json').write_text(json.dumps({
+            'frames':self.frame_counts,'configured_camera_update_rate_hz':5,'encoded_fps':5,
+            'source_sim_stamps':self.frame_stamps,
+            'timing_note':'Received frames are encoded in order. Delivery may be below the configured rate; use source stamps, not MP4 elapsed time, for measurements.'},indent=2)+'\n')
         self.mav.close();self.log.close();self.node.destroy_node()
 
 

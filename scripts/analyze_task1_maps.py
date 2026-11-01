@@ -8,6 +8,32 @@ from pathlib import Path
 import numpy as np
 
 
+def buoy_persistence(run):
+    run=Path(run);raw=run/'visualization/raw'
+    scenario=json.loads((run/'generated/task1_scenario.json').read_text())
+    if not (raw/'events.jsonl').exists():return {'passed':False,'reason':'Map recording was not enabled'}
+    mission=[json.loads(l) for l in (run/'task1_mission.jsonl').read_text().splitlines()]
+    start=next((e['sim'] for e in mission if e['event']=='started'),None)
+    if start is None:return {'passed':False,'reason':'No task start'}
+    counts={b['id']:dict(observed=0,missing=0) for b in scenario['buoys']};missing=[]
+    for event in map(json.loads,(raw/'events.jsonl').read_text().splitlines()):
+        if event['topic']!='/global_costmap/costmap' or event['stamp']<start:continue
+        if event['frame']!='map':raise ValueError('Task1 persistence requires the configured map frame')
+        with np.load(raw/event['file']) as data:grid=data['data']
+        ox,oy=event['origin'][:2];res=event['resolution']
+        for b in scenario['buoys']:
+            radius=b['radius']+res
+            x0=max(0,int(math.floor((b['x']-radius-ox)/res)));x1=min(grid.shape[1],int(math.ceil((b['x']+radius-ox)/res)))
+            y0=max(0,int(math.floor((b['y']-radius-oy)/res)));y1=min(grid.shape[0],int(math.ceil((b['y']+radius-oy)/res)))
+            present=x0<x1 and y0<y1 and np.any(grid[y0:y1,x0:x1]>=100)
+            counts[b['id']]['observed']+=1;counts[b['id']]['missing']+=int(not present)
+            if not present and len(missing)<20:missing.append(dict(stamp=event['stamp'],id=b['id']))
+    result=dict(passed=all(v['observed']>0 and v['missing']==0 for v in counts.values()),buoys=counts,
+                initially_off=[b['id'] for b in scenario['buoys'] if b['state']==0],first_missing=missing,
+                criterion='Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase.')
+    (run/'buoy_map_result.json').write_text(json.dumps(result,indent=2)+'\n');return result
+
+
 def analyze(run):
     run=Path(run);scene=json.loads((run/'generated/scene.json').read_text())
     if scene['task1']['dynamic']=='none':return None
@@ -54,6 +80,8 @@ def analyze(run):
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('run',type=Path);a=p.parse_args()
-    report=analyze(a.run);print(json.dumps({k:v for k,v in report.items() if k!='samples'}))
+    p=argparse.ArgumentParser();p.add_argument('run',type=Path);p.add_argument('--buoys',action='store_true');a=p.parse_args()
+    report=buoy_persistence(a.run) if a.buoys else analyze(a.run)
+    if report is None:raise SystemExit('This run has no moving obstacle; use --buoys for the known buoy layer')
+    print(json.dumps({k:v for k,v in report.items() if k!='samples'}))
     if not report['passed']:raise SystemExit(1)

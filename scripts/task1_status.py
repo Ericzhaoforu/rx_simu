@@ -20,7 +20,8 @@ def tail_json(path,kind=None):
 
 def main():
     pidfile=ROOT/'runs/session.json';active=json.loads(pidfile.read_text()) if pidfile.exists() else None
-    latest=ROOT/'runs/latest.txt';run=Path(latest.read_text().strip()) if latest.exists() else None
+    latest=ROOT/'runs/latest.txt'
+    run=Path(active['run_dir']) if active else Path(latest.read_text().strip()) if latest.exists() else None
     processes={p['name']:process_start(p['pid'])==p['start'] for p in active['processes']} if active else {}
     output={'managed_session':active is not None,'processes_alive':processes,'run_dir':str(run) if run else None}
     if run:

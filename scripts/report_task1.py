@@ -25,6 +25,14 @@ def main():
         key=f"s{scenario['seed']}_c{len(scenario['changes'])}_{scenario['dynamic']}"
         verdict=j.get('passed',False);f=None
         map_result=None
+        buoy_map=None
+        if not fault.exists() and (run/'visualization/raw/events.jsonl').exists():
+            buoy_file=run/'buoy_map_result.json'
+            if buoy_file.exists():buoy_map=json.loads(buoy_file.read_text())
+            else:
+                from analyze_task1_maps import buoy_persistence
+                buoy_map=buoy_persistence(run)
+            verdict=verdict and buoy_map.get('passed',False)
         if scenario['dynamic']!='none' and not fault.exists():
             map_file=run/'dynamic_map_result.json'
             if map_file.exists():map_result=json.loads(map_file.read_text())
@@ -38,8 +46,10 @@ def main():
                   endpoint=j.get('endpoint_error'),clearance_m=j.get('min_clearance_m'),collisions=j.get('collision_contacts'),
                   circles=j.get('circles'),stops=j.get('stops'),fault=f,
                   semantic_timing=j.get('semantic_timing'),drift_m=j.get('post_completion_drift_m'),
+                  buoy_map=buoy_map,
                   dynamic_map={k:v for k,v in map_result.items() if k!='samples'} if map_result else None,
-                  evidence_sha256={p.name:digest(p) for p in [result,source,run/'provenance.json'] if p.exists()})
+                  evidence_sha256={p.name:digest(p) for p in [result,source,run/'provenance.json',
+                                    run/'buoy_map_result.json',run/'dynamic_map_result.json'] if p.exists()})
         if fault.exists():item['evidence_sha256'][fault.name]=digest(fault)
         mission_log=run/'task1_mission.jsonl'
         if mission_log.exists():

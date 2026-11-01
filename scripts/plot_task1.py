@@ -68,8 +68,8 @@ def figures(data):
     for i,event in enumerate(data.plans):draw_path(ax,data,event,'#94a3b8','历史参考路径' if i==0 else None,width=1,alpha=.65)
     ax.plot(data.truth[:,0],data.truth[:,1],color=BLUE,lw=2,label='实际轨迹：VRX 真值',zorder=6)
     ax.plot(data.ekf[:,0],data.ekf[:,1],'--',color=ORANGE,lw=1,label='飞控 EKF',zorder=6)
-    data.markers(ax,data.focus['sim']);data.target_marker(ax)
-    setup(ax,'Task 1：参考路径、实际轨迹与期望末端',data.bounds);ax.legend(loc='lower left',ncol=4,fontsize=9)
+    data.markers(ax,data.rows[-1]['sim']);data.target_marker(ax)
+    setup(ax,'Task 1：参考路径、实际轨迹与期望末端（浮标颜色为结束时灯态）',data.bounds);ax.legend(loc='lower left',ncol=4,fontsize=9)
     ax=axes[1]
     phases=['APPROACH_ENTRY','CIRCLE_ENTRY','TRANSIT','CIRCLE_EXIT','COMPLETE','ABORTED']
     times=[r['stamp']-data.t0 for r in data.statuses if r['stamp']>=data.t0]
@@ -114,7 +114,8 @@ def replay(data):
         '浮标始终存在；空心表示闪烁暗相位，深灰为 OFF。0.5 仿真秒采样，2.5 倍速。',ha='center',fontsize=10)
     output=data.output/'task1_replay.mp4'
     process=subprocess.Popen(['ffmpeg','-hide_banner','-loglevel','error','-y','-f','rawvideo','-pix_fmt','rgba','-s','1280x640',
-                               '-r','5','-i','-','-an','-c:v','libx264','-threads','2','-crf','22','-pix_fmt','yuv420p',str(output)],stdin=subprocess.PIPE)
+                               '-r','5','-i','-','-an','-c:v','libx264','-threads','2','-crf','22','-pix_fmt','yuv420p',
+                               '-movflags','+faststart',str(output)],stdin=subprocess.PIPE)
     try:
         for t in times:
             index=max(0,bisect.bisect_right(sim,t)-1);row=data.rows[index];status=data.status(t)
@@ -137,14 +138,27 @@ def replay(data):
                     '-loop','0',str(data.output/'task1_excerpt.gif')],check=True)
 
 
+def camera_video(data):
+    source=data.run/'task1_overview.mp4'
+    if source.exists():
+        subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(source),'-an',
+                        '-c:v','libx264','-preset','fast','-crf','23','-threads','2','-pix_fmt','yuv420p',
+                        '-movflags','+faststart',str(data.output/'task1_vrx.mp4')],check=True)
+
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('run',type=Path);p.add_argument('--animate',action='store_true');a=p.parse_args()
     data=TaskEvidence(a.run);figures(data)
-    if a.animate:replay(data)
+    if a.animate:replay(data);camera_video(data)
     files=[data.run/'task1.jsonl',data.run/'task1_result.json',data.run/'task1_judge.jsonl',data.raw/'events.jsonl']
+    if (data.run/'task1_overview.mp4').exists():files.append(data.run/'task1_overview.mp4')
     manifest={'run_dir':str(data.run),'passed':data.result['passed'],'reference_paths':len(data.plans),
               'meaning':'Spatial Nav2 reference paths; actual vessel trajectory from independent VRX truth. EKF remains the navigation input.',
-              'source_sha256':{str(f.relative_to(data.run)):hashlib.sha256(f.read_bytes()).hexdigest() for f in files}}
+              'source_sha256':{str(f.relative_to(data.run)):hashlib.sha256(f.read_bytes()).hexdigest() for f in files},
+              'artifact_sha256':{f.name:hashlib.sha256(f.read_bytes()).hexdigest() for f in sorted(data.output.glob('task1_*'))
+                                 if f.suffix in ('.png','.mp4','.gif')},
+              'video_sources':{'task1_replay.mp4':'Recorded navigation data rendered at 2.5x simulation speed',
+                               'task1_vrx.mp4':'Gazebo overview camera, original frame sequence; source sim stamps are burned in'}}
     (data.output/'task1_manifest.json').write_text(json.dumps(manifest,indent=2)+'\n');print(data.output)
 
 

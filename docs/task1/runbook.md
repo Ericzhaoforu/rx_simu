@@ -67,6 +67,10 @@ python3 scripts/plot_task1.py runs/实际运行目录 --animate
 
 visualization 中提供参考路径/真值/EKF 航迹、期望末端与误差、实际静态/全局/局部地图、MP4 和 GIF。参考是空间路径，不是带时序的速度轨迹；GIF 是全视频节选。所有浮标实体持续绘制；空心灯标为闪烁暗相位，深灰为语义 OFF。
 
+`--animate` 同时将真实 Gazebo 总览相机转为便于播放的 H.264 `task1_vrx.mp4`；`task1_replay.mp4` 是按记录数据绘制的 2.5 倍速地图回放。真实相机按收到的帧顺序编码为 5 FPS，接收帧率可能低于配置值，因此不能用视频播放时长测量停车或灯变延迟；以画面内仿真时标、较新运行的 `task1_video.json` 源时标和原始日志为准。图像与视频的来源及校验值写入 `task1_manifest.json`。
+
+`python3 scripts/analyze_task1_maps.py runs/实际运行目录 --buoys` 检查每张全局地图持续保留全部已知浮标；不加 `--buoys` 检查动态障碍的标记和离开后清除。已知浮标占据层来自本轮允许的已知观测，不能代替 `check_task1_lidar.py` 的真实传感器回波检查。
+
 ## 已知观察接口与规则规划
 
 `/task1/observations` 为 BuoyArray：map 坐标、源时间戳、完整十个 ID、碰撞半径、语义状态、revision、survey_complete。已知 UAV 替身从 Gazebo 场景取得这些信息；没有读取船体真值定位。将来接视觉时保持此契约和来源时间，不把旧观测改成新时间戳。
