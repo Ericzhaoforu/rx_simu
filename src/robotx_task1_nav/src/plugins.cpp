@@ -1,6 +1,7 @@
 #include "robotx_task1_nav/rules.hpp"
 #include "robotx_task1_nav/dubins_estimate.hpp"
 #include "robotx_task1_nav/hull_grid.hpp"
+#include "robotx_task1_nav/traffic_layer.hpp"
 #include <mutex>
 #include <set>
 #include <nav2_core/global_planner.hpp>
@@ -208,3 +209,4 @@ PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::RulePlanner,nav2_core::GlobalPlanner)
 PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::RuleCritic,dwb_core::TrajectoryCritic)
 PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::FullHullCritic,dwb_core::TrajectoryCritic)
 PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::KnownBuoys,nav2_costmap_2d::Layer)
+PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::TrafficLayer,nav2_costmap_2d::Layer)

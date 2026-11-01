@@ -141,6 +141,10 @@ def navigation(out):
         costmap['obstacle_layer']=voxel_obstacles()
         costmap['plugins'].insert(-1,'known_buoys')
         costmap['known_buoys']={'plugin':'robotx_task1_nav/KnownBuoys'}
+        costmap['plugins'].insert(-1,'traffic_prediction')
+        costmap['traffic_prediction']=dict(plugin='robotx_task1_nav/TrafficLayer',
+            map_topic='/task1/traffic_costmap',map_subscribe_transient_local=True,
+            subscribe_to_updates=False,footprint_clearing_enabled=False)
     params['rover_bridge']['ros__parameters']['require_task_permission']=True
     (out/'nav2_wamv.yaml').write_text(json.dumps(params,indent=2)+'\n')
     area={'resolution':.2,'padding':1.,'navigable_boundary':scenario['boundary'],'exclusions':[]}

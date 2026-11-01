@@ -16,8 +16,9 @@ from mavros_msgs.msg import State
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
 from tf2_ros import Buffer, TransformListener
-from robotx_task1_interfaces.msg import BuoyArray, MissionContext, MotionPermission
+from robotx_task1_interfaces.msg import BuoyArray, MissionContext, MotionPermission, TrafficSafety
 from .core import CircleTracker, passage_events, wrap
+from .traffic import TrafficLease
 
 
 def seconds(stamp):return stamp.sec+stamp.nanosec/1e9
@@ -30,6 +31,7 @@ class Mission(Node):
         self.declare_parameter('run_dir','');self.declare_parameter('circle_radius',6.)
         self.declare_parameter('stop_speed',.04);self.declare_parameter('stop_yaw_rate',.04)
         self.declare_parameter('stop_dwell',1.5)
+        self.declare_parameter('traffic_yield_wait',60.)
         self.declare_parameter('circle_completion_margin',.05)
         # Reserve time for the 10 Hz mission tick, bridge forwarding and the
         # independent recorder within the 0.6 s interruption response budget.
@@ -39,6 +41,8 @@ class Mission(Node):
         self.circle_minimum=2*math.pi+self.get_parameter('circle_completion_margin').value
         self.stop_speed=self.get_parameter('stop_speed').value
         self.stop_yaw=self.get_parameter('stop_yaw_rate').value;self.stop_dwell=self.get_parameter('stop_dwell').value
+        self.traffic_yield_wait=self.get_parameter('traffic_yield_wait').value
+        self.yield_until=None
         run=self.get_parameter('run_dir').value
         self.log=(Path(run)/'task1_mission.jsonl').open('w') if run else None
         self.obs=None;self.buoys=[];self.pose=None;self.odom=None;self.pose_stamp=-1.;self.pose_wall=0.
@@ -50,6 +54,7 @@ class Mission(Node):
         self.still_since=None;self.last_retry=-1e9;self.started_at=None;self.last_path=None
         self.previous_pose=None;self.reason='waiting for start';self.last_revision=0
         self.last_event_pass={};self.obs_wall=0.;self.last_source_stamp=0.
+        self.traffic=TrafficLease();self.traffic_message=None
         self.plan_client=ActionClient(self,ComputePathToPose,'/compute_path_to_pose')
         self.follow_client=ActionClient(self,FollowPath,'/follow_path')
         self.context_pub=self.create_publisher(MissionContext,'/task1/context',10)
@@ -57,9 +62,11 @@ class Mission(Node):
         self.status_pub=self.create_publisher(String,'/task1/status',10)
         self.events_pub=self.create_publisher(String,'/task1/events',10)
         self.path_pub=self.create_publisher(NavPath,'/task1/reference_path',10)
+        self.candidate_pub=self.create_publisher(NavPath,'/task1/candidate_path',10)
         self.scene_pub=self.create_publisher(String,'/task1/scene_command',10)
         self.create_subscription(BuoyArray,'/task1/observations',self.on_observation,10)
         self.create_subscription(Odometry,'/usv/odom',self.on_odom,qos_profile_sensor_data)
+        self.create_subscription(TrafficSafety,'/task1/traffic_safety',self.on_traffic,10)
         self.create_subscription(State,'/mavros/state',lambda m:setattr(self,'state',m),qos_profile_sensor_data)
         self.create_service(Trigger,'/task1/start',self.start)
         self.create_service(Trigger,'/task1/cancel',self.cancel)
@@ -88,6 +95,7 @@ class Mission(Node):
         self.abort('task cancelled');response.success=True;response.message=self.reason;return response
 
     def interrupt(self,reason):
+        self.yield_until=None
         self.generation+=1;self.motion='STOPPING';self.reason=reason;self.still_since=None
         if self.follow_handle and not self.cancel_requested:
             self.follow_handle.cancel_goal_async();self.cancel_requested=True
@@ -140,6 +148,11 @@ class Mission(Node):
                 if not e['legal']:self.abort('EKF detected wrong-side/ambiguous passage: '+e['id'])
                 else:self.bits|=1 if e['state']==1 else 2
 
+    def on_traffic(self,msg):
+        if msg.header.frame_id!='map':return
+        if self.traffic.update(seconds(msg.header.stamp),seconds(msg.path_stamp),msg.clear,msg.reason,
+                               self.now(),time.monotonic()):self.traffic_message=msg
+
     def permission(self,allow):
         m=MotionPermission();m.header.stamp=self.get_clock().now().to_msg();m.header.frame_id='map'
         m.revision=self.last_revision;m.allow=allow;m.reason=self.reason;self.permission_pub.publish(m)
@@ -158,6 +171,10 @@ class Mission(Node):
                 time.monotonic()-self.obs_wall<=self.observation_timeout and
                 -.1<=self.now()-self.pose_stamp<=.5 and time.monotonic()-self.pose_wall<=.5)
 
+    def traffic_permits_path(self):
+        return (self.last_path is not None and
+                self.traffic.permits(self.now(),time.monotonic(),seconds(self.last_path.header.stamp)))
+
     def select_target(self):
         if self.stage=='APPROACH_ENTRY':self.target=[self.entry['x']-self.radius,self.entry['y'],math.pi/2]
         elif self.stage=='TRANSIT':self.target=[self.exit['x']-self.radius,self.exit['y'],-math.pi/2]
@@ -169,6 +186,7 @@ class Mission(Node):
             self.target=[marker['x']+self.radius*math.cos(a),marker['y']+self.radius*math.sin(a),wrap(a+direction*math.pi/2)]
 
     def advance(self):
+        self.yield_until=None
         if self.stage=='APPROACH_ENTRY':
             self.stage='CIRCLE_ENTRY';self.arc_index=1;self.circle=CircleTracker([self.entry['x'],self.entry['y']],-1,self.radius,self.circle_minimum);self.circle.update(self.pose)
         elif self.stage in ('CIRCLE_ENTRY','CIRCLE_EXIT'):
@@ -209,10 +227,9 @@ class Mission(Node):
                 if result.status!=4 or not result.result.path.poses:
                     self.motion='WAIT_CLEAR';self.reason='no legal path';self.event('plan_failed',status=result.status)
                 else:
-                    self.last_path=result.result.path;self.path_pub.publish(self.last_path)
-                    goal=FollowPath.Goal();goal.path=self.last_path;goal.controller_id='FollowPath';goal.goal_checker_id='goal_checker'
-                    self.send_future=self.follow_client.send_goal_async(goal);self.motion='STARTING'
-                    self.event('path_ready',poses=len(goal.path.poses),target=self.target)
+                    self.last_path=result.result.path;self.candidate_pub.publish(self.last_path)
+                    self.motion='CHECKING_TRAFFIC';self.reason='waiting for candidate path traffic assessment'
+                    self.event('path_candidate',poses=len(self.last_path.poses),target=self.target)
         if self.send_future and self.send_future.done():
             self.follow_handle=self.send_future.result();self.send_future=None
             if not self.follow_handle.accepted:
@@ -234,23 +251,54 @@ class Mission(Node):
         self.publish_context();self.poll_actions()
         if self.started and self.stage not in ('COMPLETE','ABORTED'):
             if self.now()-self.started_at>1200:self.abort('1200 sim-second task timeout')
-            elif not self.inputs_valid():
-                if self.motion not in ('STOPPING','IDLE'):self.interrupt('observation or EKF stale')
+            elif not self.inputs_valid() or not self.traffic.valid(self.now(),time.monotonic()):
+                if self.motion not in ('STOPPING','IDLE'):self.interrupt('observation, EKF or LiDAR traffic assessment stale')
                 self.still_since=None
             else:
+                if not self.traffic.clear and self.motion in ('EXECUTING','STARTING'):
+                    self.interrupt('LiDAR traffic: '+self.traffic.reason)
+                    self.yield_until=self.now()+self.traffic_yield_wait
+                    self.event('traffic_yield',source_stamp=self.traffic.stamp,
+                               track_id=self.traffic_message.track_id,
+                               conflict_after_s=self.traffic_message.conflict_after_s)
                 if self.stage=='WAIT_SURVEY':
                     self.entry=next(b for b in self.buoys if b['state']==3);self.exit=next(b for b in self.buoys if b['state']==4)
                     self.event('observations_reported',source_stamp=self.last_source_stamp,buoys=self.buoys,report_sink='local_only')
                     self.stage='APPROACH_ENTRY';self.select_target();self.event('survey_accepted',target=self.target)
+                if self.motion=='CHECKING_TRAFFIC' and self.traffic.path_stamp==seconds(self.last_path.header.stamp):
+                    if self.traffic_permits_path() and self.traffic.clear_for(self.now(),time.monotonic()):
+                        self.path_pub.publish(self.last_path)
+                        goal=FollowPath.Goal();goal.path=self.last_path;goal.controller_id='FollowPath';goal.goal_checker_id='goal_checker'
+                        self.send_future=self.follow_client.send_goal_async(goal);self.motion='STARTING'
+                        self.event('path_ready',poses=len(goal.path.poses),target=self.target)
+                    elif not self.traffic.clear:
+                        self.motion='WAIT_CLEAR';self.reason='candidate path blocked by traffic';self.last_retry=self.now()
+                        self.event('path_blocked_traffic',source_stamp=self.traffic.stamp)
                 if self.motion in ('STOPPING','WAIT_CLEAR'):
                     v=self.odom.twist.twist.linear;w=self.odom.twist.twist.angular
                     if math.hypot(v.x,v.y)<self.stop_speed and abs(w.z)<self.stop_yaw:
                         if self.still_since is None:self.still_since=self.now()
                     else:self.still_since=None
                     free=not any((self.follow_handle,self.send_future,self.plan_future,getattr(self,'plan_result',None)))
-                    if free and self.still_since is not None and self.now()-self.still_since>=self.stop_dwell and self.now()-self.last_retry>=2.:
-                        self.request_plan()
-        allow=self.motion=='EXECUTING' and self.inputs_valid() and self.stage not in ('COMPLETE','ABORTED')
+                    retry_delay=2. if self.traffic.clear else 5.
+                    if (free and self.still_since is not None and self.now()-self.still_since>=self.stop_dwell
+                            and self.now()-self.last_retry>=retry_delay):
+                        if self.yield_until is not None and self.now()<self.yield_until:
+                            # Let crossing traffic pass before choosing a new
+                            # spatial corridor. Repeated replanning around a
+                            # moving envelope can chase it into a narrow gap.
+                            # Replan against the latest complete costmap after
+                            # the accepted corridor clears: retained measured
+                            # voxels can still invalidate the previous path.
+                            if self.traffic_permits_path() and self.traffic.clear_for(self.now(),time.monotonic()):
+                                self.event('traffic_corridor_cleared',path_stamp=seconds(self.last_path.header.stamp))
+                                self.yield_until=None
+                                self.request_plan()
+                        else:
+                            self.yield_until=None
+                            self.request_plan()
+        allow=(self.motion=='EXECUTING' and self.inputs_valid() and self.traffic_permits_path()
+               and self.stage not in ('COMPLETE','ABORTED'))
         self.permission(allow)
         status=dict(sim=self.now(),stage=self.stage,motion=self.motion,revision=self.last_revision,
                     target=self.target,pose=self.pose,reason=self.reason,passed_colors=self.bits,

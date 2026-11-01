@@ -186,7 +186,7 @@ def navigation(args):
     state = json.loads(PIDFILE.read_text())
     run = Path(state['run_dir'])
     generated = run/'generated'
-    names={'navigation','lidar_tf','cloud_filter','cloud_to_scan','map_origin','task1_mission','task1_judge'}
+    names={'navigation','lidar_tf','cloud_filter','cloud_to_scan','map_origin','task1_mission','task1_judge','traffic_guard'}
     existing=[p for p in state['processes'] if p['name'] in names and process_start(p['pid'])==p['start']]
     if existing and not args.replace:
         raise RuntimeError('Navigation already attached; use --replace to restart that layer.')
@@ -218,6 +218,11 @@ def navigation(args):
     }
     if task1:
         commands['cloud_filter']+=['-p','publish_clearing_cloud:=true']
+        footprint=json.loads((generated/'scene.json').read_text())['footprint']
+        speed=json.loads((generated/'nav2_wamv.yaml').read_text())['controller_server']['ros__parameters']['FollowPath']['max_vel_x']
+        commands['traffic_guard']=['ros2','run','robotx_task1','traffic_guard','--ros-args','-p','use_sim_time:=true',
+                                   '-p','footprint:='+json.dumps(json.dumps(footprint)),'-p','speed_bound:='+str(speed),
+                                   '-p','run_dir:='+str(run)]
         commands['task1_mission']=['ros2','run','robotx_task1','mission','--ros-args','-p','use_sim_time:=true','-p','run_dir:='+str(run)]
         commands['task1_judge']=['ros2','run','robotx_task1','judge','--ros-args','-p','use_sim_time:=true','-p','run_dir:='+str(run)]
     for name, command in commands.items():
