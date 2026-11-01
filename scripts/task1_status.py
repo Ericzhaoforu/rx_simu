@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+"""Read actual process identities and recent physical evidence; no ROS required."""
+import json
+from pathlib import Path
+import time
+from sim_session import ROOT, process_start
+
+
+def tail_json(path):
+    if not path.exists():return None
+    with path.open('rb') as stream:
+        stream.seek(max(0,path.stat().st_size-65536));lines=stream.read().splitlines()
+    for line in reversed(lines):
+        try:return json.loads(line)
+        except (ValueError,UnicodeDecodeError):pass
+    return None
+
+
+def main():
+    pidfile=ROOT/'runs/session.json';active=json.loads(pidfile.read_text()) if pidfile.exists() else None
+    latest=ROOT/'runs/latest.txt';run=Path(latest.read_text().strip()) if latest.exists() else None
+    processes={p['name']:process_start(p['pid'])==p['start'] for p in active['processes']} if active else {}
+    output={'managed_session':active is not None,'processes_alive':processes,'run_dir':str(run) if run else None}
+    if run:
+        physical=run/'task1.jsonl';sample=tail_json(physical)
+        console=tail_json(run/'test_console.log') or {}
+        output['task_status']=console.get('status')
+        if sample:
+            output['last_physics_sample']={k:sample[k] for k in ['sim','phase','frame','preview','fcu_state'] if k in sample}
+            output['evidence_file_age_s']=round(time.time()-physical.stat().st_mtime,2)
+        result=run/'task1_result.json'
+        if result.exists():
+            j=json.loads(result.read_text());output['finished_result']={k:j[k] for k in ['passed','endpoint_error','circles','min_clearance_m']}
+    ledgers=sorted((ROOT/'runs').glob('task1_suite_*.json'))
+    if ledgers:
+        items=json.loads(ledgers[-1].read_text());output['latest_batch_ledger']=str(ledgers[-1])
+        output['recorded_completed_cases']=len(items)
+        output['recorded_passed_cases']=sum(i.get('fault_result',i.get('result',{})).get('passed',False) for i in items)
+    print(json.dumps(output,ensure_ascii=False,indent=2))
+
+
+if __name__=='__main__':main()

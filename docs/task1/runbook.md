@@ -18,6 +18,8 @@ git diff --check
 
 运行过程中不要覆盖已加载的共享库。运行文件由 `sim_session.py` 创建在忽略目录 runs 中；每次保存本仓库源码快照、固件/插件哈希、生成世界与参数，不覆盖既有工程。
 
+随时用 `python3 scripts/task1_status.py` 查看当前进程是否存活、最近的物理帧及记录年龄、任务阶段和已结束的批测结果。`managed_session: false` 表示当前没有本仓库管理的仿真；旧的 COMPLETE 记录不会被解释为仍在运行。
+
 ## 场景及任务
 
 只看模型，控制保持关闭：
@@ -48,6 +50,7 @@ python3 scripts/run_task1_suite.py --fault mission_exit
 python3 scripts/run_task1_suite.py --fault cancel
 python3 scripts/run_task1_suite.py --fault role_change
 python3 scripts/run_task1_suite.py --fault no_path
+python3 scripts/run_task1_suite.py --fault late_change
 ```
 
 异常测试的“通过”表示按预期停车/拒绝任务，和正常 Task1 完成分开存储。重放观测保留原时间戳。任务进程退出时，飞控、MAVROS 和物理仿真继续运行。

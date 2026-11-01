@@ -84,7 +84,12 @@ def figures(data):
         p=np.asarray(data.result['completion']['pose']);target=data.target
         fig,ax=plt.subplots(figsize=(6,6),constrained_layout=True);ax.set_facecolor('#f4f8fb')
         ax.add_patch(Circle(target[:2],.5,facecolor='#eee7fb',edgecolor=PURPLE,ls='--',label='0.5 m 验收半径'))
-        ax.plot(data.truth[:,0],data.truth[:,1],color=BLUE,lw=2,label='真值航迹');data.target_marker(ax)
+        completed=data.result['completion']['stamp']
+        before=np.asarray([r['truth'] for r in data.rows if completed-20<=r['sim']<=completed])
+        after=np.asarray([r['truth'] for r in data.rows if r['sim']>=completed])
+        if len(before):ax.plot(before[:,0],before[:,1],color=BLUE,lw=2,label='到点前真值航迹')
+        if len(after):ax.plot(after[:,0],after[:,1],'--',color=GREEN,lw=2,label='到点后漂移')
+        data.target_marker(ax,arrow_length=.6)
         ax.scatter(p[0],p[1],color=BLUE,s=60,label='完成瞬间真值',zorder=10)
         ax.arrow(p[0],p[1],.6*math.cos(p[2]),.6*math.sin(p[2]),width=.02,color=BLUE)
         errors=data.result['endpoint_error']

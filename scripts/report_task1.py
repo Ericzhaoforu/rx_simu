@@ -2,6 +2,7 @@
 """Summarize retained attempts without replacing failed evidence or inventing passes."""
 import hashlib
 import json
+import tarfile
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -40,14 +41,22 @@ def main():
                   dynamic_map={k:v for k,v in map_result.items() if k!='samples'} if map_result else None,
                   evidence_sha256={p.name:digest(p) for p in [result,source,run/'provenance.json'] if p.exists()})
         if fault.exists():item['evidence_sha256'][fault.name]=digest(fault)
+        snapshot=run/'source_snapshot.tar.gz'
+        if snapshot.exists():
+            with tarfile.open(snapshot) as archive:
+                item['runtime_source_sha256']={name:hashlib.sha256(archive.extractfile(name).read()).hexdigest() for name in
+                    ['src/robotx_task1/robotx_task1/mission.py','src/robotx_task1/robotx_task1/core.py',
+                     'src/robotx_task1/robotx_task1/observer.py','src/usv_nav2/usv_nav2/rover_bridge.py',
+                     'models/robotx_2026_robobuoy/model.sdf'] if name in archive.getnames()}
         attempts.append(item);latest[key]=item
     expected=[f's{s}_c{c}_{d}' for s in (1,2,3) for c,d in [(0,'none'),(1,'none'),(2,'none'),(0,'cross'),(0,'block'),(2,'cross')]]
-    expected+=['fault_'+f for f in ('observation_gap','reordered_observation','mission_exit','cancel','role_change','no_path')]
+    expected+=['fault_'+f for f in ('observation_gap','reordered_observation','mission_exit','cancel','role_change','no_path','late_change')]
     summary={'expected':expected,'latest':latest,'attempts':attempts,'model_checks':models,'lidar_checks':lidars,
              'scope':'Boat-side simulation; known UAV observation and local reporting substitutes; no official score claimed.'}
     out=ROOT/'docs/task1';(out/'results.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n')
     lines=['# Task 1 实际验证记录','',
            '由 `scripts/report_task1.py` 根据保留的独立裁判结果生成。完整历史（包括调试失败）见 [results.json](results.json)。',
+           '每项展示最近一次已完成的尝试，可能来自较早提交；运行目录的 provenance.json 与源码快照标识当时版本。新修改不能继承旧运行的通过结论。',
            '正常任务与故障测试分开判定；程序报告 COMPLETE 不等于独立验收通过。尚未运行的组合明确列出。','',
            '| 用例 | 判定 | 位置 / 航向误差 | 最小净空 | 证据 |',
            '|---|---|---|---|---|']

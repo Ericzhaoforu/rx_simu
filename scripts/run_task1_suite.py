@@ -16,7 +16,7 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--group',choices=('base','dynamic','all'),default='base')
     p.add_argument('--seed',type=int,choices=(1,2,3));p.add_argument('--changes',type=int,choices=(0,1,2))
     p.add_argument('--dynamic',choices=('none','cross','block'));p.add_argument('--record-maps',action='store_true')
-    p.add_argument('--fault',choices=('observation_gap','reordered_observation','mission_exit','cancel','role_change','no_path'))
+    p.add_argument('--fault',choices=('observation_gap','reordered_observation','mission_exit','cancel','role_change','no_path','late_change'))
     p.add_argument('--stop-on-failure',action='store_true')
     p.add_argument('--no-video',action='store_true');a=p.parse_args()
     if (ROOT/'runs/session.json').exists():raise RuntimeError('Stop the current managed session before running a cold-start suite')

@@ -24,7 +24,7 @@ flowchart LR
     Cost --> Rules
     Mission --> Actions[ComputePathToPose / FollowPath]
     Actions --> Rules
-    Rules --> Cmd[/usv/cmd_vel]
+    Rules --> Cmd["/usv/cmd_vel"]
     Cmd --> Bridge[rover_bridge]
     Mission --> Lease[0.5 s 运动许可租约]
     Lease --> Bridge
@@ -39,6 +39,7 @@ flowchart LR
     EKF --> Rules
     VRX --> Judge[独立真值裁判]
     Scene --> Judge
+    Mission -->|阶段与动作状态| Judge
     Mission --> Local[本地调查、变化及任务报告]
 ```
 

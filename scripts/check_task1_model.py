@@ -38,13 +38,16 @@ def main():
                          scene_stamp=state[0]['stamp'] if state[0] else None,
                          entry=next(b for b in state[0]['buoys'] if b['id']=='entry') if state[0] else None))
         key=(view[0],mode[0],max(counts)>10)
-        if key not in images:
+        channel=mode[0]-1 if mode[0] in (1,2) else 2
+        state_matches=state[0] and next(b for b in state[0]['buoys'] if b['id']=='entry')['state']==mode[0]
+        color_matches=max(counts)<=10 or (mode[0] in (1,2,3,4) and counts[channel]>10)
+        if view[0] in ('top','side') and key not in images and state_matches and color_matches:
             images[key]=True;cv2.imwrite(str(run/f'beacon_{view[0]}_{mode[0]}_{int(max(counts)>10)}.png'),bgr)
     node.create_subscription(Image,'/task1/beacon_view',receive,qos_profile_sensor_data)
     start=time.monotonic()
     while (state[0] is None or fcu[0] is None) and time.monotonic()-start<20:rclpy.spin_once(node,timeout_sec=.1)
     if state[0] is None:raise RuntimeError('No authoritative scene state')
-    if fcu[0] is None or fcu[0].armed:raise RuntimeError('Model checks require a connected, unarmed SITL')
+    if fcu[0] is None or not fcu[0].connected or fcu[0].armed:raise RuntimeError('Model checks require a connected, unarmed SITL')
     for semantic in range(5):
         mode[0]=semantic;pub.publish(String(data=json.dumps({'op':'set_states','states':{'entry':semantic}})))
         begin=node.get_clock().now().nanoseconds/1e9;end=time.monotonic()+20
@@ -57,11 +60,13 @@ def main():
         result=subprocess.run(['gz','service','-s','/world/usv_nav/set_pose','--reqtype','gz.msgs.Pose','--reptype','gz.msgs.Boolean',
                                '--timeout','3000','--req',request],check=True,capture_output=True,text=True,timeout=5)
         if 'true' not in result.stdout:raise RuntimeError('Camera pose command failed: '+result.stdout)
-    camera_pose(request)
-    begin=node.get_clock().now().nanoseconds/1e9
-    while node.get_clock().now().nanoseconds/1e9-begin<1:rclpy.spin_once(node,timeout_sec=.1)
-    view[0]='side';begin=node.get_clock().now().nanoseconds/1e9
-    while node.get_clock().now().nanoseconds/1e9-begin<4:rclpy.spin_once(node,timeout_sec=.1)
+    def spin_sim(duration):
+        begin=node.get_clock().now().nanoseconds/1e9;deadline=time.monotonic()+duration*3+5
+        while node.get_clock().now().nanoseconds/1e9-begin<duration:
+            if time.monotonic()>deadline:raise TimeoutError('Simulation stopped during camera viewpoint check')
+            rclpy.spin_once(node,timeout_sec=.1)
+    view[0]='transition';camera_pose(request);spin_sim(1)
+    view[0]='side';spin_sim(4);view[0]='transition'
     camera_pose('name: "beacon_camera", position: {x: 10, y: 0, z: 2}, orientation: {y: 0.7071067811865475, w: 0.7071067811865475}')
     pub.publish(String(data=json.dumps({'op':'set_states','states':{'entry':3}})))
     for _ in range(5):rclpy.spin_once(node,timeout_sec=.1)
