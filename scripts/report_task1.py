@@ -115,6 +115,11 @@ def main():
         file='task1_fault_result.json' if r['fault'] else 'task1_result.json'
         version='当前' if r['matches_current_runtime_sources'] else '较早；需回归'
         lines.append(f"| {key} | {'通过' if r['passed'] else '失败'} | {version} | {errors} | {clearance} | [{Path(r['run']).name}](../../{r['run']}/{file}) |")
+    late=latest.get('fault_late_change',{}).get('fault')
+    if late:
+        motion=late.get('status_after_fault',{}).get('motion','未知')
+        lines+=['',f'临近浮标灯变测试只测注入后 10 s 的停止和规则响应；记录末端运动状态为 `{motion}`。'
+                '若为 STOPPING / PLANNING / WAIT_CLEAR，只能证明安全停等，不能声称已恢复航行或完成整场。']
     lines+=['','模型和感知检查：']
     for name,items,file in [('相机灯态/实体',models,'model_validation.json'),('LiDAR 三层回波',lidars,'lidar_validation.json')]:
         if items:
