@@ -120,11 +120,12 @@ def replay(data):
     title=fig.suptitle('');fig.text(.5,.025,'蓝：真值　橙虚线：EKF　绿：当前参考路径　紫：末端目标\n'
         '浮标始终存在；空心表示闪烁暗相位，深灰为 OFF。0.5 仿真秒采样，2.5 倍速。',ha='center',fontsize=10)
     output=data.output/'task1_replay.mp4'
+    partial=data.output/'task1_replay.partial.mp4'
     process=subprocess.Popen(['ffmpeg','-hide_banner','-loglevel','error','-y','-f','rawvideo','-pix_fmt','rgba','-s','1280x640',
                                '-r','5','-i','-','-an','-c:v','libx264','-threads','2','-crf','22','-pix_fmt','yuv420p',
-                               '-movflags','+faststart',str(output)],stdin=subprocess.PIPE)
+                               '-movflags','+faststart',str(partial)],stdin=subprocess.PIPE)
     try:
-        for t in times:
+        for frame,t in enumerate(times):
             index=max(0,bisect.bisect_right(sim,t)-1);row=data.rows[index];status=data.status(t)
             for ax,topic in zip(axes,['/global_costmap/costmap','/local_costmap/costmap']):
                 ax.clear();data.map(ax,row['wall'],topic);data.markers(ax,t,labels=ax is axes[0])
@@ -136,8 +137,10 @@ def replay(data):
                 setup(ax,'任务全景' if ax is axes[0] else '局部感知与控制',bounds)
             title.set_text(f"RobotX 2026 Task 1 · {t-data.t0:.1f}s · {status['stage']} / {status['motion']} · 灯态版本 {status['revision']}")
             fig.canvas.draw();process.stdin.write(fig.canvas.buffer_rgba())
+            if frame%100==0:print(f'Replay frames: {frame+1}/{len(times)}',flush=True)
     finally:process.stdin.close();code=process.wait(timeout=30);plt.close(fig)
     if code:raise RuntimeError('Video encoding failed')
+    partial.replace(output)
     excerpts(data)
 
 

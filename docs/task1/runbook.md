@@ -67,6 +67,8 @@ python3 scripts/run_task1_suite.py --fault late_change
 
 ## 数据和图像
 
+一轮已完成的一次灯态切换实验示例见 [20261101_181046 完整记录](experiments/20261101_181046.md)，包含 MP4、轨迹/地图、参数、事件时间和原始证据索引。这是历史版本、无动态障碍的通过记录，不替代当前版本回归。
+
 每次目录包含 task1_mission.jsonl（事件）、task1_judge.jsonl（独立真值、场景、接触）、task1.jsonl（指令、EKF、推力反馈、真值）、task1_result.json（独立判定）、task1_execution.json（动作执行）、两个实际相机 MP4。推进器力由 Gazebo Thruster 反馈角速度和固定配置反算，详见 thrust_observation.json，不是实体测力计或轴动力学模型。
 
 启动时选择 `--record-maps` 才能生成地图回放：
