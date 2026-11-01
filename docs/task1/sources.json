@@ -20,5 +20,8 @@
       "bytes": 11434,
       "sha256": "93a74fda034f5889cd26600e2966b461a593878ce7be29837787373a0bf93bde"
     }
-  ]
+  ],
+  "official_index_rechecked_utc": "2026-11-01T10:08:48.263794+00:00",
+  "official_index": "https://robotx.org/programs/2026/",
+  "official_index_handbook_label": "Updated 23 October 2026"
 }

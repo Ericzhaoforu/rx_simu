@@ -1,0 +1,554 @@
+{
+  "expected": [
+    "s1_c0_none",
+    "s1_c1_none",
+    "s1_c2_none",
+    "s1_c0_cross",
+    "s1_c0_block",
+    "s1_c2_cross",
+    "s2_c0_none",
+    "s2_c1_none",
+    "s2_c2_none",
+    "s2_c0_cross",
+    "s2_c0_block",
+    "s2_c2_cross",
+    "s3_c0_none",
+    "s3_c1_none",
+    "s3_c2_none",
+    "s3_c0_cross",
+    "s3_c0_block",
+    "s3_c2_cross",
+    "fault_observation_gap",
+    "fault_reordered_observation",
+    "fault_mission_exit",
+    "fault_cancel",
+    "fault_role_change",
+    "fault_no_path"
+  ],
+  "latest": {
+    "s1_c0_none": {
+      "case": "s1_c0_none",
+      "run": "runs/20261030_030121_task1_s1_c0_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.3662245994950048,
+        "yaw_rad": 0.05019319344504436
+      },
+      "clearance_m": 2.8554516851915515,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.373874011660051,
+          "wrong_way_rad": 0.002886489637844658
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.351165234874127,
+          "wrong_way_rad": 0.000616737933159861
+        }
+      },
+      "stops": [],
+      "fault": null,
+      "semantic_timing": "10 Hz scene publication",
+      "drift_m": 0.26453172036846917,
+      "evidence_sha256": {
+        "task1_result.json": "a6ac13e8a90aa6377e3dc12e0dcd0a53af216b041c1acb38d8891389db55953c",
+        "task1_scenario.json": "8acea76aab6b992ed46443be70edd42165c5c293362a9fd12d42f7b11b67d7c0",
+        "provenance.json": "31661e3f784e4467aba74451cbddb5c7b642c8a0ad2eb825b6a5dbe9ea47ee13"
+      }
+    },
+    "s1_c2_none": {
+      "case": "s1_c2_none",
+      "run": "runs/20261030_033126_task1_s1_c2_none",
+      "passed": false,
+      "normal_task_passed": false,
+      "endpoint": {
+        "position_m": 0.37323411636064235,
+        "yaw_rad": 0.045649091254304164
+      },
+      "clearance_m": 1.2044897029810382,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.3492514927435995,
+          "wrong_way_rad": 0.0072959256632061376
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.387653133537593,
+          "wrong_way_rad": 0.0
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 219.304,
+          "resume_sim": 232.7,
+          "zero_command_delay_s": 0.056000000000011596,
+          "first_force_below_1N_delay_s": 2.352000000000004,
+          "force_peak_before_resume_N": 71.39999999999998,
+          "stopped_dwell_confirmed_delay_s": 4.756,
+          "distance_to_stop_m": 0.6077850322574917,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 264.404,
+          "resume_sim": 267.9,
+          "zero_command_delay_s": 0.055999999999983174,
+          "first_force_below_1N_delay_s": 1.7560000000000286,
+          "force_peak_before_resume_N": 30.00000000000003,
+          "stopped_dwell_confirmed_delay_s": null,
+          "distance_to_stop_m": null,
+          "physics_advancing": true,
+          "passed": false
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.26679793847653444,
+      "evidence_sha256": {
+        "task1_result.json": "d985d6b47ea713b04699a0868084e6ea27d772845e83dce7066149bf20f1917b",
+        "task1_scenario.json": "00663d649397c6176ab44ee1b5a2d5876981c3941a942c55c5467653831b1815",
+        "provenance.json": "7d3aa8d458bf813872793a58fadd20b85035ed6e8acf16b8833e18a1712a81e4"
+      }
+    },
+    "s1_c2_cross": {
+      "case": "s1_c2_cross",
+      "run": "runs/20261030_163410_task1_s1_c2_cross",
+      "passed": false,
+      "normal_task_passed": false,
+      "endpoint": {
+        "position_m": 0.3966058809595498,
+        "yaw_rad": 0.1246762769706995
+      },
+      "clearance_m": 0.6727589659376751,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.342960558814836,
+          "wrong_way_rad": 0.0081247644290954
+        },
+        "CIRCLE_EXIT": {
+          "complete": false,
+          "angle_rad": 6.280998723478239,
+          "wrong_way_rad": 0.0033305041605586894
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 224.904,
+          "resume_sim": 234.2,
+          "zero_command_delay_s": 0.04800000000000182,
+          "first_force_below_1N_delay_s": 2.4480000000000075,
+          "force_peak_before_resume_N": 85.80000000000001,
+          "stopped_dwell_confirmed_delay_s": 4.848000000000013,
+          "distance_to_stop_m": 0.6232816196973658,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 269.904,
+          "resume_sim": 292.8,
+          "zero_command_delay_s": 0.04399999999998272,
+          "first_force_below_1N_delay_s": 1.6440000000000055,
+          "force_peak_before_resume_N": 56.999999999999986,
+          "stopped_dwell_confirmed_delay_s": 3.1440000000000055,
+          "distance_to_stop_m": 0.406634755862577,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.12841022289965406,
+      "evidence_sha256": {
+        "task1_result.json": "92667be4cffce1cce062226f84c0dd828af98009a0f5fcacc7e2759a3f79a15e",
+        "task1_scenario.json": "d9feae2e4490d824a30d1ff932f1e781e057a75bc077096d09c4f318d903dcfc",
+        "provenance.json": "c4d93e58c9e9f79aef86f8a812abba6be324bda14f4cf001bf502e54bb3c9aa8"
+      }
+    }
+  },
+  "attempts": [
+    {
+      "case": "s1_c0_none",
+      "run": "runs/20261030_024116_task1_model_fixed",
+      "passed": false,
+      "normal_task_passed": false,
+      "endpoint": null,
+      "clearance_m": 3.241463873996425,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.3152190993593855,
+          "wrong_way_rad": 0.005463558457314832
+        }
+      },
+      "stops": null,
+      "fault": null,
+      "semantic_timing": null,
+      "drift_m": null,
+      "evidence_sha256": {
+        "task1_result.json": "298d862af559f082e493d5a6450698dd862873e594cccf90001759ac0f238a14",
+        "task1_scenario.json": "8acea76aab6b992ed46443be70edd42165c5c293362a9fd12d42f7b11b67d7c0",
+        "provenance.json": "09548f082553c0cb47d98fd7670e83618794c738d9d034ad3057597eb223892a"
+      }
+    },
+    {
+      "case": "s1_c0_none",
+      "run": "runs/20261030_025750_task1_s1_c0_none",
+      "passed": false,
+      "normal_task_passed": false,
+      "endpoint": null,
+      "clearance_m": 7.1956025532084285,
+      "collisions": 0,
+      "circles": {},
+      "stops": null,
+      "fault": null,
+      "semantic_timing": null,
+      "drift_m": null,
+      "evidence_sha256": {
+        "task1_result.json": "68dbbf9c0ee5d76b6076cfa18817cb7b5f6d82a545307c3d05852e00c0d3348b",
+        "task1_scenario.json": "8acea76aab6b992ed46443be70edd42165c5c293362a9fd12d42f7b11b67d7c0",
+        "provenance.json": "05c17301250c5b32050ea4cf75bffa574aac3095a8e35dcfddee8ac06acde00f"
+      }
+    },
+    {
+      "case": "s1_c0_none",
+      "run": "runs/20261030_030121_task1_s1_c0_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.3662245994950048,
+        "yaw_rad": 0.05019319344504436
+      },
+      "clearance_m": 2.8554516851915515,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.373874011660051,
+          "wrong_way_rad": 0.002886489637844658
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.351165234874127,
+          "wrong_way_rad": 0.000616737933159861
+        }
+      },
+      "stops": [],
+      "fault": null,
+      "semantic_timing": "10 Hz scene publication",
+      "drift_m": 0.26453172036846917,
+      "evidence_sha256": {
+        "task1_result.json": "a6ac13e8a90aa6377e3dc12e0dcd0a53af216b041c1acb38d8891389db55953c",
+        "task1_scenario.json": "8acea76aab6b992ed46443be70edd42165c5c293362a9fd12d42f7b11b67d7c0",
+        "provenance.json": "31661e3f784e4467aba74451cbddb5c7b642c8a0ad2eb825b6a5dbe9ea47ee13"
+      }
+    },
+    {
+      "case": "s1_c2_none",
+      "run": "runs/20261030_031456_task1_s1_c2_none",
+      "passed": false,
+      "normal_task_passed": false,
+      "endpoint": null,
+      "clearance_m": 3.408611748366676,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.365858533284111,
+          "wrong_way_rad": 0.0012417837224720785
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 219.604,
+          "resume_sim": 234.4,
+          "zero_command_delay_s": 0.04399999999998272,
+          "first_force_below_1N_delay_s": 12.543999999999983,
+          "force_peak_before_resume_N": 37.799999999999976,
+          "stopped_dwell_confirmed_delay_s": 3.7439999999999998,
+          "distance_to_stop_m": 0.471440790084045,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 264.704,
+          "resume_sim": 279.3,
+          "zero_command_delay_s": 0.04800000000000182,
+          "first_force_below_1N_delay_s": 1.6479999999999677,
+          "force_peak_before_resume_N": 42.59999999999997,
+          "stopped_dwell_confirmed_delay_s": 3.348000000000013,
+          "distance_to_stop_m": 0.42146893383357537,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "task cancelled",
+          "start_sim": 287.544,
+          "resume_sim": null,
+          "zero_command_delay_s": 0.004000000000019099,
+          "first_force_below_1N_delay_s": 1.7080000000000268,
+          "force_peak_before_resume_N": 27.599999999999987,
+          "stopped_dwell_confirmed_delay_s": 3.608000000000004,
+          "distance_to_stop_m": 0.4686086749276867,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "10 Hz scene publication",
+      "drift_m": null,
+      "evidence_sha256": {
+        "task1_result.json": "72cb928753290438d58d80ca2d5ecdcb5ef31ecf792676af6b16051b0cd80c99",
+        "task1_scenario.json": "03a9f831652c12afb0c29c83e6fad28477a80c291ff7e38360729f51b0334c40",
+        "provenance.json": "30258791182a5fd69ddc8dac08b1a5b5126d10dc4c9ef86d05117d9ec80eb90d"
+      }
+    },
+    {
+      "case": "s1_c2_none",
+      "run": "runs/20261030_032121_task1_s1_c2_none",
+      "passed": false,
+      "normal_task_passed": false,
+      "endpoint": null,
+      "clearance_m": 1.2456585927106023,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.369353448902692,
+          "wrong_way_rad": 0.0005192574564616415
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 219.804,
+          "resume_sim": 224.7,
+          "zero_command_delay_s": 0.03999999999999204,
+          "first_force_below_1N_delay_s": 1.7439999999999998,
+          "force_peak_before_resume_N": 55.19999999999997,
+          "stopped_dwell_confirmed_delay_s": 4.443999999999988,
+          "distance_to_stop_m": 0.5569280852240934,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 264.904,
+          "resume_sim": 268.3,
+          "zero_command_delay_s": 0.04800000000000182,
+          "first_force_below_1N_delay_s": 0.4479999999999791,
+          "force_peak_before_resume_N": 26.99999999999999,
+          "stopped_dwell_confirmed_delay_s": 3.1480000000000246,
+          "distance_to_stop_m": 0.3730457068908445,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "controller failed; wait and replan",
+          "start_sim": 380.1,
+          "resume_sim": 382.4,
+          "zero_command_delay_s": 0.051999999999964075,
+          "first_force_below_1N_delay_s": 0.051999999999964075,
+          "force_peak_before_resume_N": 0.0,
+          "stopped_dwell_confirmed_delay_s": 1.051999999999964,
+          "distance_to_stop_m": 0.0037849696683192355,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "controller failed; wait and replan",
+          "start_sim": 402.4,
+          "resume_sim": 404.0,
+          "zero_command_delay_s": 0.04800000000000182,
+          "first_force_below_1N_delay_s": 0.04800000000000182,
+          "force_peak_before_resume_N": 0.6000000000000005,
+          "stopped_dwell_confirmed_delay_s": 1.0480000000000018,
+          "distance_to_stop_m": 4.85651549063814e-05,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "controller failed; wait and replan",
+          "start_sim": 424.0,
+          "resume_sim": 426.1,
+          "zero_command_delay_s": 0.04800000000000182,
+          "first_force_below_1N_delay_s": 0.04800000000000182,
+          "force_peak_before_resume_N": 0.6000000000000005,
+          "stopped_dwell_confirmed_delay_s": 1.0480000000000018,
+          "distance_to_stop_m": 1.6724589754753413e-05,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "EKF detected wrong-side/ambiguous passage: buoy_06",
+          "start_sim": 430.98,
+          "resume_sim": null,
+          "zero_command_delay_s": 0.06399999999996453,
+          "first_force_below_1N_delay_s": 1.1639999999999873,
+          "force_peak_before_resume_N": 4.200000000000004,
+          "stopped_dwell_confirmed_delay_s": 1.0639999999999645,
+          "distance_to_stop_m": 0.0043098615789485374,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": null,
+      "evidence_sha256": {
+        "task1_result.json": "84625ce2a097da8f033783b40a8c19faf59c88eacdfb7fe32e5d37f508729248",
+        "task1_scenario.json": "00663d649397c6176ab44ee1b5a2d5876981c3941a942c55c5467653831b1815",
+        "provenance.json": "e2e0c9dd450047137985d2190570b9b014ca0d149b556cdf6b5c548350a44035"
+      }
+    },
+    {
+      "case": "s1_c2_none",
+      "run": "runs/20261030_033126_task1_s1_c2_none",
+      "passed": false,
+      "normal_task_passed": false,
+      "endpoint": {
+        "position_m": 0.37323411636064235,
+        "yaw_rad": 0.045649091254304164
+      },
+      "clearance_m": 1.2044897029810382,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.3492514927435995,
+          "wrong_way_rad": 0.0072959256632061376
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.387653133537593,
+          "wrong_way_rad": 0.0
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 219.304,
+          "resume_sim": 232.7,
+          "zero_command_delay_s": 0.056000000000011596,
+          "first_force_below_1N_delay_s": 2.352000000000004,
+          "force_peak_before_resume_N": 71.39999999999998,
+          "stopped_dwell_confirmed_delay_s": 4.756,
+          "distance_to_stop_m": 0.6077850322574917,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 264.404,
+          "resume_sim": 267.9,
+          "zero_command_delay_s": 0.055999999999983174,
+          "first_force_below_1N_delay_s": 1.7560000000000286,
+          "force_peak_before_resume_N": 30.00000000000003,
+          "stopped_dwell_confirmed_delay_s": null,
+          "distance_to_stop_m": null,
+          "physics_advancing": true,
+          "passed": false
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.26679793847653444,
+      "evidence_sha256": {
+        "task1_result.json": "d985d6b47ea713b04699a0868084e6ea27d772845e83dce7066149bf20f1917b",
+        "task1_scenario.json": "00663d649397c6176ab44ee1b5a2d5876981c3941a942c55c5467653831b1815",
+        "provenance.json": "7d3aa8d458bf813872793a58fadd20b85035ed6e8acf16b8833e18a1712a81e4"
+      }
+    },
+    {
+      "case": "s1_c2_cross",
+      "run": "runs/20261030_163410_task1_s1_c2_cross",
+      "passed": false,
+      "normal_task_passed": false,
+      "endpoint": {
+        "position_m": 0.3966058809595498,
+        "yaw_rad": 0.1246762769706995
+      },
+      "clearance_m": 0.6727589659376751,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.342960558814836,
+          "wrong_way_rad": 0.0081247644290954
+        },
+        "CIRCLE_EXIT": {
+          "complete": false,
+          "angle_rad": 6.280998723478239,
+          "wrong_way_rad": 0.0033305041605586894
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 224.904,
+          "resume_sim": 234.2,
+          "zero_command_delay_s": 0.04800000000000182,
+          "first_force_below_1N_delay_s": 2.4480000000000075,
+          "force_peak_before_resume_N": 85.80000000000001,
+          "stopped_dwell_confirmed_delay_s": 4.848000000000013,
+          "distance_to_stop_m": 0.6232816196973658,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 269.904,
+          "resume_sim": 292.8,
+          "zero_command_delay_s": 0.04399999999998272,
+          "first_force_below_1N_delay_s": 1.6440000000000055,
+          "force_peak_before_resume_N": 56.999999999999986,
+          "stopped_dwell_confirmed_delay_s": 3.1440000000000055,
+          "distance_to_stop_m": 0.406634755862577,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.12841022289965406,
+      "evidence_sha256": {
+        "task1_result.json": "92667be4cffce1cce062226f84c0dd828af98009a0f5fcacc7e2759a3f79a15e",
+        "task1_scenario.json": "d9feae2e4490d824a30d1ff932f1e781e057a75bc077096d09c4f318d903dcfc",
+        "provenance.json": "c4d93e58c9e9f79aef86f8a812abba6be324bda14f4cf001bf502e54bb3c9aa8"
+      }
+    }
+  ],
+  "model_checks": [
+    {
+      "run": "runs/20261030_023841_task1_model_check",
+      "passed": false,
+      "sha256": "074a87fbc26727335b0349482561311eebe8edd583f26140ce977a14a8c3d8df"
+    },
+    {
+      "run": "runs/20261030_024116_task1_model_fixed",
+      "passed": true,
+      "sha256": "fd8d9754375ebc85a4476c667f46ed27c46cbff8f6118a56a892ef561dbda32a"
+    }
+  ],
+  "lidar_checks": [
+    {
+      "run": "runs/20261030_024116_task1_model_fixed",
+      "passed": true,
+      "sha256": "71486ae11e3e53e77e5785d690fa531661bdaafff7911f8bc4adb2fe0709978b"
+    }
+  ],
+  "scope": "Boat-side simulation; known UAV observation and local reporting substitutes; no official score claimed."
+}

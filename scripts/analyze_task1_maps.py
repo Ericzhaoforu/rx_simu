@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+"""Measure the moving obstacle in recorded maps, independently of task control."""
+import argparse
+import bisect
+import json
+import math
+from pathlib import Path
+import numpy as np
+
+
+def analyze(run):
+    run=Path(run);scene=json.loads((run/'generated/scene.json').read_text())
+    if scene['task1']['dynamic']=='none':return None
+    raw=run/'visualization/raw';events_file=raw/'events.jsonl'
+    if not events_file.exists():return {'passed':False,'reason':'Map recording was not enabled'}
+    events=[json.loads(l) for l in events_file.read_text().splitlines()]
+    records=[json.loads(l) for l in (run/'task1_judge.jsonl').read_text().splitlines()]
+    states=sorted((r for r in records if r['type']=='scene' and 'dynamic_pose' in r['data']),key=lambda r:r['stamp'])
+    times=[r['stamp'] for r in states]
+    origin=np.asarray(json.loads((run/'map_alignment.json').read_text())['offset_xy_m'])
+    x=states[0]['data']['dynamic_pose'][0];counts=[]
+    for event in events:
+        if event['topic']!='/global_costmap/costmap':continue
+        index=bisect.bisect_right(times,event['stamp'])-1
+        if index<0:continue
+        offset=origin if event['frame']=='odom' else np.zeros(2)
+        if event['frame'] not in ('map','odom'):raise ValueError('Unknown costmap frame')
+        ox,oy=np.asarray(event['origin'][:2])+offset;res=event['resolution']
+        with np.load(raw/event['file']) as data:grid=data['data']
+        x0=max(0,int(math.floor((x-1.2-ox)/res)));x1=min(grid.shape[1],int(math.ceil((x+1.2-ox)/res)))
+        y0=max(0,int(math.floor((-1.7-oy)/res)));y1=min(grid.shape[0],int(math.ceil((1.7-oy)/res)))
+        if x0>=x1 or y0>=y1:continue
+        counts.append(dict(stamp=event['stamp'],lethal_cells=int(np.count_nonzero(grid[y0:y1,x0:x1]>=100)),
+                           moving_y=states[index]['data']['dynamic_pose'][1]))
+    marked=[c for c in counts if abs(c['moving_y'])<3.2 and c['lethal_cells']>0]
+    left=next((r['stamp'] for r in states if r['data']['dynamic_pose'][1]>3.5),None)
+    cleared=next((c for c in counts if left is not None and c['stamp']>=left and c['lethal_cells']==0),None)
+    from usv_sim.geometry import vessel_clearance
+    distances=[]
+    for row in records:
+        if row['type']!='truth':continue
+        i=bisect.bisect_right(times,row['stamp'])-1
+        if i<0:continue
+        p=row['pose'];xy=states[i]['data']['dynamic_pose']
+        distances.append(vessel_clearance(scene['footprint'],p[0],p[1],p[2],[dict(x=xy[0],y=xy[1],size=[2.,3.])]))
+    report=dict(passed=bool(marked and cleared),region=[x-1.2,x+1.2,-1.7,1.7],
+                peak_lethal_cells=max((c['lethal_cells'] for c in marked),default=0),
+                obstacle_left_region_sim=left,first_clear_sim=cleared['stamp'] if cleared else None,
+                clear_delay_s=cleared['stamp']-left if cleared else None,
+                min_moving_obstacle_clearance_m=min(distances) if distances else None,samples=counts,
+                criterion='Actual global costmap marks the moving body at its crossing, then clears its former region after it leaves.')
+    (run/'dynamic_map_result.json').write_text(json.dumps(report,indent=2)+'\n')
+    return report
+
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser();p.add_argument('run',type=Path);a=p.parse_args()
+    report=analyze(a.run);print(json.dumps({k:v for k,v in report.items() if k!='samples'}))
+    if not report['passed']:raise SystemExit(1)

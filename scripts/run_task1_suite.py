@@ -17,6 +17,7 @@ def main():
     p.add_argument('--seed',type=int,choices=(1,2,3));p.add_argument('--changes',type=int,choices=(0,1,2))
     p.add_argument('--dynamic',choices=('none','cross','block'));p.add_argument('--record-maps',action='store_true')
     p.add_argument('--fault',choices=('observation_gap','reordered_observation','mission_exit','cancel','role_change','no_path'))
+    p.add_argument('--stop-on-failure',action='store_true')
     p.add_argument('--no-video',action='store_true');a=p.parse_args()
     if (ROOT/'runs/session.json').exists():raise RuntimeError('Stop the current managed session before running a cold-start suite')
     cases=[]
@@ -70,9 +71,16 @@ def main():
             except Exception as error:item['judge_error']=repr(error)
         if a.fault and run and (run/'task1_fault_result.json').exists():
             item['fault_result']=json.loads((run/'task1_fault_result.json').read_text())
+        if run and case['dynamic']!='none' and a.record_maps:
+            from analyze_task1_maps import analyze
+            try:item['map_result']={k:v for k,v in analyze(run).items() if k!='samples'}
+            except Exception as error:item['map_result']={'passed':False,'error':repr(error)}
         results.append(item);ledger.write_text(json.dumps(results,indent=2)+'\n');print(json.dumps(item),flush=True)
+        if a.stop_on_failure and (not item.get('fault_result' if a.fault else 'result',{}).get('passed',False)
+                                 or not item.get('map_result',{'passed':True})['passed']):break
     print('Ledger:',ledger,flush=True)
-    if not all(r.get('fault_result' if a.fault else 'result',{}).get('passed',False) for r in results):raise SystemExit(1)
+    if not all(r.get('fault_result' if a.fault else 'result',{}).get('passed',False) and
+               r.get('map_result',{'passed':True})['passed'] for r in results):raise SystemExit(1)
 
 
 if __name__=='__main__':main()
