@@ -46,6 +46,7 @@ def main():
                   endpoint=j.get('endpoint_error'),clearance_m=j.get('min_clearance_m'),collisions=j.get('collision_contacts'),
                   circles=j.get('circles'),stops=j.get('stops'),fault=f,
                   semantic_timing=j.get('semantic_timing'),drift_m=j.get('post_completion_drift_m'),
+                  post_completion_record_s=j.get('post_completion_record_s'),
                   buoy_map=buoy_map,
                   dynamic_map={k:v for k,v in map_result.items() if k!='samples'} if map_result else None,
                   evidence_sha256={p.name:digest(p) for p in [result,source,run/'provenance.json',

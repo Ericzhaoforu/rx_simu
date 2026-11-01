@@ -23,98 +23,377 @@
     "fault_mission_exit",
     "fault_cancel",
     "fault_role_change",
-    "fault_no_path"
+    "fault_no_path",
+    "fault_late_change"
   ],
   "latest": {
     "s1_c0_none": {
       "case": "s1_c0_none",
-      "run": "runs/20261030_030121_task1_s1_c0_none",
+      "run": "runs/20261101_180105_task1_s1_c0_none",
       "passed": true,
       "normal_task_passed": true,
       "endpoint": {
-        "position_m": 0.3662245994950048,
-        "yaw_rad": 0.05019319344504436
+        "position_m": 0.3911777803594695,
+        "yaw_rad": 0.03900444164894812
       },
-      "clearance_m": 2.8554516851915515,
+      "clearance_m": 1.0554428705918806,
       "collisions": 0,
       "circles": {
         "CIRCLE_ENTRY": {
           "complete": true,
-          "angle_rad": 6.373874011660051,
-          "wrong_way_rad": 0.002886489637844658
+          "angle_rad": 6.360758790054663,
+          "wrong_way_rad": 0.008986413859473963
         },
         "CIRCLE_EXIT": {
           "complete": true,
-          "angle_rad": 6.351165234874127,
-          "wrong_way_rad": 0.000616737933159861
+          "angle_rad": 6.394882784456685,
+          "wrong_way_rad": 0.0
         }
       },
       "stops": [],
       "fault": null,
-      "semantic_timing": "10 Hz scene publication",
-      "drift_m": 0.26453172036846917,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.297605542177819,
+      "post_completion_record_s": 11.0,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 345,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 345,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 345,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 345,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 345,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 345,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 345,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 345,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 345,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 345,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
       "evidence_sha256": {
-        "task1_result.json": "a6ac13e8a90aa6377e3dc12e0dcd0a53af216b041c1acb38d8891389db55953c",
-        "task1_scenario.json": "8acea76aab6b992ed46443be70edd42165c5c293362a9fd12d42f7b11b67d7c0",
-        "provenance.json": "31661e3f784e4467aba74451cbddb5c7b642c8a0ad2eb825b6a5dbe9ea47ee13"
+        "task1_result.json": "6543e03c7b16c8f08485b751bba721080ae5411b42d9d20ba2b1863b135958fe",
+        "task1_scenario.json": "fdf93660e3ab14b0471ab4b17b0311b2332c8fa629e9773014a0cff52406263f",
+        "provenance.json": "d41b6ceb6ee63e236bbc9ec8b65121cc364d4bd1404681bb366d027545f08834",
+        "buoy_map_result.json": "c4f752fc9ce90192809ac4b99431e440f7b3303c22903e8e1405e8eb75e9a1dc"
+      },
+      "execution_metrics": {
+        "planning_attempts": 12,
+        "planning_failures": 0,
+        "controller_failures": 0,
+        "reported_semantic_changes": 0,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.2037893789820373
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20361467800103128
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20201823697425425
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20537972799502313
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20171220693737268
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20114621799439192
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.5,
+            "wall_s": 1.510253079002723
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20463472802657634
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20565254299435765
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2037388680037111
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20152552099898458
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20221575791947544
+          }
+        ],
+        "total_planning_wall_s": 3.7456809438299388,
+        "max_planning_wall_s": 1.510253079002723,
+        "semantic_pause_sim_s": []
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       }
     },
     "s1_c2_none": {
       "case": "s1_c2_none",
-      "run": "runs/20261030_033126_task1_s1_c2_none",
-      "passed": false,
-      "normal_task_passed": false,
+      "run": "runs/20261101_182043_task1_s1_c2_none",
+      "passed": true,
+      "normal_task_passed": true,
       "endpoint": {
-        "position_m": 0.37323411636064235,
-        "yaw_rad": 0.045649091254304164
+        "position_m": 0.37834989169106703,
+        "yaw_rad": 0.049071141223881565
       },
-      "clearance_m": 1.2044897029810382,
+      "clearance_m": 1.0214699427445826,
       "collisions": 0,
       "circles": {
         "CIRCLE_ENTRY": {
           "complete": true,
-          "angle_rad": 6.3492514927435995,
-          "wrong_way_rad": 0.0072959256632061376
+          "angle_rad": 6.350591059491913,
+          "wrong_way_rad": 0.009456307429109412
         },
         "CIRCLE_EXIT": {
           "complete": true,
-          "angle_rad": 6.387653133537593,
-          "wrong_way_rad": 0.0
+          "angle_rad": 6.388267757906339,
+          "wrong_way_rad": 0.0031396951331756906
         }
       },
       "stops": [
         {
           "reason": "semantic revision changed",
-          "start_sim": 219.304,
-          "resume_sim": 232.7,
-          "zero_command_delay_s": 0.056000000000011596,
-          "first_force_below_1N_delay_s": 2.352000000000004,
-          "force_peak_before_resume_N": 71.39999999999998,
-          "stopped_dwell_confirmed_delay_s": 4.756,
-          "distance_to_stop_m": 0.6077850322574917,
+          "start_sim": 223.704,
+          "resume_sim": 229.6,
+          "zero_command_delay_s": 0.07200000000000273,
+          "first_force_below_1N_delay_s": 1.8719999999999857,
+          "force_below_1N_dwell_confirmed_delay_s": 2.8719999999999857,
+          "force_peak_before_resume_N": 103.20000000000003,
+          "stopped_dwell_confirmed_delay_s": 3.8719999999999857,
+          "distance_to_stop_m": 0.4677660283844307,
           "physics_advancing": true,
           "passed": true
         },
         {
           "reason": "semantic revision changed",
-          "start_sim": 264.404,
-          "resume_sim": 267.9,
-          "zero_command_delay_s": 0.055999999999983174,
-          "first_force_below_1N_delay_s": 1.7560000000000286,
-          "force_peak_before_resume_N": 30.00000000000003,
-          "stopped_dwell_confirmed_delay_s": null,
-          "distance_to_stop_m": null,
+          "start_sim": 268.704,
+          "resume_sim": 272.5,
+          "zero_command_delay_s": 0.07999999999998408,
+          "first_force_below_1N_delay_s": 1.6800000000000068,
+          "force_below_1N_dwell_confirmed_delay_s": 2.683999999999969,
+          "force_peak_before_resume_N": 34.80000000000003,
+          "stopped_dwell_confirmed_delay_s": 3.084000000000003,
+          "distance_to_stop_m": 0.39352400143928495,
           "physics_advancing": true,
-          "passed": false
+          "passed": true
         }
       ],
       "fault": null,
       "semantic_timing": "physics effective history",
-      "drift_m": 0.26679793847653444,
+      "drift_m": 0.2805845401884733,
+      "post_completion_record_s": 11.100000000000023,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 351,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 351,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
       "evidence_sha256": {
-        "task1_result.json": "d985d6b47ea713b04699a0868084e6ea27d772845e83dce7066149bf20f1917b",
+        "task1_result.json": "289eddb41677d11f18120ceef0d72ab78cb0a858f4c994f71aafa608b0f954d9",
         "task1_scenario.json": "00663d649397c6176ab44ee1b5a2d5876981c3941a942c55c5467653831b1815",
-        "provenance.json": "7d3aa8d458bf813872793a58fadd20b85035ed6e8acf16b8833e18a1712a81e4"
+        "provenance.json": "61e85686a16eb4ae63946a666ef803c2fa80c566063a45d85c3cfa9ea8984db7",
+        "buoy_map_result.json": "9e5eae7f3e9b7097163b3f0c5f7ef87b46a759a16ec5804190b982bbf40fb7a4"
+      },
+      "execution_metrics": {
+        "planning_attempts": 15,
+        "planning_failures": 1,
+        "controller_failures": 0,
+        "reported_semantic_changes": 2,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.2024968919577077
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20335237495601177
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20023968908935785
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.1989946539979428
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20428430091124028
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2007498969323933
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.012009809957817
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.6999999999999886,
+            "wall_s": 1.7115234920056537
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.9000000000000057,
+            "wall_s": 1.911010339972563
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.39999999999997726,
+            "wall_s": 0.41436499694827944
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20175578503403813
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2081719539128244
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20332019496709108
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20730392402037978
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20266475400421768
+          }
+        ],
+        "total_planning_wall_s": 9.282243058667518,
+        "max_planning_wall_s": 3.012009809957817,
+        "semantic_pause_sim_s": [
+          5.895999999999987,
+          3.7959999999999923
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       }
     },
     "s1_c2_cross": {
@@ -169,10 +448,1530 @@
       "fault": null,
       "semantic_timing": "physics effective history",
       "drift_m": 0.12841022289965406,
+      "post_completion_record_s": 11.100000000000023,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 360,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 360,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 360,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 360,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 360,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 360,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 360,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 360,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 360,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 360,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": {
+        "passed": true,
+        "region": [
+          26.8,
+          29.2,
+          -1.7,
+          1.7
+        ],
+        "peak_lethal_cells": 29,
+        "obstacle_left_region_sim": 321.604,
+        "first_clear_sim": 322.404,
+        "clear_delay_s": 0.8000000000000114,
+        "min_moving_obstacle_clearance_m": 2.5090230494737518,
+        "criterion": "Actual global costmap marks the moving body at its crossing, then clears its former region after it leaves."
+      },
       "evidence_sha256": {
         "task1_result.json": "92667be4cffce1cce062226f84c0dd828af98009a0f5fcacc7e2759a3f79a15e",
         "task1_scenario.json": "d9feae2e4490d824a30d1ff932f1e781e057a75bc077096d09c4f318d903dcfc",
-        "provenance.json": "c4d93e58c9e9f79aef86f8a812abba6be324bda14f4cf001bf502e54bb3c9aa8"
+        "provenance.json": "c4d93e58c9e9f79aef86f8a812abba6be324bda14f4cf001bf502e54bb3c9aa8",
+        "buoy_map_result.json": "a57fd0d8fb8cf975d43e0a99cbf94704895f4ce0218b681d204ee95e5704262a",
+        "dynamic_map_result.json": "6ecedccd3da465dc23dd0d1e233651589a210d5aaaafae922f0875090a8b91fe"
+      },
+      "execution_metrics": {
+        "planning_attempts": 19,
+        "planning_failures": 6,
+        "controller_failures": 0,
+        "reported_semantic_changes": 2,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.19894018594641238
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.2028503540204838
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20348598703276366
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20239186799153686
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20219338301103562
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20237267191987485
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.0,
+            "wall_s": 2.025715491035953
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.9000000000000057,
+            "wall_s": 2.9265069789253175
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0294286760035902
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.024910848005675
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0258141859667376
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.030819805106148
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.024277430959046
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.025260020978749
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.5,
+            "wall_s": 1.516799094970338
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2033967210445553
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20319589402060956
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.2026000120677054
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20178056799340993
+          }
+        ],
+        "total_planning_wall_s": 26.65274017699994,
+        "max_planning_wall_s": 3.030819805106148,
+        "semantic_pause_sim_s": [
+          9.295999999999992,
+          22.896000000000015
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "9668c5f51df64ddaaae2e874ee47b682adc3377e0cec7df5684f40ac8fd5cc5d",
+        "src/robotx_task1/robotx_task1/core.py": "4efb28220db338dba404046e3eb481239944a893afd104346b246b7b995f9a26",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      }
+    },
+    "s1_c1_none": {
+      "case": "s1_c1_none",
+      "run": "runs/20261101_181046_task1_s1_c1_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.3761097556846917,
+        "yaw_rad": 0.05254607181920546
+      },
+      "clearance_m": 1.103793184732296,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.364082569867856,
+          "wrong_way_rad": 0.00885735349281358
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.401824502646159,
+          "wrong_way_rad": 0.003218486690372835
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 225.804,
+          "resume_sim": 235.3,
+          "zero_command_delay_s": 0.07999999999998408,
+          "first_force_below_1N_delay_s": 2.3760000000000048,
+          "force_below_1N_dwell_confirmed_delay_s": 3.3760000000000048,
+          "force_peak_before_resume_N": 94.80000000000003,
+          "stopped_dwell_confirmed_delay_s": 4.876000000000005,
+          "distance_to_stop_m": 0.5936256075129002,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.27043934927813995,
+      "post_completion_record_s": 11.0,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 353,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 353,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 353,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 353,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 353,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 353,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 353,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 353,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 353,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 353,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "6128d343db87de3be2f30693dc62ff436741c9bad0a688c90b79983e84959048",
+        "task1_scenario.json": "d8e95e690cb2834d6eb627623f2eb204494ffed7f974ea2c20fea6cc0bf9ab0d",
+        "provenance.json": "975873b1215161c24d901f92d6b5023787ef0ee3285efab6efe2748c431e65c4",
+        "buoy_map_result.json": "0000ca934298dec2a949ecf3239d8a3df1d00a269a3c8b8831da137fbdbd0554"
+      },
+      "execution_metrics": {
+        "planning_attempts": 13,
+        "planning_failures": 0,
+        "controller_failures": 0,
+        "reported_semantic_changes": 1,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.20641891390550882
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20054639701265842
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20186415710486472
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20089037506841123
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20149153703823686
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20107181603088975
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.9000000000000057,
+            "wall_s": 2.9316700390772894
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.6040000000000134,
+            "wall_s": 2.621299725957215
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20144041907042265
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.21014735999051481
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20643404102884233
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20307245291769505
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20098359405528754
+          }
+        ],
+        "total_planning_wall_s": 7.787330828257836,
+        "max_planning_wall_s": 2.9316700390772894,
+        "semantic_pause_sim_s": [
+          9.49600000000001
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      }
+    },
+    "s2_c0_none": {
+      "case": "s2_c0_none",
+      "run": "runs/20261101_183035_task1_s2_c0_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.37446584947913836,
+        "yaw_rad": 0.07089852089041782
+      },
+      "clearance_m": 1.1883046724718747,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.343982960568383,
+          "wrong_way_rad": 0.008253189970855779
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.3867585428368105,
+          "wrong_way_rad": 0.003944572776149569
+        }
+      },
+      "stops": [],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.2721350952010024,
+      "post_completion_record_s": 11.0,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 348,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 348,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 348,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 348,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 348,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 348,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 348,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 348,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 348,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 348,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "8aee3395d7b37450e961cd952bd55bcaec1c7660addf85f6f741b05b45d7156a",
+        "task1_scenario.json": "4752d859c5e1dd0ecc7217197dd845af6cf0c627aef5274846fa4a9f27bca343",
+        "provenance.json": "b20266f71186aa7ee64a28a09449d3ba31508b51603fe253df7e92a105af796f",
+        "buoy_map_result.json": "278d971e4692f0a1163512e08a8376f2f899162f6416242c8bb4dc54901bf7ba"
+      },
+      "execution_metrics": {
+        "planning_attempts": 13,
+        "planning_failures": 1,
+        "controller_failures": 0,
+        "reported_semantic_changes": 0,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20146509795449674
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20334638399071991
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20144643494859338
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20301390695385635
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20637471904046834
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.19858266494702548
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0136427929392084
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.4000000000000057,
+            "wall_s": 2.410986808943562
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20360221504233778
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2037514770636335
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2075507640838623
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20787547109648585
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20155677502043545
+          }
+        ],
+        "total_planning_wall_s": 7.663195512024686,
+        "max_planning_wall_s": 3.0136427929392084,
+        "semantic_pause_sim_s": []
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      }
+    },
+    "s2_c1_none": {
+      "case": "s2_c1_none",
+      "run": "runs/20261101_184021_task1_s2_c1_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.3657688674045072,
+        "yaw_rad": 0.05439885737126259
+      },
+      "clearance_m": 1.197700121272357,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.355124542256483,
+          "wrong_way_rad": 0.008572042413887537
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.401197414592685,
+          "wrong_way_rad": 0.0
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 223.104,
+          "resume_sim": 247.3,
+          "zero_command_delay_s": 0.08399999999997476,
+          "first_force_below_1N_delay_s": 2.2879999999999825,
+          "force_below_1N_dwell_confirmed_delay_s": 3.2879999999999825,
+          "force_peak_before_resume_N": 55.79999999999999,
+          "stopped_dwell_confirmed_delay_s": 4.887999999999977,
+          "distance_to_stop_m": 0.6155849031876283,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.2637762228364146,
+      "post_completion_record_s": 10.900000000000091,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 356,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 356,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 356,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 356,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 356,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 356,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 356,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 356,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 356,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 356,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "72caaea71bcd772237b7186ed801001a50b5042fc36b2c9dfcbbe1370f3c226c",
+        "task1_scenario.json": "855009446389eab97f0fbf7e9eaf42aea2331615d548187cfa39ae7276232b63",
+        "provenance.json": "f205ef67287ae1ed833618e3fa44d955092d634604cd20dda80ca5e7514f054b",
+        "buoy_map_result.json": "1aad4abfc77198c6cfdeca41f7b84661c69f215c248d96965aba80be0616d6d8"
+      },
+      "execution_metrics": {
+        "planning_attempts": 18,
+        "planning_failures": 5,
+        "controller_failures": 0,
+        "reported_semantic_changes": 1,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20223935705143958
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20179876603651792
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20461923500988632
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.2057636990211904
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.204310572007671
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.19921909493859857
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.5,
+            "wall_s": 1.508898859960027
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.011277940007858
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0120406369678676
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0131676699966192
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.014071294106543
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0118183459853753
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.799999999999983,
+            "wall_s": 2.8239380810409784
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20169966202229261
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20383200503420085
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2075057679321617
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20150343398563564
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.20361237495671958
+          }
+        ],
+        "total_planning_wall_s": 21.631316796061583,
+        "max_planning_wall_s": 3.014071294106543,
+        "semantic_pause_sim_s": [
+          24.195999999999998
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      }
+    },
+    "s2_c2_none": {
+      "case": "s2_c2_none",
+      "run": "runs/20261101_185028_task1_s2_c2_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.37295464132287864,
+        "yaw_rad": 0.05140324830739562
+      },
+      "clearance_m": 1.2164204498379638,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.34790355145163,
+          "wrong_way_rad": 0.008495280947648176
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.391864330779643,
+          "wrong_way_rad": 0.0
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 222.704,
+          "resume_sim": 231.8,
+          "zero_command_delay_s": 0.08400000000000318,
+          "first_force_below_1N_delay_s": 2.283999999999992,
+          "force_below_1N_dwell_confirmed_delay_s": 3.3799999999999955,
+          "force_peak_before_resume_N": 58.79999999999998,
+          "stopped_dwell_confirmed_delay_s": 4.8799999999999955,
+          "distance_to_stop_m": 0.6132767880662994,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 267.704,
+          "resume_sim": 272.9,
+          "zero_command_delay_s": 0.07200000000000273,
+          "first_force_below_1N_delay_s": 1.6719999999999686,
+          "force_below_1N_dwell_confirmed_delay_s": 2.6719999999999686,
+          "force_peak_before_resume_N": 27.599999999999987,
+          "stopped_dwell_confirmed_delay_s": 3.1719999999999686,
+          "distance_to_stop_m": 0.40855941850721716,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.27538784819114037,
+      "post_completion_record_s": 11.100000000000023,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 351,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 351,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "b45b8493a0d5fc81f6d5393af52aeb71de1ffaeaec6991a70c9017915497318d",
+        "task1_scenario.json": "3bab0e8804448209d6c957239ed74d3b842b33842028c6c1c315d23ff6894416",
+        "provenance.json": "a53011cef6c3cb4bb9c874bd3f283082bd00942048d731c40be78531b1540ce1",
+        "buoy_map_result.json": "9e5eae7f3e9b7097163b3f0c5f7ef87b46a759a16ec5804190b982bbf40fb7a4"
+      },
+      "execution_metrics": {
+        "planning_attempts": 14,
+        "planning_failures": 0,
+        "controller_failures": 0,
+        "reported_semantic_changes": 2,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.20236319897230715
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20608306303620338
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2013314819196239
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20240522793028504
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20189161598682404
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.19962464703712612
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.3999999999999773,
+            "wall_s": 1.4175448979949579
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.6999999999999886,
+            "wall_s": 2.7174976429669186
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.6999999999999886,
+            "wall_s": 1.7222595160128549
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20523806801065803
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20241245406214148
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2016925240168348
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2080602740170434
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.201623375993222
+          }
+        ],
+        "total_planning_wall_s": 8.090027987957,
+        "max_planning_wall_s": 2.7174976429669186,
+        "semantic_pause_sim_s": [
+          9.096000000000004,
+          5.1959999999999695
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      }
+    },
+    "s3_c0_none": {
+      "case": "s3_c0_none",
+      "run": "runs/20261101_190020_task1_s3_c0_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.38205952940708104,
+        "yaw_rad": 0.04869454302746279
+      },
+      "clearance_m": 1.2556052777591744,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.374243898217395,
+          "wrong_way_rad": 0.008075393438741418
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.391886794920249,
+          "wrong_way_rad": 0.0009977677372543514
+        }
+      },
+      "stops": [],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.2719147815537441,
+      "post_completion_record_s": 11.0,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 350,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 350,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 350,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 350,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 350,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 350,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 350,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 350,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 350,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 350,
+            "missing": 0
+          }
+        },
+        "initially_off": [
+          "buoy_07"
+        ],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "a6c6a2269cfaf94e38fd27fc9a1c38b9ea4bfd1e6850ac7ea802f9a65a715e9a",
+        "task1_scenario.json": "8449d3e68cf4b437335eb7e42fb97f35a9b94753cba0e599f37fb0eb83c33364",
+        "provenance.json": "f0d9dc0575a90fa2a36b1862eae1fd184d70a1f2c67a03cfc97a53e62a1f608a",
+        "buoy_map_result.json": "59eb157f70b167418650480a2b71ecb98ad9ee012e36e0c777f8a6a436009473"
+      },
+      "execution_metrics": {
+        "planning_attempts": 13,
+        "planning_failures": 1,
+        "controller_failures": 0,
+        "reported_semantic_changes": 0,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.2038465669611469
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.2007342049619183
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20396102708764374
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20619390299543738
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20239603403024375
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.2004662649706006
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0131852549966425
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.3000000000000114,
+            "wall_s": 2.312210605945438
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20957853796426207
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20416553993709385
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20517422095872462
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20161903102416545
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.20047291391529143
+          }
+        ],
+        "total_planning_wall_s": 7.564004105748609,
+        "max_planning_wall_s": 3.0131852549966425,
+        "semantic_pause_sim_s": []
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      }
+    },
+    "s3_c1_none": {
+      "case": "s3_c1_none",
+      "run": "runs/20261101_191009_task1_s3_c1_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.3753756870185634,
+        "yaw_rad": 0.05951098814885758
+      },
+      "clearance_m": 1.3877395280711629,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.3675356200555555,
+          "wrong_way_rad": 0.008344025890789197
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.401293556805086,
+          "wrong_way_rad": 0.00337765864774231
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 225.304,
+          "resume_sim": 231.8,
+          "zero_command_delay_s": 0.07200000000000273,
+          "first_force_below_1N_delay_s": null,
+          "force_below_1N_dwell_confirmed_delay_s": null,
+          "force_peak_before_resume_N": 118.79999999999998,
+          "stopped_dwell_confirmed_delay_s": 5.675999999999988,
+          "distance_to_stop_m": 0.7808800030267574,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.2708202968244687,
+      "post_completion_record_s": 11.0,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 357,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 357,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 357,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 357,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 357,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 357,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 357,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 357,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 357,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 357,
+            "missing": 0
+          }
+        },
+        "initially_off": [
+          "buoy_07"
+        ],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "fa30ddd54ed74e455cc27afa4462273e85f903de94d84fc08ffc76d571b61d2b",
+        "task1_scenario.json": "3e562ac3138ce160e9d7133a891bb9ab6ef3c5ab3756349bbf59eb7554f82bc5",
+        "provenance.json": "466552459fc36710773539e9f35b97873be94040db86d027563ea1d809766c16",
+        "buoy_map_result.json": "4066e15c88b7fad3e68f173ceae039ffb0a08c8419522e5922d8d6fd936bc864"
+      },
+      "execution_metrics": {
+        "planning_attempts": 15,
+        "planning_failures": 2,
+        "controller_failures": 0,
+        "reported_semantic_changes": 1,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.2026016419986263
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20417525002267212
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20898189500439912
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20335967896971852
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20684369502123445
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.19999027100857347
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0118175629759207
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.013357199029997
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.9000000000000057,
+            "wall_s": 2.935254830052145
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.6999999999999886,
+            "wall_s": 0.7194693419151008
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.199709209962748
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20227104402147233
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20825817598961294
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.20575392106547952
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2004417999414727
+          }
+        ],
+        "total_planning_wall_s": 11.922285516979173,
+        "max_planning_wall_s": 3.013357199029997,
+        "semantic_pause_sim_s": [
+          6.496000000000009
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      }
+    },
+    "s3_c2_none": {
+      "case": "s3_c2_none",
+      "run": "runs/20261101_192014_task1_s3_c2_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.3783983403419756,
+        "yaw_rad": 0.04058402610695944
+      },
+      "clearance_m": 1.105284800149735,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.348787215656091,
+          "wrong_way_rad": 0.008332691011364357
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.403529760844424,
+          "wrong_way_rad": 0.0034381743148037547
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 223.004,
+          "resume_sim": 227.7,
+          "zero_command_delay_s": 0.05200000000002092,
+          "first_force_below_1N_delay_s": 1.7560000000000002,
+          "force_below_1N_dwell_confirmed_delay_s": 2.7560000000000002,
+          "force_peak_before_resume_N": 80.4,
+          "stopped_dwell_confirmed_delay_s": 3.856000000000023,
+          "distance_to_stop_m": 0.5048180876719351,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 268.004,
+          "resume_sim": 277.1,
+          "zero_command_delay_s": 0.07200000000000273,
+          "first_force_below_1N_delay_s": 1.6759999999999877,
+          "force_below_1N_dwell_confirmed_delay_s": 2.6759999999999877,
+          "force_peak_before_resume_N": 26.39999999999999,
+          "stopped_dwell_confirmed_delay_s": 3.2759999999999536,
+          "distance_to_stop_m": 0.4173484829063344,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.27841743192071583,
+      "post_completion_record_s": 11.0,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 354,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 354,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 354,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 354,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 354,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 354,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 354,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 354,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 354,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 354,
+            "missing": 0
+          }
+        },
+        "initially_off": [
+          "buoy_07"
+        ],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "a630f9e56afa0e060d74a46c1844ba9d76f5a06443b22bba6d09ba0a91143cc1",
+        "task1_scenario.json": "14e29c8a9579dd248f279a36215c39e83ddc933ec43d06aaddf0e2315db8b9cb",
+        "provenance.json": "e68e20523b900886d4c903dbccbca780564c913abd525d2a7877d52241dea2d9",
+        "buoy_map_result.json": "79b52063e283475027ebd1cb001ddaef685ad7d285e93954cbb04dd24adfb674"
+      },
+      "execution_metrics": {
+        "planning_attempts": 16,
+        "planning_failures": 2,
+        "controller_failures": 0,
+        "reported_semantic_changes": 2,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20316253299824893
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20687772694509476
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20068199909292161
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.19983240705914795
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2006610829848796
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20120365195907652
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0999999999999943,
+            "wall_s": 3.1128251549089327
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.8000000000000114,
+            "wall_s": 2.8212466299301013
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.9000000000000057,
+            "wall_s": 0.9108404300641268
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.012028616038151
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.1999999999999886,
+            "wall_s": 2.218599873012863
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.205914496909827
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20895601098891348
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20134779706131667
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.1996704339981079
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2008696080883965
+          }
+        ],
+        "total_planning_wall_s": 14.304718452040106,
+        "max_planning_wall_s": 3.1128251549089327,
+        "semantic_pause_sim_s": [
+          4.695999999999998,
+          9.096000000000004
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       }
     }
   },
@@ -196,10 +1995,126 @@
       "fault": null,
       "semantic_timing": null,
       "drift_m": null,
+      "post_completion_record_s": null,
+      "buoy_map": null,
+      "dynamic_map": null,
       "evidence_sha256": {
         "task1_result.json": "298d862af559f082e493d5a6450698dd862873e594cccf90001759ac0f238a14",
         "task1_scenario.json": "8acea76aab6b992ed46443be70edd42165c5c293362a9fd12d42f7b11b67d7c0",
         "provenance.json": "09548f082553c0cb47d98fd7670e83618794c738d9d034ad3057597eb223892a"
+      },
+      "execution_metrics": {
+        "planning_attempts": 19,
+        "planning_failures": 0,
+        "controller_failures": 12,
+        "reported_semantic_changes": 0,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2014905959367752
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20300317893270403
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20301736902911216
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20381011196877807
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20222317497245967
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2021866129944101
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.8000000000000114,
+            "wall_s": 1.817654391983524
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20221204799599946
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.2018690099939704
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20148445200175047
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20189612300600857
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.20228990307077765
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20099173509515822
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.2021698880707845
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20086976105812937
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20118393993470818
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.20121906395070255
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2009241699706763
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.20223467401228845
+          }
+        ],
+        "total_planning_wall_s": 5.452730203978717,
+        "max_planning_wall_s": 1.817654391983524,
+        "semantic_pause_sim_s": []
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "09a76e0766550cecc1ba64b421a7d386c30c0b5198f8cb05cd3c83a734a07e0e",
+        "src/robotx_task1/robotx_task1/core.py": "4efb28220db338dba404046e3eb481239944a893afd104346b246b7b995f9a26",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "28c5bd24632242bea9c542e12c812a70ad0cd6127b196999195394ef5ae8c17b"
       }
     },
     {
@@ -215,10 +2130,33 @@
       "fault": null,
       "semantic_timing": null,
       "drift_m": null,
+      "post_completion_record_s": null,
+      "buoy_map": {
+        "passed": false,
+        "reason": "No task start"
+      },
+      "dynamic_map": null,
       "evidence_sha256": {
         "task1_result.json": "68dbbf9c0ee5d76b6076cfa18817cb7b5f6d82a545307c3d05852e00c0d3348b",
         "task1_scenario.json": "8acea76aab6b992ed46443be70edd42165c5c293362a9fd12d42f7b11b67d7c0",
         "provenance.json": "05c17301250c5b32050ea4cf75bffa574aac3095a8e35dcfddee8ac06acde00f"
+      },
+      "execution_metrics": {
+        "planning_attempts": 0,
+        "planning_failures": 0,
+        "controller_failures": 0,
+        "reported_semantic_changes": 0,
+        "planning_duration_samples": [],
+        "total_planning_wall_s": 0,
+        "max_planning_wall_s": null,
+        "semantic_pause_sim_s": []
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "0407c7d3bec0255bf10d49416ca6bff47c32482b9b660c879c245a4afd30eb61",
+        "src/robotx_task1/robotx_task1/core.py": "4efb28220db338dba404046e3eb481239944a893afd104346b246b7b995f9a26",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "28c5bd24632242bea9c542e12c812a70ad0cd6127b196999195394ef5ae8c17b"
       }
     },
     {
@@ -248,10 +2186,139 @@
       "fault": null,
       "semantic_timing": "10 Hz scene publication",
       "drift_m": 0.26453172036846917,
+      "post_completion_record_s": 11.0,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 338,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 338,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 338,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 338,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 338,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 338,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 338,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 338,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 338,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 338,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
       "evidence_sha256": {
         "task1_result.json": "a6ac13e8a90aa6377e3dc12e0dcd0a53af216b041c1acb38d8891389db55953c",
         "task1_scenario.json": "8acea76aab6b992ed46443be70edd42165c5c293362a9fd12d42f7b11b67d7c0",
-        "provenance.json": "31661e3f784e4467aba74451cbddb5c7b642c8a0ad2eb825b6a5dbe9ea47ee13"
+        "provenance.json": "31661e3f784e4467aba74451cbddb5c7b642c8a0ad2eb825b6a5dbe9ea47ee13",
+        "buoy_map_result.json": "8b6db111fff6bf5d801369891dd86ccd26d65ad9a9e680e89c3f63b43c9ba9dc"
+      },
+      "execution_metrics": {
+        "planning_attempts": 12,
+        "planning_failures": 0,
+        "controller_failures": 0,
+        "reported_semantic_changes": 0,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.20185211405623704
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20372028404381126
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.202901944052428
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2022510749520734
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2026563989929855
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2018809620058164
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.700000000000017,
+            "wall_s": 2.7271470099221915
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20347998791839927
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20298925403039902
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20246403303463012
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20341532700695097
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20217103301547468
+          }
+        ],
+        "total_planning_wall_s": 4.956929423031397,
+        "max_planning_wall_s": 2.7271470099221915,
+        "semantic_pause_sim_s": []
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "14ceceb7e8d3d90ba6ebb33c4e4c14feb4a051b0900902133d2f1eba1e024028",
+        "src/robotx_task1/robotx_task1/core.py": "4efb28220db338dba404046e3eb481239944a893afd104346b246b7b995f9a26",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "28c5bd24632242bea9c542e12c812a70ad0cd6127b196999195394ef5ae8c17b"
       }
     },
     {
@@ -310,10 +2377,162 @@
       "fault": null,
       "semantic_timing": "10 Hz scene publication",
       "drift_m": null,
+      "post_completion_record_s": null,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 160,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 160,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 160,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 160,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 160,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 160,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 160,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 160,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 160,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 160,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
       "evidence_sha256": {
         "task1_result.json": "72cb928753290438d58d80ca2d5ecdcb5ef31ecf792676af6b16051b0cd80c99",
         "task1_scenario.json": "03a9f831652c12afb0c29c83e6fad28477a80c291ff7e38360729f51b0334c40",
-        "provenance.json": "30258791182a5fd69ddc8dac08b1a5b5126d10dc4c9ef86d05117d9ec80eb90d"
+        "provenance.json": "30258791182a5fd69ddc8dac08b1a5b5126d10dc4c9ef86d05117d9ec80eb90d",
+        "buoy_map_result.json": "2e25341963ac70edd186db7834e3534d150a5a7458296f5766178ea7a7cd8cec"
+      },
+      "execution_metrics": {
+        "planning_attempts": 16,
+        "planning_failures": 7,
+        "controller_failures": 0,
+        "reported_semantic_changes": 2,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.20272483408916742
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.2029326061019674
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.2027411040617153
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20324988197535276
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20345588505733758
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20164390897843987
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.031010124948807
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.4000000000000057,
+            "wall_s": 2.422178551903926
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.027909028925933
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.025750519009307
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.029345050919801
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.8000000000000114,
+            "wall_s": 2.8275652889860794
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.025417656986974
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0285884409677237
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0290272339479998
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.6999999999999886,
+            "wall_s": 2.724225757061504
+          }
+        ],
+        "total_planning_wall_s": 30.387765873922035,
+        "max_planning_wall_s": 3.031010124948807,
+        "semantic_pause_sim_s": [
+          14.795999999999992,
+          14.596000000000004
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "14ceceb7e8d3d90ba6ebb33c4e4c14feb4a051b0900902133d2f1eba1e024028",
+        "src/robotx_task1/robotx_task1/core.py": "4efb28220db338dba404046e3eb481239944a893afd104346b246b7b995f9a26",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       }
     },
     {
@@ -408,10 +2627,142 @@
       "fault": null,
       "semantic_timing": "physics effective history",
       "drift_m": null,
+      "post_completion_record_s": null,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 269,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 269,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 269,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 269,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 269,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 269,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 269,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 269,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 269,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 269,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
       "evidence_sha256": {
         "task1_result.json": "84625ce2a097da8f033783b40a8c19faf59c88eacdfb7fe32e5d37f508729248",
         "task1_scenario.json": "00663d649397c6176ab44ee1b5a2d5876981c3941a942c55c5467653831b1815",
-        "provenance.json": "e2e0c9dd450047137985d2190570b9b014ca0d149b556cdf6b5c548350a44035"
+        "provenance.json": "e2e0c9dd450047137985d2190570b9b014ca0d149b556cdf6b5c548350a44035",
+        "buoy_map_result.json": "a20a89fae143d38dbdcc53bae7a5697ab40b5ccb4d10806a7b483336a24b0758"
+      },
+      "execution_metrics": {
+        "planning_attempts": 12,
+        "planning_failures": 0,
+        "controller_failures": 3,
+        "reported_semantic_changes": 2,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.20171910896897316
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.20355114596895874
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20309846696909517
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20368094800505787
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.2039700219174847
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2016745900036767
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.4000000000000057,
+            "wall_s": 0.4069596730405465
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.5,
+            "wall_s": 0.5086935060098767
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.6999999999999886,
+            "wall_s": 0.7071427820483223
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.1999999999999886,
+            "wall_s": 1.2133221100084484
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.5,
+            "wall_s": 0.5051700200419873
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.0,
+            "wall_s": 1.0105425079818815
+          }
+        ],
+        "total_planning_wall_s": 5.569524880964309,
+        "max_planning_wall_s": 1.2133221100084484,
+        "semantic_pause_sim_s": [
+          4.895999999999987,
+          3.396000000000015
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "60fd25b77ad4f7eb8f4760229cc7f3899ed9d8b184ecb4cfc28a54d78caef2fc",
+        "src/robotx_task1/robotx_task1/core.py": "4efb28220db338dba404046e3eb481239944a893afd104346b246b7b995f9a26",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       }
     },
     {
@@ -466,10 +2817,162 @@
       "fault": null,
       "semantic_timing": "physics effective history",
       "drift_m": 0.26679793847653444,
+      "post_completion_record_s": 11.0,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 346,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 346,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 346,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 346,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 346,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 346,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 346,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 346,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 346,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 346,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
       "evidence_sha256": {
         "task1_result.json": "d985d6b47ea713b04699a0868084e6ea27d772845e83dce7066149bf20f1917b",
         "task1_scenario.json": "00663d649397c6176ab44ee1b5a2d5876981c3941a942c55c5467653831b1815",
-        "provenance.json": "7d3aa8d458bf813872793a58fadd20b85035ed6e8acf16b8833e18a1712a81e4"
+        "provenance.json": "7d3aa8d458bf813872793a58fadd20b85035ed6e8acf16b8833e18a1712a81e4",
+        "buoy_map_result.json": "e4bf30d70d688eb98c0c70de883e5579e03b8dbbbd030c1874080084da2faac3"
+      },
+      "execution_metrics": {
+        "planning_attempts": 16,
+        "planning_failures": 2,
+        "controller_failures": 0,
+        "reported_semantic_changes": 2,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.20223963307216763
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20286096492782235
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20297026704065502
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20273641590029
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20302706095390022
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20194843295030296
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.9000000000000057,
+            "wall_s": 1.9242846150882542
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.029128517024219
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.028717466047965
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.5999999999999943,
+            "wall_s": 2.625485942000523
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.30000000000001137,
+            "wall_s": 0.3035090590128675
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2035949369892478
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20243843796197325
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20276875491254032
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.20282167801633477
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20260673796292394
+          }
+        ],
+        "total_planning_wall_s": 13.141138919861987,
+        "max_planning_wall_s": 3.029128517024219,
+        "semantic_pause_sim_s": [
+          13.395999999999987,
+          3.495999999999981
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "60fd25b77ad4f7eb8f4760229cc7f3899ed9d8b184ecb4cfc28a54d78caef2fc",
+        "src/robotx_task1/robotx_task1/core.py": "4efb28220db338dba404046e3eb481239944a893afd104346b246b7b995f9a26",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       }
     },
     {
@@ -524,10 +3027,1899 @@
       "fault": null,
       "semantic_timing": "physics effective history",
       "drift_m": 0.12841022289965406,
+      "post_completion_record_s": 11.100000000000023,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 360,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 360,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 360,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 360,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 360,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 360,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 360,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 360,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 360,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 360,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": {
+        "passed": true,
+        "region": [
+          26.8,
+          29.2,
+          -1.7,
+          1.7
+        ],
+        "peak_lethal_cells": 29,
+        "obstacle_left_region_sim": 321.604,
+        "first_clear_sim": 322.404,
+        "clear_delay_s": 0.8000000000000114,
+        "min_moving_obstacle_clearance_m": 2.5090230494737518,
+        "criterion": "Actual global costmap marks the moving body at its crossing, then clears its former region after it leaves."
+      },
       "evidence_sha256": {
         "task1_result.json": "92667be4cffce1cce062226f84c0dd828af98009a0f5fcacc7e2759a3f79a15e",
         "task1_scenario.json": "d9feae2e4490d824a30d1ff932f1e781e057a75bc077096d09c4f318d903dcfc",
-        "provenance.json": "c4d93e58c9e9f79aef86f8a812abba6be324bda14f4cf001bf502e54bb3c9aa8"
+        "provenance.json": "c4d93e58c9e9f79aef86f8a812abba6be324bda14f4cf001bf502e54bb3c9aa8",
+        "buoy_map_result.json": "a57fd0d8fb8cf975d43e0a99cbf94704895f4ce0218b681d204ee95e5704262a",
+        "dynamic_map_result.json": "6ecedccd3da465dc23dd0d1e233651589a210d5aaaafae922f0875090a8b91fe"
+      },
+      "execution_metrics": {
+        "planning_attempts": 19,
+        "planning_failures": 6,
+        "controller_failures": 0,
+        "reported_semantic_changes": 2,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.19894018594641238
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.2028503540204838
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20348598703276366
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20239186799153686
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20219338301103562
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20237267191987485
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.0,
+            "wall_s": 2.025715491035953
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.9000000000000057,
+            "wall_s": 2.9265069789253175
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0294286760035902
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.024910848005675
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0258141859667376
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.030819805106148
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.024277430959046
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.025260020978749
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.5,
+            "wall_s": 1.516799094970338
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2033967210445553
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20319589402060956
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.2026000120677054
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20178056799340993
+          }
+        ],
+        "total_planning_wall_s": 26.65274017699994,
+        "max_planning_wall_s": 3.030819805106148,
+        "semantic_pause_sim_s": [
+          9.295999999999992,
+          22.896000000000015
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "9668c5f51df64ddaaae2e874ee47b682adc3377e0cec7df5684f40ac8fd5cc5d",
+        "src/robotx_task1/robotx_task1/core.py": "4efb28220db338dba404046e3eb481239944a893afd104346b246b7b995f9a26",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      }
+    },
+    {
+      "case": "s1_c0_none",
+      "run": "runs/20261101_180105_task1_s1_c0_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.3911777803594695,
+        "yaw_rad": 0.03900444164894812
+      },
+      "clearance_m": 1.0554428705918806,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.360758790054663,
+          "wrong_way_rad": 0.008986413859473963
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.394882784456685,
+          "wrong_way_rad": 0.0
+        }
+      },
+      "stops": [],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.297605542177819,
+      "post_completion_record_s": 11.0,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 345,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 345,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 345,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 345,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 345,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 345,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 345,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 345,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 345,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 345,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "6543e03c7b16c8f08485b751bba721080ae5411b42d9d20ba2b1863b135958fe",
+        "task1_scenario.json": "fdf93660e3ab14b0471ab4b17b0311b2332c8fa629e9773014a0cff52406263f",
+        "provenance.json": "d41b6ceb6ee63e236bbc9ec8b65121cc364d4bd1404681bb366d027545f08834",
+        "buoy_map_result.json": "c4f752fc9ce90192809ac4b99431e440f7b3303c22903e8e1405e8eb75e9a1dc"
+      },
+      "execution_metrics": {
+        "planning_attempts": 12,
+        "planning_failures": 0,
+        "controller_failures": 0,
+        "reported_semantic_changes": 0,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.2037893789820373
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20361467800103128
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20201823697425425
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20537972799502313
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20171220693737268
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20114621799439192
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.5,
+            "wall_s": 1.510253079002723
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20463472802657634
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20565254299435765
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2037388680037111
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20152552099898458
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20221575791947544
+          }
+        ],
+        "total_planning_wall_s": 3.7456809438299388,
+        "max_planning_wall_s": 1.510253079002723,
+        "semantic_pause_sim_s": []
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      }
+    },
+    {
+      "case": "s1_c1_none",
+      "run": "runs/20261101_181046_task1_s1_c1_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.3761097556846917,
+        "yaw_rad": 0.05254607181920546
+      },
+      "clearance_m": 1.103793184732296,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.364082569867856,
+          "wrong_way_rad": 0.00885735349281358
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.401824502646159,
+          "wrong_way_rad": 0.003218486690372835
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 225.804,
+          "resume_sim": 235.3,
+          "zero_command_delay_s": 0.07999999999998408,
+          "first_force_below_1N_delay_s": 2.3760000000000048,
+          "force_below_1N_dwell_confirmed_delay_s": 3.3760000000000048,
+          "force_peak_before_resume_N": 94.80000000000003,
+          "stopped_dwell_confirmed_delay_s": 4.876000000000005,
+          "distance_to_stop_m": 0.5936256075129002,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.27043934927813995,
+      "post_completion_record_s": 11.0,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 353,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 353,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 353,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 353,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 353,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 353,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 353,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 353,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 353,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 353,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "6128d343db87de3be2f30693dc62ff436741c9bad0a688c90b79983e84959048",
+        "task1_scenario.json": "d8e95e690cb2834d6eb627623f2eb204494ffed7f974ea2c20fea6cc0bf9ab0d",
+        "provenance.json": "975873b1215161c24d901f92d6b5023787ef0ee3285efab6efe2748c431e65c4",
+        "buoy_map_result.json": "0000ca934298dec2a949ecf3239d8a3df1d00a269a3c8b8831da137fbdbd0554"
+      },
+      "execution_metrics": {
+        "planning_attempts": 13,
+        "planning_failures": 0,
+        "controller_failures": 0,
+        "reported_semantic_changes": 1,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.20641891390550882
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20054639701265842
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20186415710486472
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20089037506841123
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20149153703823686
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20107181603088975
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.9000000000000057,
+            "wall_s": 2.9316700390772894
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.6040000000000134,
+            "wall_s": 2.621299725957215
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20144041907042265
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.21014735999051481
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20643404102884233
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20307245291769505
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20098359405528754
+          }
+        ],
+        "total_planning_wall_s": 7.787330828257836,
+        "max_planning_wall_s": 2.9316700390772894,
+        "semantic_pause_sim_s": [
+          9.49600000000001
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      }
+    },
+    {
+      "case": "s1_c2_none",
+      "run": "runs/20261101_182043_task1_s1_c2_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.37834989169106703,
+        "yaw_rad": 0.049071141223881565
+      },
+      "clearance_m": 1.0214699427445826,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.350591059491913,
+          "wrong_way_rad": 0.009456307429109412
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.388267757906339,
+          "wrong_way_rad": 0.0031396951331756906
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 223.704,
+          "resume_sim": 229.6,
+          "zero_command_delay_s": 0.07200000000000273,
+          "first_force_below_1N_delay_s": 1.8719999999999857,
+          "force_below_1N_dwell_confirmed_delay_s": 2.8719999999999857,
+          "force_peak_before_resume_N": 103.20000000000003,
+          "stopped_dwell_confirmed_delay_s": 3.8719999999999857,
+          "distance_to_stop_m": 0.4677660283844307,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 268.704,
+          "resume_sim": 272.5,
+          "zero_command_delay_s": 0.07999999999998408,
+          "first_force_below_1N_delay_s": 1.6800000000000068,
+          "force_below_1N_dwell_confirmed_delay_s": 2.683999999999969,
+          "force_peak_before_resume_N": 34.80000000000003,
+          "stopped_dwell_confirmed_delay_s": 3.084000000000003,
+          "distance_to_stop_m": 0.39352400143928495,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.2805845401884733,
+      "post_completion_record_s": 11.100000000000023,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 351,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 351,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "289eddb41677d11f18120ceef0d72ab78cb0a858f4c994f71aafa608b0f954d9",
+        "task1_scenario.json": "00663d649397c6176ab44ee1b5a2d5876981c3941a942c55c5467653831b1815",
+        "provenance.json": "61e85686a16eb4ae63946a666ef803c2fa80c566063a45d85c3cfa9ea8984db7",
+        "buoy_map_result.json": "9e5eae7f3e9b7097163b3f0c5f7ef87b46a759a16ec5804190b982bbf40fb7a4"
+      },
+      "execution_metrics": {
+        "planning_attempts": 15,
+        "planning_failures": 1,
+        "controller_failures": 0,
+        "reported_semantic_changes": 2,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.2024968919577077
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20335237495601177
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20023968908935785
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.1989946539979428
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20428430091124028
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2007498969323933
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.012009809957817
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.6999999999999886,
+            "wall_s": 1.7115234920056537
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.9000000000000057,
+            "wall_s": 1.911010339972563
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.39999999999997726,
+            "wall_s": 0.41436499694827944
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20175578503403813
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2081719539128244
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20332019496709108
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20730392402037978
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20266475400421768
+          }
+        ],
+        "total_planning_wall_s": 9.282243058667518,
+        "max_planning_wall_s": 3.012009809957817,
+        "semantic_pause_sim_s": [
+          5.895999999999987,
+          3.7959999999999923
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      }
+    },
+    {
+      "case": "s2_c0_none",
+      "run": "runs/20261101_183035_task1_s2_c0_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.37446584947913836,
+        "yaw_rad": 0.07089852089041782
+      },
+      "clearance_m": 1.1883046724718747,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.343982960568383,
+          "wrong_way_rad": 0.008253189970855779
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.3867585428368105,
+          "wrong_way_rad": 0.003944572776149569
+        }
+      },
+      "stops": [],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.2721350952010024,
+      "post_completion_record_s": 11.0,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 348,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 348,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 348,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 348,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 348,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 348,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 348,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 348,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 348,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 348,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "8aee3395d7b37450e961cd952bd55bcaec1c7660addf85f6f741b05b45d7156a",
+        "task1_scenario.json": "4752d859c5e1dd0ecc7217197dd845af6cf0c627aef5274846fa4a9f27bca343",
+        "provenance.json": "b20266f71186aa7ee64a28a09449d3ba31508b51603fe253df7e92a105af796f",
+        "buoy_map_result.json": "278d971e4692f0a1163512e08a8376f2f899162f6416242c8bb4dc54901bf7ba"
+      },
+      "execution_metrics": {
+        "planning_attempts": 13,
+        "planning_failures": 1,
+        "controller_failures": 0,
+        "reported_semantic_changes": 0,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20146509795449674
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20334638399071991
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20144643494859338
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20301390695385635
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20637471904046834
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.19858266494702548
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0136427929392084
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.4000000000000057,
+            "wall_s": 2.410986808943562
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20360221504233778
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2037514770636335
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2075507640838623
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20787547109648585
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20155677502043545
+          }
+        ],
+        "total_planning_wall_s": 7.663195512024686,
+        "max_planning_wall_s": 3.0136427929392084,
+        "semantic_pause_sim_s": []
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      }
+    },
+    {
+      "case": "s2_c1_none",
+      "run": "runs/20261101_184021_task1_s2_c1_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.3657688674045072,
+        "yaw_rad": 0.05439885737126259
+      },
+      "clearance_m": 1.197700121272357,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.355124542256483,
+          "wrong_way_rad": 0.008572042413887537
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.401197414592685,
+          "wrong_way_rad": 0.0
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 223.104,
+          "resume_sim": 247.3,
+          "zero_command_delay_s": 0.08399999999997476,
+          "first_force_below_1N_delay_s": 2.2879999999999825,
+          "force_below_1N_dwell_confirmed_delay_s": 3.2879999999999825,
+          "force_peak_before_resume_N": 55.79999999999999,
+          "stopped_dwell_confirmed_delay_s": 4.887999999999977,
+          "distance_to_stop_m": 0.6155849031876283,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.2637762228364146,
+      "post_completion_record_s": 10.900000000000091,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 356,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 356,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 356,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 356,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 356,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 356,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 356,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 356,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 356,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 356,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "72caaea71bcd772237b7186ed801001a50b5042fc36b2c9dfcbbe1370f3c226c",
+        "task1_scenario.json": "855009446389eab97f0fbf7e9eaf42aea2331615d548187cfa39ae7276232b63",
+        "provenance.json": "f205ef67287ae1ed833618e3fa44d955092d634604cd20dda80ca5e7514f054b",
+        "buoy_map_result.json": "1aad4abfc77198c6cfdeca41f7b84661c69f215c248d96965aba80be0616d6d8"
+      },
+      "execution_metrics": {
+        "planning_attempts": 18,
+        "planning_failures": 5,
+        "controller_failures": 0,
+        "reported_semantic_changes": 1,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20223935705143958
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20179876603651792
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20461923500988632
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.2057636990211904
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.204310572007671
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.19921909493859857
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.5,
+            "wall_s": 1.508898859960027
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.011277940007858
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0120406369678676
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0131676699966192
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.014071294106543
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0118183459853753
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.799999999999983,
+            "wall_s": 2.8239380810409784
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20169966202229261
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20383200503420085
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2075057679321617
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20150343398563564
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.20361237495671958
+          }
+        ],
+        "total_planning_wall_s": 21.631316796061583,
+        "max_planning_wall_s": 3.014071294106543,
+        "semantic_pause_sim_s": [
+          24.195999999999998
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      }
+    },
+    {
+      "case": "s2_c2_none",
+      "run": "runs/20261101_185028_task1_s2_c2_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.37295464132287864,
+        "yaw_rad": 0.05140324830739562
+      },
+      "clearance_m": 1.2164204498379638,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.34790355145163,
+          "wrong_way_rad": 0.008495280947648176
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.391864330779643,
+          "wrong_way_rad": 0.0
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 222.704,
+          "resume_sim": 231.8,
+          "zero_command_delay_s": 0.08400000000000318,
+          "first_force_below_1N_delay_s": 2.283999999999992,
+          "force_below_1N_dwell_confirmed_delay_s": 3.3799999999999955,
+          "force_peak_before_resume_N": 58.79999999999998,
+          "stopped_dwell_confirmed_delay_s": 4.8799999999999955,
+          "distance_to_stop_m": 0.6132767880662994,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 267.704,
+          "resume_sim": 272.9,
+          "zero_command_delay_s": 0.07200000000000273,
+          "first_force_below_1N_delay_s": 1.6719999999999686,
+          "force_below_1N_dwell_confirmed_delay_s": 2.6719999999999686,
+          "force_peak_before_resume_N": 27.599999999999987,
+          "stopped_dwell_confirmed_delay_s": 3.1719999999999686,
+          "distance_to_stop_m": 0.40855941850721716,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.27538784819114037,
+      "post_completion_record_s": 11.100000000000023,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 351,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 351,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 351,
+            "missing": 0
+          }
+        },
+        "initially_off": [],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "b45b8493a0d5fc81f6d5393af52aeb71de1ffaeaec6991a70c9017915497318d",
+        "task1_scenario.json": "3bab0e8804448209d6c957239ed74d3b842b33842028c6c1c315d23ff6894416",
+        "provenance.json": "a53011cef6c3cb4bb9c874bd3f283082bd00942048d731c40be78531b1540ce1",
+        "buoy_map_result.json": "9e5eae7f3e9b7097163b3f0c5f7ef87b46a759a16ec5804190b982bbf40fb7a4"
+      },
+      "execution_metrics": {
+        "planning_attempts": 14,
+        "planning_failures": 0,
+        "controller_failures": 0,
+        "reported_semantic_changes": 2,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.20236319897230715
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20608306303620338
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2013314819196239
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20240522793028504
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20189161598682404
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.19962464703712612
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.3999999999999773,
+            "wall_s": 1.4175448979949579
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.6999999999999886,
+            "wall_s": 2.7174976429669186
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 1.6999999999999886,
+            "wall_s": 1.7222595160128549
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20523806801065803
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20241245406214148
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2016925240168348
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2080602740170434
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.201623375993222
+          }
+        ],
+        "total_planning_wall_s": 8.090027987957,
+        "max_planning_wall_s": 2.7174976429669186,
+        "semantic_pause_sim_s": [
+          9.096000000000004,
+          5.1959999999999695
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      }
+    },
+    {
+      "case": "s3_c0_none",
+      "run": "runs/20261101_190020_task1_s3_c0_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.38205952940708104,
+        "yaw_rad": 0.04869454302746279
+      },
+      "clearance_m": 1.2556052777591744,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.374243898217395,
+          "wrong_way_rad": 0.008075393438741418
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.391886794920249,
+          "wrong_way_rad": 0.0009977677372543514
+        }
+      },
+      "stops": [],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.2719147815537441,
+      "post_completion_record_s": 11.0,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 350,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 350,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 350,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 350,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 350,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 350,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 350,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 350,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 350,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 350,
+            "missing": 0
+          }
+        },
+        "initially_off": [
+          "buoy_07"
+        ],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "a6c6a2269cfaf94e38fd27fc9a1c38b9ea4bfd1e6850ac7ea802f9a65a715e9a",
+        "task1_scenario.json": "8449d3e68cf4b437335eb7e42fb97f35a9b94753cba0e599f37fb0eb83c33364",
+        "provenance.json": "f0d9dc0575a90fa2a36b1862eae1fd184d70a1f2c67a03cfc97a53e62a1f608a",
+        "buoy_map_result.json": "59eb157f70b167418650480a2b71ecb98ad9ee012e36e0c777f8a6a436009473"
+      },
+      "execution_metrics": {
+        "planning_attempts": 13,
+        "planning_failures": 1,
+        "controller_failures": 0,
+        "reported_semantic_changes": 0,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.2038465669611469
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.2007342049619183
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20396102708764374
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20619390299543738
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20239603403024375
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.2004662649706006
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0131852549966425
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.3000000000000114,
+            "wall_s": 2.312210605945438
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20957853796426207
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20416553993709385
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20517422095872462
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20161903102416545
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.20047291391529143
+          }
+        ],
+        "total_planning_wall_s": 7.564004105748609,
+        "max_planning_wall_s": 3.0131852549966425,
+        "semantic_pause_sim_s": []
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      }
+    },
+    {
+      "case": "s3_c1_none",
+      "run": "runs/20261101_191009_task1_s3_c1_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.3753756870185634,
+        "yaw_rad": 0.05951098814885758
+      },
+      "clearance_m": 1.3877395280711629,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.3675356200555555,
+          "wrong_way_rad": 0.008344025890789197
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.401293556805086,
+          "wrong_way_rad": 0.00337765864774231
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 225.304,
+          "resume_sim": 231.8,
+          "zero_command_delay_s": 0.07200000000000273,
+          "first_force_below_1N_delay_s": null,
+          "force_below_1N_dwell_confirmed_delay_s": null,
+          "force_peak_before_resume_N": 118.79999999999998,
+          "stopped_dwell_confirmed_delay_s": 5.675999999999988,
+          "distance_to_stop_m": 0.7808800030267574,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.2708202968244687,
+      "post_completion_record_s": 11.0,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 357,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 357,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 357,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 357,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 357,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 357,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 357,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 357,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 357,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 357,
+            "missing": 0
+          }
+        },
+        "initially_off": [
+          "buoy_07"
+        ],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "fa30ddd54ed74e455cc27afa4462273e85f903de94d84fc08ffc76d571b61d2b",
+        "task1_scenario.json": "3e562ac3138ce160e9d7133a891bb9ab6ef3c5ab3756349bbf59eb7554f82bc5",
+        "provenance.json": "466552459fc36710773539e9f35b97873be94040db86d027563ea1d809766c16",
+        "buoy_map_result.json": "4066e15c88b7fad3e68f173ceae039ffb0a08c8419522e5922d8d6fd936bc864"
+      },
+      "execution_metrics": {
+        "planning_attempts": 15,
+        "planning_failures": 2,
+        "controller_failures": 0,
+        "reported_semantic_changes": 1,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.2026016419986263
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20417525002267212
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20898189500439912
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20335967896971852
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20684369502123445
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.19999027100857347
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.0118175629759207
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.013357199029997
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.9000000000000057,
+            "wall_s": 2.935254830052145
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.6999999999999886,
+            "wall_s": 0.7194693419151008
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.199709209962748
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20227104402147233
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20825817598961294
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.20575392106547952
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2004417999414727
+          }
+        ],
+        "total_planning_wall_s": 11.922285516979173,
+        "max_planning_wall_s": 3.013357199029997,
+        "semantic_pause_sim_s": [
+          6.496000000000009
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      }
+    },
+    {
+      "case": "s3_c2_none",
+      "run": "runs/20261101_192014_task1_s3_c2_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.3783983403419756,
+        "yaw_rad": 0.04058402610695944
+      },
+      "clearance_m": 1.105284800149735,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.348787215656091,
+          "wrong_way_rad": 0.008332691011364357
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.403529760844424,
+          "wrong_way_rad": 0.0034381743148037547
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 223.004,
+          "resume_sim": 227.7,
+          "zero_command_delay_s": 0.05200000000002092,
+          "first_force_below_1N_delay_s": 1.7560000000000002,
+          "force_below_1N_dwell_confirmed_delay_s": 2.7560000000000002,
+          "force_peak_before_resume_N": 80.4,
+          "stopped_dwell_confirmed_delay_s": 3.856000000000023,
+          "distance_to_stop_m": 0.5048180876719351,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 268.004,
+          "resume_sim": 277.1,
+          "zero_command_delay_s": 0.07200000000000273,
+          "first_force_below_1N_delay_s": 1.6759999999999877,
+          "force_below_1N_dwell_confirmed_delay_s": 2.6759999999999877,
+          "force_peak_before_resume_N": 26.39999999999999,
+          "stopped_dwell_confirmed_delay_s": 3.2759999999999536,
+          "distance_to_stop_m": 0.4173484829063344,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.27841743192071583,
+      "post_completion_record_s": 11.0,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 354,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 354,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 354,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 354,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 354,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 354,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 354,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 354,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 354,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 354,
+            "missing": 0
+          }
+        },
+        "initially_off": [
+          "buoy_07"
+        ],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "a630f9e56afa0e060d74a46c1844ba9d76f5a06443b22bba6d09ba0a91143cc1",
+        "task1_scenario.json": "14e29c8a9579dd248f279a36215c39e83ddc933ec43d06aaddf0e2315db8b9cb",
+        "provenance.json": "e68e20523b900886d4c903dbccbca780564c913abd525d2a7877d52241dea2d9",
+        "buoy_map_result.json": "79b52063e283475027ebd1cb001ddaef685ad7d285e93954cbb04dd24adfb674"
+      },
+      "execution_metrics": {
+        "planning_attempts": 16,
+        "planning_failures": 2,
+        "controller_failures": 0,
+        "reported_semantic_changes": 2,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20316253299824893
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20687772694509476
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.20068199909292161
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.19983240705914795
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2006610829848796
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20120365195907652
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0999999999999943,
+            "wall_s": 3.1128251549089327
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.8000000000000114,
+            "wall_s": 2.8212466299301013
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.9000000000000057,
+            "wall_s": 0.9108404300641268
+          },
+          {
+            "outcome": "plan_failed",
+            "sim_s": 3.0,
+            "wall_s": 3.012028616038151
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 2.1999999999999886,
+            "wall_s": 2.218599873012863
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.205914496909827
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20895601098891348
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20134779706131667
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.1996704339981079
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2008696080883965
+          }
+        ],
+        "total_planning_wall_s": 14.304718452040106,
+        "max_planning_wall_s": 3.1128251549089327,
+        "semantic_pause_sim_s": [
+          4.695999999999998,
+          9.096000000000004
+        ]
+      },
+      "runtime_source_sha256": {
+        "src/robotx_task1/robotx_task1/mission.py": "29386a3c4aebbd756be096f2cbd273259ae757b3d030acce820e93ca28e279d8",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       }
     }
   ],
@@ -548,6 +4940,16 @@
       "run": "runs/20261030_024116_task1_model_fixed",
       "passed": true,
       "sha256": "71486ae11e3e53e77e5785d690fa531661bdaafff7911f8bc4adb2fe0709978b"
+    },
+    {
+      "run": "runs/20261101_185028_task1_s2_c2_none",
+      "passed": true,
+      "sha256": "61f71bb7f704327204470b26d3fc502f11097412b1b857f322617f836535beec"
+    },
+    {
+      "run": "runs/20261101_190020_task1_s3_c0_none",
+      "passed": true,
+      "sha256": "68adcd415e494cdf8ad6a47b9ad19808bef17253320a14818828bfa3dc799da4"
     }
   ],
   "scope": "Boat-side simulation; known UAV observation and local reporting substitutes; no official score claimed."

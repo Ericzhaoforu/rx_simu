@@ -37,6 +37,13 @@ def main():
         result=run/'task1_result.json'
         if result.exists():
             j=json.loads(result.read_text());output['finished_result']={k:j[k] for k in ['passed','endpoint_error','circles','min_clearance_m']}
+            output['finished_result']['kind']='normal_task'
+        fault=run/'task1_fault_result.json'
+        if fault.exists():
+            j=json.loads(fault.read_text())
+            output['normal_task_result']=output.pop('finished_result',None)
+            output['finished_result']={k:j[k] for k in ['fault','passed','error','fcu_alive','stops'] if k in j}
+            output['finished_result']['kind']='fault_response'
     ledgers=sorted((ROOT/'runs').glob('task1_suite_*.json'))
     if ledgers:
         items=json.loads(ledgers[-1].read_text());output['latest_batch_ledger']=str(ledgers[-1])
