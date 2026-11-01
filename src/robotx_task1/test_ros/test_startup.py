@@ -15,6 +15,10 @@ class RosStartup(unittest.TestCase):
             for i in range(10):
                 b=Buoy();b.id=str(i);b.position.x=float(i);b.collision_radius=.36;b.state=3 if i==0 else 4 if i==1 else 0
                 msg.buoys.append(b)
+            delayed=copy.deepcopy(msg)
+            t=mission.get_clock().now().nanoseconds-400_000_000
+            delayed.header.stamp.sec=t//1_000_000_000;delayed.header.stamp.nanosec=t%1_000_000_000
+            mission.on_observation(delayed);self.assertIsNone(mission.obs)
             mission.on_observation(msg);self.assertEqual(mission.last_revision,1)
             newer=copy.deepcopy(msg);newer.header.stamp=mission.get_clock().now().to_msg();newer.revision=2;newer.buoys[2].state=1
             mission.started=True;mission.stage='TRANSIT';mission.motion='EXECUTING'
