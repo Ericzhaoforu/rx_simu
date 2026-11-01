@@ -10,7 +10,7 @@
       "entry": [9, -4], "exit": [61, 5],
       "markers": [[22, 4.5, 2], [25, -8.5, 1], [31, 10.5, 2], [35, -2.5, 1], [40, 4, 0], [43, -8.5, 1], [48, 11, 2], [52, -1.5, 1]],
       "change": {"after_s": 45, "id": "buoy_03", "state": 1},
-      "traffic": {"x": 37, "y_min": -15, "y_max": 16, "speed_mps": 0.25, "depart_after_s": 25, "hold_y": 0, "hold_s": 40}
+      "traffic": {"x": 37, "y_min": -15, "y_max": 16, "speed_mps": 0.25, "depart_after_s": 60, "hold_y": 0, "hold_s": 40}
     },
     "2": {
       "entry": [9, 3], "exit": [62, -4],

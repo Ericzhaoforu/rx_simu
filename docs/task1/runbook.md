@@ -51,6 +51,35 @@ python3 scripts/run_task1_suite.py --seed 1 --changes 1 --record-maps
 
 人工观察时，可先 `sim_session.py start --task1 --navigation --control ...`，再运行 `validate_task1.py`；控制开启只面向脚本核验过的本次固定版本 SITL。不要同时运行其他速度控制器。
 
+## 港区工程场景与标注视频
+
+`--course harbor` 选择 [harbor.json](../../config/task1/harbor.json) 中的独立布局：88 m × 47 m 边界、错位红绿浮标、OFF 实体、南侧码头和北侧浮台。三个固定布局改变通道弯曲和一次灯变的时机（进入 TRANSIT 后 45 / 70 / 100 s）。它们用于增加工程测试的约束，不是官方场地测绘复刻；结果和原 baseline 用例分开归档。
+
+交通目标使用独立工作船外形、2 m × 3 m × 0.9 m 保守碰撞体，按预设航线匀速横穿，`block` 模式在中段暂停再继续。它是连续运动的实体障碍，尚无独立船舶控制器、水动力和碰撞避让决策。交通真值只供裁判与视频使用，导航仍靠 LiDAR 感知；两个固定码头作为已测绘禁航区进入静态地图。所有十个浮标继续使用 2026 RoboBuoy 模型。
+
+以下命令逐次冷启动；必须等前一条结束并完成进程清理再执行下一条：
+
+```bash
+source scripts/env.sh
+python3 scripts/run_task1_suite.py --course harbor --group base --seed 1 --changes 1 --record-maps
+python3 scripts/run_task1_suite.py --course harbor --group dynamic --seed 1 --changes 1 --dynamic cross --record-maps --record-sensors
+python3 scripts/run_task1_suite.py --course harbor --group base --seed 1 --changes 1 --wind 2 --wave-gain 0.08 --record-maps
+```
+
+`wave-gain` 是 VRX 波浪插件的增益，不能直接称作波高；实际摇摆与漂移从该次真值日志计算。未实测的布局、风浪和交通组合不能继承其他用例的通过结论。低层遮挡、停止后的占据残留和动态相遇仍是需要验证的现有能力缺口。
+
+新运行同时记录每帧相机源时间和任务实际接受的 `/task1/reference_path`。完整任务结束后生成 1920 × 1080 标注视频及轨迹、末端、地图图片：
+
+```bash
+python3 scripts/annotate_task1.py runs/实际运行目录
+# 单帧审核，秒数相对任务开始：
+python3 scripts/annotate_task1.py runs/实际运行目录 --preview 260
+```
+
+输出 `visualization/task1_annotated.mp4`：左侧是真实 Gazebo 相机加数据标注，右侧为同次发布的局部代价地图和状态。紫色虚线为当前执行的规划路径，青色实线为实际 VRX 航迹，黄色星号为当前阶段末端目标；停车/重规划时旧路径改为灰色。红绿保留给浮标，ID、灯态文字和闪烁亮暗相位分别标清。相机标注按相机源时间投影，地图按回放时间取最近的历史记录；显示源时间差，不使用未来消息填补空缺。
+
+标注来自已知灯态接口，不能视为视觉识别结果；VRX 真值用于离线航迹评估，导航仍使用飞控 EKF。回放按 0.5 仿真秒采样、5 FPS 编码，为 2.5 倍速；原相机 MP4 保留不变，来源和校验值见 `task1_annotated.json`。若旧运行缺少相机标定或逐帧时标，脚本拒绝猜测同步关系。
+
 异常场景分别冷启动：
 
 ```bash
