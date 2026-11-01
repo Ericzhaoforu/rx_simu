@@ -37,11 +37,17 @@ def buoy_persistence(run):
 def analyze(run):
     run=Path(run);scene=json.loads((run/'generated/scene.json').read_text())
     if scene['task1']['dynamic']=='none':return None
+    def unavailable(reason):
+        report={'passed':False,'status':'not_evaluated','reason':reason}
+        (run/'dynamic_map_result.json').write_text(json.dumps(report,indent=2)+'\n')
+        return report
     raw=run/'visualization/raw';events_file=raw/'events.jsonl'
-    if not events_file.exists():return {'passed':False,'reason':'Map recording was not enabled'}
+    if not events_file.exists():return unavailable('Map recording was not enabled')
+    if not (run/'map_alignment.json').exists():return unavailable('FCU/map alignment unavailable; navigation did not become ready')
     events=[json.loads(l) for l in events_file.read_text().splitlines()]
     records=[json.loads(l) for l in (run/'task1_judge.jsonl').read_text().splitlines()]
     states=sorted((r for r in records if r['type']=='scene' and 'dynamic_pose' in r['data']),key=lambda r:r['stamp'])
+    if not states:return unavailable('No source-timed moving-obstacle state recorded')
     times=[r['stamp'] for r in states]
     origin=np.asarray(json.loads((run/'map_alignment.json').read_text())['offset_xy_m'])
     x=states[0]['data']['dynamic_pose'][0];counts=[]

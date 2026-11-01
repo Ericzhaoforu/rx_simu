@@ -70,8 +70,10 @@ def main():
                                     run/'buoy_map_result.json',run/'dynamic_map_result.json'] if p.exists()})
         if fault.exists():item['evidence_sha256'][fault.name]=digest(fault)
         mission_log=run/'task1_mission.jsonl'
+        item['task_started']=False
         if mission_log.exists():
             events=[json.loads(l) for l in mission_log.read_text().splitlines()]
+            item['task_started']=any(e['event']=='started' for e in events)
             planning=[]
             for i,e in enumerate(events):
                 if e['event']!='planning':continue
@@ -89,6 +91,7 @@ def main():
                 'max_planning_wall_s':max((p['wall_s'] for p in planning),default=None),
                 'semantic_pause_sim_s':[s['resume_sim']-s['start_sim'] for s in j.get('stops',[])
                                         if s['reason']=='semantic revision changed' and s['resume_sim'] is not None]}
+        item['outcome']='passed' if verdict else 'collision' if j.get('collision_contacts',0)>0 else 'not_started' if not item['task_started'] and not f else 'failed'
         snapshot=run/'source_snapshot.tar.gz'
         if snapshot.exists():
             with tarfile.open(snapshot) as archive:
@@ -110,7 +113,11 @@ def main():
     fault_keys=['fault_'+f for f in FAULTS]
     expected=normal+fault_keys
     stress=[case_key(c) for c in cases(stress=True) if case_key(c) in latest]
+    competition_coverage={label:sum(latest.get(k,{}).get('outcome')==label for k in match)
+                          for label in ('passed','collision','not_started','failed')}
+    competition_coverage['not_attempted']=sum(k not in latest for k in match)
     summary={'expected':expected,'competition_cases':match,'baseline_cases':baseline,'recorded_stress_cases':stress,
+             'competition_coverage':competition_coverage,
              'competition_change_count':1,'constraint_source':'User confirmation on 2026-11-01; blinking phases are not semantic changes.',
              'latest':latest,'attempts':attempts,'model_checks':models,'lidar_checks':lidars,
              'scope':'Boat-side simulation; known UAV observation and local reporting substitutes; no official score claimed.'}
@@ -119,6 +126,7 @@ def main():
            '由 `scripts/report_task1.py` 根据保留的独立裁判结果生成。完整历史（包括调试失败）见 [results.json](results.json)。',
            '每项展示最近一次已完成的尝试，可能来自较早提交；运行目录的 provenance.json 与源码快照标识当时版本。新修改不能继承旧运行的通过结论。',
            '根据用户 2026-11-01 确认，正式比赛仅一次语义灯态切换；闪烁亮灭不计次数。一次切换为主验收，零切换为对照，两次切换仅作额外压力测试。',
+           '比赛主验收最近记录：'+str(competition_coverage['passed'])+' 项通过，'+str(competition_coverage['collision'])+' 项接触碰撞，'+str(competition_coverage['not_started'])+' 项启动失败、任务未开始；启动失败不能算作已完成场景验证。',
            '正常任务与故障测试分开判定；程序报告 COMPLETE 不等于独立验收通过。尚未运行的组合明确列出。','',
            '| 范围 | 用例 | 判定 | 行为源码版本 | 位置 / 航向误差 | 最小净空 | 证据 |',
            '|---|---|---|---|---|---|---|']
@@ -131,7 +139,8 @@ def main():
         clearance='—' if r['clearance_m'] is None else f"{r['clearance_m']:.3f} m"
         file='task1_fault_result.json' if r['fault'] else 'task1_result.json'
         version='当前' if r['matches_current_runtime_sources'] else '较早；需回归'
-        lines.append(f"| {category} | {key} | {'通过' if r['passed'] else '失败'} | {version} | {errors} | {clearance} | [{Path(r['run']).name}](../../{r['run']}/{file}) |")
+        label={'passed':'通过','collision':'失败：接触碰撞','not_started':'启动失败：任务未开始','failed':'失败'}[r['outcome']]
+        lines.append(f"| {category} | {key} | {label} | {version} | {errors} | {clearance} | [{Path(r['run']).name}](../../{r['run']}/{file}) |")
     experiments=[r for key,r in latest.items() if key.endswith('_visibility_guard')]
     if experiments:
         lines+=['','额外观测距离为非默认实验，不替代上面的默认配置验收：','']
@@ -154,6 +163,7 @@ def main():
                       'competition_passed':sum(latest[k]['passed'] for k in match if k in latest),
                       'current_normal_passed':sum(latest[k]['passed'] and latest[k]['matches_current_runtime_sources'] for k in normal if k in latest),
                       'fault_passed':sum(latest[k]['passed'] for k in fault_keys if k in latest),
+                      'not_started':[k for k in normal if latest.get(k,{}).get('outcome')=='not_started'],
                       'unverified':[k for k in expected if k not in latest],'attempts':len(attempts)},ensure_ascii=False))
 
 

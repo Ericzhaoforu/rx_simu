@@ -29,17 +29,36 @@ def stop():
     if not PIDFILE.exists():
         return
     state = json.loads(PIDFILE.read_text())
+    def active(child):
+        try:
+            stat=Path(f"/proc/{child['pid']}/stat").read_text().split(') ',1)[1].split()
+            return stat[19]==child['start'] and stat[0]!='Z'
+        except FileNotFoundError:return False
+    def signal_group(child,sig):
+        if process_start(child['pid'])==child['start']:
+            try:os.killpg(child['pid'],sig)
+            except ProcessLookupError:pass
     for child in reversed(state['processes']):
-        if process_start(child['pid']) == child['start']:
-            os.killpg(child['pid'], signal.SIGINT)
+        signal_group(child,signal.SIGINT)
     deadline = time.monotonic()+8
     while time.monotonic() < deadline:
-        if not any(process_start(p['pid']) == p['start'] for p in state['processes']):
+        if not any(active(p) for p in state['processes']):
             break
         time.sleep(0.2)
     for child in state['processes']:
-        if process_start(child['pid']) == child['start']:
-            os.killpg(child['pid'], signal.SIGTERM)
+        signal_group(child,signal.SIGTERM)
+    # Gazebo may remain blocked during shutdown after SIGTERM. Do not discard
+    # its identity and allow the next world to share its transport publishers.
+    deadline = time.monotonic()+3
+    while time.monotonic()<deadline:
+        if not any(active(p) for p in state['processes']):break
+        time.sleep(.1)
+    for child in state['processes']:
+        signal_group(child,signal.SIGKILL)
+    deadline=time.monotonic()+2
+    while any(active(p) for p in state['processes']) and time.monotonic()<deadline:time.sleep(.1)
+    if any(active(p) for p in state['processes']):
+        raise RuntimeError('Owned processes survived shutdown; retaining session identity and refusing a new session')
     PIDFILE.unlink(missing_ok=True)
     print('Stopped workspace session:', state['run_dir'])
 
