@@ -11,6 +11,8 @@ RUNTIME_SOURCES=[
     'scripts/prepare_task1.py','scripts/prepare_navigation.py','scripts/generate_world.py',
     'scripts/sim_session.py','src/usv_sim/usv_sim/cloud_filter.py','src/usv_sim/usv_sim/clearing_cloud.py',
     'src/robotx_task1/robotx_task1/mission.py','src/robotx_task1/robotx_task1/core.py',
+    'src/robotx_task1/robotx_task1/traffic.py','src/robotx_task1/robotx_task1/traffic_guard.py',
+    'src/robotx_task1_interfaces/msg/TrafficSafety.msg',
     'src/robotx_task1/robotx_task1/observer.py','src/usv_nav2/usv_nav2/rover_bridge.py',
     'src/usv_nav2/launch/navigation.launch.py','src/usv_nav2/usv_nav2/launch_config.py',
     'src/usv_nav2/usv_nav2/task_lease.py',
@@ -18,6 +20,7 @@ RUNTIME_SOURCES=[
     'src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp',
     'src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp',
     'src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp',
+    'src/robotx_task1_nav/include/robotx_task1_nav/traffic_layer.hpp','src/robotx_task1_nav/plugins.xml',
     'tools/task1_gazebo/Task1Scene.cc','models/robotx_2026_robobuoy/model.sdf',
     'config/task1/harbor.json','models/task1_workboat/model.sdf']
 
@@ -81,13 +84,14 @@ def main():
             for i,e in enumerate(events):
                 if e['event']!='planning':continue
                 outcome=next((x for x in events[i+1:] if x['generation']==e['generation'] and
-                              x['event'] in ('path_ready','plan_failed','stop_requested','aborted')),None)
+                              x['event'] in ('path_candidate','path_ready','plan_failed','stop_requested','aborted')),None)
                 if outcome:planning.append(dict(outcome=outcome['event'],sim_s=outcome['sim']-e['sim'],
                                                 wall_s=outcome['wall']-e['wall']))
             item['execution_metrics']={
                 'planning_attempts':sum(e['event']=='planning' for e in events),
                 'planning_failures':sum(e['event']=='plan_failed' for e in events),
                 'controller_failures':sum(e['event']=='controller_result' and e['status'] not in (4,5) for e in events),
+                'candidate_traffic_rejections':sum(e['event']=='path_blocked_traffic' for e in events),
                 'reported_semantic_changes':sum(e['event']=='semantic_update_reported' for e in events),
                 'planning_duration_samples':planning,
                 'total_planning_wall_s':sum(p['wall_s'] for p in planning),

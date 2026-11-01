@@ -27,6 +27,7 @@ LABELS={0:'灭灯',1:'红灯',2:'绿灯',3:'蓝闪·入口',4:'蓝常亮·出口
 STAGES={'APPROACH_ENTRY':'驶向入口','CIRCLE_ENTRY':'入口顺时针绕行','TRANSIT':'安全通行',
         'CIRCLE_EXIT':'出口逆时针绕行','COMPLETE':'任务完成','ABORTED':'任务终止'}
 MOTIONS={'EXECUTING':'执行路径','PLANNING':'正在重规划','STARTING':'等待控制器',
+         'CHECKING_TRAFFIC':'检查候选路径的交通冲突',
          'STOPPING':'停车中','WAIT_CLEAR':'停等可行路径','COMPLETE':'完成后观察','ABORTED':'已终止'}
 
 
@@ -96,6 +97,9 @@ class Review:
         self.mission_times=[e['sim'] for e in data.mission]
         self.path_cache={};self.grid_images={}
         self.camera_size=(1264,790);self.local_size=596
+        traffic_file=data.run/'traffic_guard.jsonl'
+        self.traffic=[json.loads(l) for l in traffic_file.read_text().splitlines()] if traffic_file.exists() else []
+        self.traffic_times=[r['evaluated_at'] for r in self.traffic]
 
     def event(self,topic,t):
         i=prior_index(self.event_times.get(topic,[]),t)
@@ -208,7 +212,7 @@ class Review:
         text(draw,(12,3),'实际发布的局部代价地图 · 30 m × 30 m',19)
         draw.rectangle((0,size-33,size,size),fill=BG)
         age=t-latest['stamp'] if latest else math.nan
-        text(draw,(12,size-31),f'地图源时间差 {age:.2f} s  |  黑：占用  灰：代价',17)
+        text(draw,(12,size-31),f'源时间差 {age:.2f} s  |  黑：占据（含交通预测）',17)
         return picture
 
     def render(self,t):
@@ -244,6 +248,13 @@ class Review:
         if status['stage'] in ('COMPLETE','ABORTED'):
             label='独立裁判：通过' if self.data.result['passed'] else '独立裁判：未通过（完整保留）'
             text(draw,(1322,998),label,21,GOAL)
+        elif self.traffic:
+            index=prior_index(self.traffic_times,t)
+            assessment=self.traffic[index] if index>=0 else None
+            if assessment and t-assessment['source_stamp']<=.4:
+                label='LiDAR 交通预测：通道可行' if assessment['clear'] else 'LiDAR 交通预测：停车让行'
+                text(draw,(1322,998),label,21,MUTED if assessment['clear'] else TRAFFIC)
+            else:text(draw,(1322,998),'LiDAR 交通预测：等待新观测',21,TRAFFIC)
         draw.rounded_rectangle((20,910,1284,1060),radius=10,fill=PANEL)
         dashed(draw,[[40,937],[110,937]],PLAN,width=4);text(draw,(122,921),'规划路径',21)
         draw.line((290,937,360,937),fill=TRACK,width=4);text(draw,(372,921),'实际航迹（VRX 真值）',21)

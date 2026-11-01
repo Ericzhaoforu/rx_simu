@@ -9,7 +9,8 @@ import time
 import cv2
 import numpy as np
 import rclpy
-from rclpy.qos import qos_profile_sensor_data
+from rclpy.qos import qos_profile_sensor_data, QoSProfile, DurabilityPolicy
+from nav_msgs.msg import OccupancyGrid
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
@@ -24,6 +25,10 @@ class TaskRunner(Runner):
         # The evaluation process observes navigation; it never publishes velocity/setpoints.
         self.node.destroy_publisher(self.raw);self.node.destroy_publisher(self.twist)
         self.status=None;self.events=[];self.scene_state=None;self.writers={};self.frame_counts={};self.frame_stamps={}
+        self.costmaps={}
+        for topic in ('/global_costmap/costmap','/local_costmap/costmap'):
+            self.node.create_subscription(OccupancyGrid,topic,lambda m,t=topic:self.costmaps.__setitem__(t,m),
+                QoSProfile(depth=1,durability=DurabilityPolicy.TRANSIENT_LOCAL))
         self.node.create_subscription(String,'/task1/status',self.on_status,10)
         self.node.create_subscription(String,'/task1/events',lambda m:self.events.append(json.loads(m.data)),10)
         self.node.create_subscription(String,'/task1/scene_state',self.on_scene,10)
@@ -34,6 +39,31 @@ class TaskRunner(Runner):
 
     def on_status(self,msg):
         self.status=json.loads(msg.data);self.phase=self.status['stage']+'/'+self.status['motion']
+
+    def navigation_ready(self):
+        super().navigation_ready()
+        report={}
+        def maps_ready():
+            report.clear()
+            for topic in ('/global_costmap/costmap','/local_costmap/costmap'):
+                msg=self.costmaps.get(topic)
+                if msg is None or msg.header.frame_id!='map':return False
+                grid=np.asarray(msg.data).reshape(msg.info.height,msg.info.width)
+                origin=msg.info.origin.position;res=msg.info.resolution;missing=[];checked=[]
+                for b in self.scene['task1']['buoys']:
+                    x=int(math.floor((b['x']-origin.x)/res));y=int(math.floor((b['y']-origin.y)/res))
+                    if not(0<=x<msg.info.width and 0<=y<msg.info.height):
+                        if topic.startswith('/global'):missing.append(b['id'])
+                        continue
+                    radius=int(math.ceil(b['radius']/res))+1
+                    window=grid[max(0,y-radius):y+radius+1,max(0,x-radius):x+radius+1]
+                    checked.append(b['id'])
+                    if not np.any(window>=100):missing.append(b['id'])
+                report[topic]=dict(source_stamp=msg.header.stamp.sec+msg.header.stamp.nanosec/1e9,
+                                   checked=checked,missing=missing)
+            return len(report)==2 and all(r['checked'] and not r['missing'] for r in report.values())
+        try:self.wait(maps_ready,20,'physical buoys retained in both costmaps before arming')
+        finally:(self.run/'startup_costmap_check.json').write_text(json.dumps(report,indent=2)+'\n')
 
     def on_scene(self,msg):
         self.scene_state=json.loads(msg.data)

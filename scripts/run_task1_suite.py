@@ -8,7 +8,7 @@ import signal
 import subprocess
 import sys
 import time
-from task1_cases import cases as selected_cases,case_key
+from task1_cases import cases as selected_cases,case_key,FAULTS
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -23,7 +23,7 @@ def main():
     p.add_argument('--visibility-guard',action='store_true',help='Test the experimental lidar stand-off separately')
     p.add_argument('--stress',action='store_true',help='Run two-change stress cases outside the confirmed match setting')
     p.add_argument('--skip-case',action='append',default=[],help='Omit an already recorded case ID, e.g. s1_c0_none')
-    p.add_argument('--fault',choices=('observation_gap','reordered_observation','mission_exit','cancel','role_change','no_path','late_change'))
+    p.add_argument('--fault',choices=FAULTS)
     p.add_argument('--stop-on-failure',action='store_true')
     p.add_argument('--no-video',action='store_true');a=p.parse_args()
     if (ROOT/'runs/session.json').exists():raise RuntimeError('Stop the current managed session before running a cold-start suite')
@@ -66,7 +66,9 @@ def main():
             if a.record_sensors:
                 recorders.append(subprocess.Popen(['ros2','bag','record','--use-sim-time','--storage','sqlite3',
                     '--output',str(run/'sensors'),'/usv/lidar/points','/usv/lidar/filtered','/usv/lidar/marking','/usv/lidar/clearing','/scan','/tf','/tf_static',
-                    '/clock','/usv/odom','/usv/cmd_vel','/task1/reference_path'],stdout=(run/'record_sensors.log').open('w'),stderr=subprocess.STDOUT))
+                    '/clock','/usv/odom','/usv/cmd_vel','/task1/reference_path','/task1/traffic_safety',
+                    '/task1/observations','/map','/task1/candidate_path','/task1/traffic_costmap'],
+                    stdout=(run/'record_sensors.log').open('w'),stderr=subprocess.STDOUT))
             command=[sys.executable,str(ROOT/'scripts/validate_task1.py')]
             if a.fault:command=[sys.executable,str(ROOT/'scripts/validate_task1_fault.py'),a.fault]
             elif a.no_video:command.append('--no-video')
@@ -74,6 +76,13 @@ def main():
             item['exit_code']=result.returncode
         except Exception as error:item['error']=repr(error)
         finally:
+            owned={}
+            session=ROOT/'runs/session.json'
+            if run and session.exists():
+                state=json.loads(session.read_text())
+                if Path(state['run_dir'])==run:
+                    owned=state
+                    (run/'owned_processes.json').write_text(json.dumps(state,indent=2)+'\n')
             for recorder in recorders:
                 recorder.send_signal(signal.SIGINT)
                 try:recorder.wait(timeout=10)
@@ -81,6 +90,13 @@ def main():
             subprocess.run([sys.executable,str(ROOT/'scripts/sim_session.py'),'stop'],check=False)
             try:supervisor.wait(timeout=12)
             except subprocess.TimeoutExpired:supervisor.terminate();supervisor.wait(timeout=5)
+            if run:
+                groups={p['pid'] for p in owned.get('processes',[])}
+                remaining=[line for line in subprocess.check_output(['ps','-eo','pid=,pgid=,stat='],text=True).splitlines()
+                           if int(line.split()[1]) in groups and not line.split()[2].startswith('Z')]
+                item['shutdown']=dict(session_removed=not session.exists(),owned_groups_alive=remaining,
+                                      passed=bool(groups) and not remaining and not session.exists())
+                (run/'shutdown_result.json').write_text(json.dumps(item['shutdown'],indent=2)+'\n')
         if run and (run/'task1_judge.jsonl').exists():
             from robotx_task1.judge import evaluate
             try:item['result']=evaluate(run)
@@ -93,10 +109,12 @@ def main():
             except Exception as error:item['map_result']={'passed':False,'error':repr(error)}
         results.append(item);ledger.write_text(json.dumps(results,indent=2)+'\n');print(json.dumps(item),flush=True)
         if a.stop_on_failure and (not item.get('fault_result' if a.fault else 'result',{}).get('passed',False)
-                                 or not item.get('map_result',{'passed':True})['passed']):break
+                                 or not item.get('map_result',{'passed':True})['passed']
+                                 or not item.get('shutdown',{}).get('passed',False)):break
     print('Ledger:',ledger,flush=True)
     if not all(r.get('fault_result' if a.fault else 'result',{}).get('passed',False) and
-               r.get('map_result',{'passed':True})['passed'] for r in results):raise SystemExit(1)
+               r.get('map_result',{'passed':True})['passed'] and
+               r.get('shutdown',{}).get('passed',False) for r in results):raise SystemExit(1)
 
 
 if __name__=='__main__':main()

@@ -149,6 +149,8 @@ visualization 中提供参考路径/真值/EKF 航迹、期望末端与误差、
 
 任务机的停车、绕圈和搜索设置见上一节。`config/task1/defaults.json` 同时记录模型依据和当前任务默认值；现阶段仅边界与圈半径由场景生成器读取，任务机其他值以其 ROS 参数声明为准，搜索离散参数在 `rules.hpp` 中。修改这些值时同时检查场景、任务机和独立裁判的一致性，不能只改记录文件便认为运行配置已更新。
 
-规划耗时按每次事件的单调墙钟记录在 `results.json` 的 `execution_metrics`，灯变到重新行驶的暂停则按仿真时钟记录。搜索超过 3 s 可以安全停车后重试；最终到达并不表示每次搜索都在预算内成功。
+规划耗时按每次事件的单调墙钟记录在 `results.json` 的 `execution_metrics`，灯变到重新行驶的暂停则按仿真时钟记录。Task1 当前搜索预算为 10 s，预算耗尽时保持停车后重试；最终到达并不表示每次搜索都在预算内成功。
 
 复现记录地图上的搜索：`cmake -S tools/task1_search -B build/task1_search -DCMAKE_BUILD_TYPE=Release && cmake --build build/task1_search`，再执行 `python3 scripts/replay_task1_search.py runs/运行目录 仿真时刻`。它比较欧氏与 Dubins 估计，使用飞控 EKF 起点和当时语义，输出路径及耗时。OccupancyGrid 已量化非致命栅格代价，因此这是离线诊断，不能代替实时闭环。
+
+交通碰撞修复的新增节点、预测层、复测与保护进程故障命令见 [交通让行说明](traffic_avoidance.md)。完整 Task1 驱动现在在解锁前检查两张 costmap 中的浮标占据，并保留 `startup_costmap_check.json`；新层不能覆盖原来的浮标、静态边界和传感器占据。`traffic_avoidance.json` 与 `visualization/traffic_avoidance.png` 用于查看预警、零指令、实际推力、停止和恢复。规划耗时以 `path_candidate` 为结束事件，候选交通检查的等待不再计入搜索耗时。

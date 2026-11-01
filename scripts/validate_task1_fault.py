@@ -15,10 +15,11 @@ from robotx_task1_interfaces.msg import BuoyArray
 from robotx_task1.safety_evidence import stop_evidence
 from validate_task1 import TaskRunner
 from sim_session import process_start, ROOT
+from task1_cases import FAULTS
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('fault',choices=('observation_gap','reordered_observation','mission_exit','cancel','role_change','no_path','late_change'))
+    p=argparse.ArgumentParser();p.add_argument('fault',choices=FAULTS)
     a=p.parse_args();rclpy.init();r=TaskRunner();report={'fault':a.fault,'passed':False};suspended=None
     try:
         r.ready();r.navigation_ready();r.arm()
@@ -60,6 +61,8 @@ def main():
                 if snapshot is None:raise RuntimeError('No observation to replay with original timestamp')
                 replay=r.node.create_publisher(BuoyArray,'/task1/observations',10)
         elif a.fault=='mission_exit':signal_owned('task1_mission',signal.SIGTERM)
+        elif a.fault=='traffic_gap':suspended=signal_owned('traffic_guard',signal.SIGSTOP)
+        elif a.fault=='traffic_exit':signal_owned('traffic_guard',signal.SIGTERM)
         elif a.fault=='cancel':
             c=r.node.create_client(Trigger,'/task1/cancel');c.call_async(Trigger.Request())
         elif a.fault=='role_change':

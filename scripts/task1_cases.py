@@ -17,4 +17,5 @@ def cases(group='all', stress=False):
             for count in changes for seed in (1,2,3) for dynamic in dynamics]
 
 
-FAULTS=('observation_gap','reordered_observation','mission_exit','cancel','role_change','no_path','late_change')
+FAULTS=('observation_gap','reordered_observation','mission_exit','cancel','role_change','no_path','late_change',
+        'traffic_gap','traffic_exit')

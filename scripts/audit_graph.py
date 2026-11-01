@@ -28,7 +28,9 @@ def main():
     topics={'/usv/lidar/points':PointCloud2,'/usv/lidar/filtered':PointCloud2,'/scan':LaserScan,
             '/mavros/local_position/odom':Odometry,'/usv/odom':Odometry}
     if 'task1' in json.loads((run/'generated/scene.json').read_text()):
+        from robotx_task1_interfaces.msg import TrafficSafety
         topics.update({'/usv/lidar/marking':PointCloud2,'/usv/lidar/clearing':PointCloud2})
+        topics['/task1/traffic_safety']=TrafficSafety
     for topic,cls in topics.items():node.create_subscription(cls,topic,lambda m,t=topic:receive(t,m),qos_profile_sensor_data)
     def tf(message,topic):
         for t in message.transforms:edges[topic].add(t.header.frame_id+' -> '+t.child_frame_id)
@@ -55,6 +57,9 @@ def main():
                                  'samples':len(stamps[topic]),'max_source_age_s':max(ages[topic],default=None)}
     derived=[('/scan','/usv/lidar/points'),('/usv/lidar/filtered','/usv/lidar/points'),('/usv/odom','/mavros/local_position/odom')]
     derived.extend((topic,'/usv/lidar/points') for topic in ('/usv/lidar/marking','/usv/lidar/clearing') if topic in topics)
+    if '/task1/traffic_safety' in topics:
+        derived.append(('/task1/traffic_safety','/usv/lidar/marking'))
+        result['traffic_guard_subscriptions']=dict(node.get_subscriber_names_and_types_by_node('traffic_guard','/'))
     for out,source in derived:
         observed=stamps[out]
         result['topics'][out]['source_stamps_matched']=len(observed&stamps[source])
