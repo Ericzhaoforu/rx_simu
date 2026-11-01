@@ -41,6 +41,26 @@ def main():
                   dynamic_map={k:v for k,v in map_result.items() if k!='samples'} if map_result else None,
                   evidence_sha256={p.name:digest(p) for p in [result,source,run/'provenance.json'] if p.exists()})
         if fault.exists():item['evidence_sha256'][fault.name]=digest(fault)
+        mission_log=run/'task1_mission.jsonl'
+        if mission_log.exists():
+            events=[json.loads(l) for l in mission_log.read_text().splitlines()]
+            planning=[]
+            for i,e in enumerate(events):
+                if e['event']!='planning':continue
+                outcome=next((x for x in events[i+1:] if x['generation']==e['generation'] and
+                              x['event'] in ('path_ready','plan_failed','stop_requested','aborted')),None)
+                if outcome:planning.append(dict(outcome=outcome['event'],sim_s=outcome['sim']-e['sim'],
+                                                wall_s=outcome['wall']-e['wall']))
+            item['execution_metrics']={
+                'planning_attempts':sum(e['event']=='planning' for e in events),
+                'planning_failures':sum(e['event']=='plan_failed' for e in events),
+                'controller_failures':sum(e['event']=='controller_result' and e['status'] not in (4,5) for e in events),
+                'reported_semantic_changes':sum(e['event']=='semantic_update_reported' for e in events),
+                'planning_duration_samples':planning,
+                'total_planning_wall_s':sum(p['wall_s'] for p in planning),
+                'max_planning_wall_s':max((p['wall_s'] for p in planning),default=None),
+                'semantic_pause_sim_s':[s['resume_sim']-s['start_sim'] for s in j.get('stops',[])
+                                        if s['reason']=='semantic revision changed' and s['resume_sim'] is not None]}
         snapshot=run/'source_snapshot.tar.gz'
         if snapshot.exists():
             with tarfile.open(snapshot) as archive:

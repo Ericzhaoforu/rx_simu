@@ -28,7 +28,8 @@ def main():
         future=start.call_async(Trigger.Request());r.wait(future.done,10,'start response')
         if not future.result().success:raise RuntimeError(future.result().message)
         if a.fault=='no_path':
-            r.wait(lambda:r.status and r.status['motion']=='WAIT_CLEAR',45,'blocked planner must reject')
+            r.wait(lambda:any(e['event']=='plan_failed' for e in r.events) and r.status and
+                   r.status['motion'] in ('WAIT_CLEAR','PLANNING'),45,'blocked planner must reject and remain stopped')
         else:
             r.wait(lambda:r.rows and r.rows[-1].get('preview',[0])[0]>.15 and
                    math.hypot(*r.rows[-1]['truth'][4:6])>.15,90,'moving vessel before fault')
@@ -77,7 +78,11 @@ def main():
         report['fcu_alive']=bool(last.get('fcu_state',{}).get('connected') and last['fcu_state']['wall_age_s']<2.)
         report['collision_messages']=len(r.contacts)
         if a.fault=='no_path':
-            report['passed']=bool(r.status['motion']=='WAIT_CLEAR' and report['fault_window_displacement_m']<.3 and
+            # A search longer than the retry interval can re-enter PLANNING in the same tick.
+            # Check actual failed plans and motion, rather than requiring a transient status sample.
+            report['plan_failures']=sum(e['event']=='plan_failed' for e in r.events)
+            report['passed']=bool(report['plan_failures'] and r.status['motion'] in ('WAIT_CLEAR','PLANNING') and
+                                  report['fault_window_displacement_m']<.3 and
                                   all(max(map(abs,x.get('preview',[0,0])))<1e-6 for x in r.rows if x.get('sim',-1)>=now))
         else:report['passed']=bool(report['stops'] and all(s['passed'] for s in report['stops']))
         if suspended:

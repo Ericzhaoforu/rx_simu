@@ -55,6 +55,13 @@ def main():
         observed=stamps[out]
         result['topics'][out]['source_stamps_matched']=len(observed&stamps[source])
         result['topics'][out]['source_stamps_unmatched']=len(observed-stamps[source])
+        if observed and stamps[source]:
+            # DDS callbacks at the start/end can straddle the observation window.
+            # Keep raw counts and separately test the common interior time range.
+            begin=max(min(observed),min(stamps[source]));end=min(max(observed),max(stamps[source]))
+            interior={t for t in observed if begin<t<end}
+            result['topics'][out]['interior_source_stamps_matched']=len(interior&stamps[source])
+            result['topics'][out]['interior_source_stamps_unmatched']=len(interior-stamps[source])
     for name,namespace in node.get_node_names_and_namespaces():
         full=(namespace.rstrip('/')+'/'+name)
         client=node.create_client(GetParameters,full+'/get_parameters')

@@ -6,12 +6,14 @@ import time
 from sim_session import ROOT, process_start
 
 
-def tail_json(path):
+def tail_json(path,kind=None):
     if not path.exists():return None
     with path.open('rb') as stream:
         stream.seek(max(0,path.stat().st_size-65536));lines=stream.read().splitlines()
     for line in reversed(lines):
-        try:return json.loads(line)
+        try:
+            row=json.loads(line)
+            if kind is None or row.get('type')==kind:return row
         except (ValueError,UnicodeDecodeError):pass
     return None
 
@@ -24,10 +26,13 @@ def main():
     if run:
         physical=run/'task1.jsonl';sample=tail_json(physical)
         console=tail_json(run/'test_console.log') or {}
-        output['task_status']=console.get('status')
+        status=tail_json(run/'task1_judge.jsonl','status')
+        output['task_status']=status['data'] if status else console.get('status')
         if sample:
             output['last_physics_sample']={k:sample[k] for k in ['sim','phase','frame','preview','fcu_state'] if k in sample}
             output['evidence_file_age_s']=round(time.time()-physical.stat().st_mtime,2)
+            if output['task_status']:
+                output['status_lag_behind_physics_s']=round(max(0.,sample['sim']-output['task_status']['sim']),3)
         result=run/'task1_result.json'
         if result.exists():
             j=json.loads(result.read_text());output['finished_result']={k:j[k] for k in ['passed','endpoint_error','circles','min_clearance_m']}
