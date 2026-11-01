@@ -32,12 +32,14 @@ def launch_nodes(context):
     # parameter file so their nested namespaces are configured correctly.
     from launch_ros.descriptions import ParameterFile
     from nav2_common.launch import RewrittenYaml
+    from usv_nav2.launch_config import scan_topic_rewrites
+    rewrites = {'use_sim_time': str(use_sim_time).lower(),
+                'odom_topic': value('nav_odom_topic')}
+    rewrites.update(scan_topic_rewrites(config, value('scan_topic')))
     configured_params = ParameterFile(RewrittenYaml(
         source_file=params_file,
         root_key='',
-        param_rewrites={'use_sim_time': str(use_sim_time).lower(),
-                       'odom_topic': value('nav_odom_topic'),
-                       'topic': value('scan_topic')},
+        param_rewrites=rewrites,
         convert_types=True), allow_substs=True)
     nodes = [
         Node(package='nav2_map_server', executable='map_server', name='map_server',
