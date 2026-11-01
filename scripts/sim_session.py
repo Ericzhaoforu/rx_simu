@@ -193,6 +193,7 @@ def navigation(args):
                        'enable_control:='+str(args.control).lower()],
     }
     if task1:
+        commands['cloud_filter']+=['-p','publish_clearing_cloud:=true']
         commands['task1_mission']=['ros2','run','robotx_task1','mission','--ros-args','-p','use_sim_time:=true','-p','run_dir:='+str(run)]
         commands['task1_judge']=['ros2','run','robotx_task1','judge','--ros-args','-p','use_sim_time:=true','-p','run_dir:='+str(run)]
     for name, command in commands.items():

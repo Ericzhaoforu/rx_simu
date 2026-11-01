@@ -1,5 +1,6 @@
 #include "robotx_task1_nav/rules.hpp"
 #include "robotx_task1_nav/dubins_estimate.hpp"
+#include "robotx_task1_nav/hull_grid.hpp"
 #include <mutex>
 #include <set>
 #include <nav2_core/global_planner.hpp>
@@ -45,14 +46,32 @@ struct Input {
   }
 };
 
+struct Visibility {
+  double range=0,x=0,y=0;
+  void configure(const rclcpp_lifecycle::LifecycleNode::SharedPtr &node,const std::string &prefix) {
+    auto parameter=[&](const std::string &key,double &value){
+      if(!node->has_parameter(prefix+key))node->declare_parameter(prefix+key,value);
+      node->get_parameter(prefix+key,value);
+      if(!std::isfinite(value))throw std::runtime_error("invalid lidar visibility parameter");
+    };
+    parameter("visibility_clearance",range);parameter("lidar_x",x);parameter("lidar_y",y);
+    if(range<0)throw std::runtime_error("negative lidar visibility clearance");
+  }
+  bool blocked(const HullGrid &grid,const Pose &p) const {
+    return grid.unknownWithin(p.x+std::cos(p.h)*x-std::sin(p.h)*y,
+                              p.y+std::sin(p.h)*x+std::cos(p.h)*y,range);
+  }
+};
+
 class RulePlanner : public nav2_core::GlobalPlanner {
   rclcpp_lifecycle::LifecycleNode::SharedPtr node_;
   std::shared_ptr<nav2_costmap_2d::Costmap2DROS> map_;
   Input input_;
+  Visibility visibility_;
  public:
-  void configure(const rclcpp_lifecycle::LifecycleNode::WeakPtr &node,std::string,
+  void configure(const rclcpp_lifecycle::LifecycleNode::WeakPtr &node,std::string name,
                  std::shared_ptr<tf2_ros::Buffer>,std::shared_ptr<nav2_costmap_2d::Costmap2DROS> map) override {
-    node_=node.lock();map_=map;input_.attach(node_);
+    node_=node.lock();map_=map;input_.attach(node_);visibility_.configure(node_,name+".");
   }
   void cleanup()override{input_.os.reset();input_.cs.reset();map_.reset();node_.reset();}
   void activate()override{}
@@ -64,11 +83,14 @@ class RulePlanner : public nav2_core::GlobalPlanner {
     std::unique_lock<nav2_costmap_2d::Costmap2D::mutex_t> lock(*cm->getMutex());
     nav2_costmap_2d::FootprintCollisionChecker<nav2_costmap_2d::Costmap2D*> checker(cm);
     auto footprint=map_->getRobotFootprint();
+    HullGrid occupied;occupied.reset(*cm,footprint,buoys);
     auto cost=[&](const Pose &p){
       unsigned int mx,my;if(!cm->worldToMap(p.x,p.y,mx,my))return std::numeric_limits<double>::infinity();
       if(cm->getCost(mx,my)>=253)return std::numeric_limits<double>::infinity();
       double value=checker.footprintCostAtPose(p.x,p.y,p.h,footprint);
       if(value>=254||value<0)return std::numeric_limits<double>::infinity();
+      if(occupied.collides(p))return std::numeric_limits<double>::infinity();
+      if(visibility_.blocked(occupied,p))return std::numeric_limits<double>::infinity();
       // Edge-only grid collision checks miss a small marker entirely inside the hull.
       for(const auto &b:buoys){auto xy=body(p,b);bool inside=false;double distance=1e9;
         for(size_t i=0,j=footprint.size()-1;i<footprint.size();j=i++){
@@ -109,6 +131,26 @@ class RulePlanner : public nav2_core::GlobalPlanner {
         m.pose.orientation.z=std::sin(p.h/2);m.pose.orientation.w=std::cos(p.h/2);result.poses.push_back(m);
       }
     }return result;
+  }
+};
+
+class FullHullCritic : public dwb_core::TrajectoryCritic {
+  HullGrid occupied_;
+  Input input_;Visibility visibility_;bool ready_=false;
+ public:
+  void onInit() override {input_.attach(node_.lock());visibility_.configure(node_.lock(),dwb_plugin_name_+"."+name_+".");}
+  bool prepare(const geometry_msgs::msg::Pose2D &,const nav_2d_msgs::msg::Twist2D &,
+               const geometry_msgs::msg::Pose2D &,const nav_2d_msgs::msg::Path2D &) override {
+    Observations o;Context c;ready_=input_.read(node_.lock()->now(),o,c);
+    occupied_.reset(*costmap_ros_->getCostmap(),costmap_ros_->getRobotFootprint(),markers(o));return true;
+  }
+  double scoreTrajectory(const dwb_msgs::msg::Trajectory2D &trajectory) override {
+    if(!ready_)throw dwb_core::IllegalTrajectoryException(name_,"stale Task1 context");
+    for(const auto &p:trajectory.poses){
+      if(occupied_.collides({p.x,p.y,p.theta}))throw dwb_core::IllegalTrajectoryException(name_,"occupied cell inside full hull");
+      if(visibility_.blocked(occupied_,{p.x,p.y,p.theta}))throw dwb_core::IllegalTrajectoryException(name_,"unknown body inside lidar clearing stand-off");
+    }
+    return 0.;
   }
 };
 
@@ -164,4 +206,5 @@ class KnownBuoys : public nav2_costmap_2d::Layer {
 } // namespace
 PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::RulePlanner,nav2_core::GlobalPlanner)
 PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::RuleCritic,dwb_core::TrajectoryCritic)
+PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::FullHullCritic,dwb_core::TrajectoryCritic)
 PLUGINLIB_EXPORT_CLASS(robotx_task1_nav::KnownBuoys,nav2_costmap_2d::Layer)

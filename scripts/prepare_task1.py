@@ -63,12 +63,32 @@ def prepare(out, seed=1, changes=0, dynamic='none', blocked=False):
     return scenario
 
 
+def voxel_obstacles():
+    # Keep height while clearing: a ray over a low object's roof is not proof
+    # that its entire 2D column is empty. Only actual returns mark occupancy.
+    common=dict(data_type='PointCloud2',observation_persistence=0.,expected_update_rate=.5,
+                obstacle_min_range=0.,obstacle_max_range=15.,raytrace_min_range=0.,raytrace_max_range=20.)
+    return dict(plugin='nav2_costmap_2d::VoxelLayer',enabled=True,combination_method=1,
+                footprint_clearing_enabled=False,origin_z=-.2,z_resolution=.2,z_voxels=16,
+                unknown_threshold=15,mark_threshold=0,max_obstacle_height=3.,
+                observation_sources='returns rays',
+                returns=dict(common,topic='/usv/lidar/marking',marking=True,clearing=False,
+                             min_obstacle_height=-100.,max_obstacle_height=100.),
+                rays=dict(common,topic='/usv/lidar/clearing',marking=False,clearing=True,
+                          min_obstacle_height=-100.,max_obstacle_height=100.))
+
+
 def navigation(out):
     out=Path(out);scene=json.loads((out/'scene.json').read_text());scenario=scene['task1']
     params=json.loads((out/'nav2_wamv.yaml').read_text())
     planner=params['planner_server']['ros__parameters']
     planner['planner_plugins']=['GridBased','Task1']
     planner['Task1']={'plugin':'robotx_task1_nav/RulePlanner'}
+    # Remain outside the near-field blind zone for the lowest marking height.
+    # Fixed surveyed buoy bodies still use their normal physical collision checks.
+    clearance=(scene['lidar_xyz'][2]-.25)/math.tan(abs(scene['lidar_vertical_min_rad']))+.2
+    visibility=dict(visibility_clearance=clearance,lidar_x=scene['lidar_xyz'][0],lidar_y=scene['lidar_xyz'][1])
+    planner['Task1'].update(visibility)
     controller=params['controller_server']['ros__parameters']
     # The boat still drifts below 0.03 m/s. Preserve that motion in DWB's
     # initial state and allow for the measured, slower braking response.
@@ -79,6 +99,10 @@ def navigation(out):
     controller['FollowPath']['decel_lim_theta']=-.2
     controller['FollowPath']['sim_time']=5.
     controller['FollowPath']['critics'].insert(0,'Task1Rule')
+    controller['FollowPath']['critics'].insert(0,'Task1Hull')
+    controller['FollowPath']['Task1Hull.class']='robotx_task1_nav::FullHullCritic'
+    controller['FollowPath']['Task1Hull.scale']=1.0
+    controller['FollowPath'].update({'Task1Hull.'+k:v for k,v in visibility.items()})
     controller['FollowPath']['Task1Rule.class']='robotx_task1_nav::RuleCritic'
     controller['FollowPath']['Task1Rule.scale']=1.0
     controller['FollowPath']['RotateToGoal.class']='robotx_task1_nav::RecoverableRotateCritic'
@@ -88,6 +112,10 @@ def navigation(out):
     controller['failure_tolerance']=.5
     for name in ('local_costmap','global_costmap'):
         costmap=params[name][name]['ros__parameters']
+        # Self returns are removed by cloud_filter using the physical hull.
+        # Clearing the padded footprint here erases external returns before
+        # physical contact, including a moving obstacle entering the margin.
+        costmap['obstacle_layer']=voxel_obstacles()
         costmap['plugins'].insert(-1,'known_buoys')
         costmap['known_buoys']={'plugin':'robotx_task1_nav/KnownBuoys'}
     params['rover_bridge']['ros__parameters']['require_task_permission']=True

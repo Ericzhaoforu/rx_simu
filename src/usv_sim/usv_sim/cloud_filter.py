@@ -1,15 +1,17 @@
 """Remove the simulated vessel from LiDAR without rewriting source timestamps."""
 import json
+import copy
 from collections import OrderedDict
 import math
 import numpy as np
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
-from sensor_msgs.msg import PointCloud2, LaserScan
+from sensor_msgs.msg import PointCloud2, PointField, LaserScan
 from rclpy.time import Time
 from tf2_ros import Buffer, TransformListener, TransformException
 from scipy.spatial.transform import Rotation
+from .clearing_cloud import clearing_points, ray_directions
 
 
 def xyz_view(msg):
@@ -37,11 +39,21 @@ class CloudFilter(Node):
     def __init__(self):
         super().__init__('cloud_filter')
         self.declare_parameter('scene_file', '')
+        self.declare_parameter('publish_clearing_cloud',False)
+        self.declare_parameter('marking_min_height',.25)
+        self.declare_parameter('marking_max_height',3.)
+        self.marking_height=(self.get_parameter('marking_min_height').value,self.get_parameter('marking_max_height').value)
         with open(self.get_parameter('scene_file').value) as stream:
             scene = json.load(stream)
         self.polygon = scene['footprint']
         self.offset = np.array(scene['lidar_xyz'])
         self.shape = (scene.get('lidar_beams', 16), scene.get('lidar_samples', 1875))
+        self.clearing_publisher=None
+        self.marking_publisher=None
+        if self.get_parameter('publish_clearing_cloud').value:
+            self.directions=ray_directions(self.shape,scene['lidar_vertical_min_rad'],scene['lidar_vertical_max_rad'])
+            self.clearing_publisher=self.create_publisher(PointCloud2,'/usv/lidar/clearing',qos_profile_sensor_data)
+            self.marking_publisher=self.create_publisher(PointCloud2,'/usv/lidar/marking',qos_profile_sensor_data)
         self.clouds = OrderedDict()
         self.tf = Buffer()
         self.listener = TransformListener(self.tf, self)
@@ -73,6 +85,15 @@ class CloudFilter(Node):
             msg.data = bytes(data)
             msg.is_dense = False
             self.publisher.publish(msg)
+            if self.clearing_publisher:
+                points=clearing_points(xyz,remove,self.directions)
+                clearing=copy.deepcopy(msg);data=bytearray(msg.data)
+                for i,key in enumerate(('x','y','z')):
+                    field=next(f for f in msg.fields if f.name==key)
+                    values=np.ndarray((msg.height,msg.width),dtype=('>' if msg.is_bigendian else '<')+'f4',
+                        buffer=data,offset=field.offset,strides=(msg.row_step,msg.point_step))
+                    values[:]=points[...,i]
+                clearing.data=bytes(data);self.clearing_publisher.publish(clearing)
         except (ValueError, TypeError) as error:
             self.get_logger().error(str(error), throttle_duration_sec=2)
 
@@ -91,6 +112,19 @@ class CloudFilter(Node):
             return
         q = transform.transform.rotation
         rotation = Rotation.from_quat([q.x, q.y, q.z, q.w])
+        if self.marking_publisher:
+            # Use the same gravity-aligned height band as the scan converter.
+            # Absolute map z has an FCU datum offset and is not water height.
+            finite=xyz.reshape(-1,3);finite=finite[np.isfinite(finite).all(axis=1)]
+            finite=finite[~inside_polygon(finite+self.offset,self.polygon)]
+            tr=transform.transform.translation
+            stable=rotation.apply(finite)+[tr.x,tr.y,tr.z]
+            keep=(stable[:,2]>=self.marking_height[0])&(stable[:,2]<=self.marking_height[1])
+            marked=PointCloud2();marked.header=copy.deepcopy(scan.header);marked.header.frame_id=source_frame
+            marked.height=1;marked.width=int(np.count_nonzero(keep));marked.point_step=12;marked.row_step=12*marked.width
+            marked.fields=[PointField(name=k,offset=i*4,datatype=7,count=1) for i,k in enumerate(('x','y','z'))]
+            marked.is_dense=True;marked.data=np.asarray(finite[keep],dtype='<f4').tobytes()
+            self.marking_publisher.publish(marked)
         angles = np.linspace(-math.pi, math.pi, xyz.shape[1])
         directions = rotation.apply(np.stack([np.cos(angles), np.sin(angles), np.zeros_like(angles)], axis=1))
         projected = np.arctan2(directions[:, 1], directions[:, 0])

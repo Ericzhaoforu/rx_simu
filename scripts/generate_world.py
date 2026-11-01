@@ -204,6 +204,8 @@ def main():
         'world': 'usv_nav', 'origin': [-33.724223, 150.679736, 0],
         'footprint': polygon, 'lidar_xyz': [0.7, -0.3, 1.8], 'obstacles': obstacles,
         'lidar_samples': 720, 'lidar_beams': 16,
+        'lidar_vertical_min_rad': float(sensor.findtext('.//vertical/min_angle')),
+        'lidar_vertical_max_rad': float(sensor.findtext('.//vertical/max_angle')),
         'wind_mps': args.wind, 'wave_gain': args.wave_gain, 'wave_period_s': 5,
         'thrust_limit_n': 300, 'lockstep': args.lockstep,
         'vrx_revision': subprocess.check_output(['git', '-C', str(vrx), 'rev-parse', 'HEAD'], text=True).strip(),
