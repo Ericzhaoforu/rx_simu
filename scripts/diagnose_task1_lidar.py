@@ -56,6 +56,10 @@ def main():
                             overflight.append((leave-enter)*float(np.linalg.norm(delta[:2])))
                 result.append(dict(topic=topic,stamp=t,hits=int(np.count_nonzero(hit)),
                                    projected_ray_overflight_max_m=max(overflight,default=0.),
+                                   max_return_y_m=float(world[hit,1].max()) if np.any(hit) else None,
+                                   body_leading_edge_y_m=float(box[1]+1.5),
+                                   leading_edge_gap_y_m=float(box[1]+1.5-world[hit,1].max()) if np.any(hit) else None,
+                                   return_world_z_range_m=[float(world[hit,2].min()),float(world[hit,2].max())] if np.any(hit) else None,
                                    box_xy=box.tolist(),sensor_xy=sensor[:2].tolist(),
                                    sensor_to_box_center_m=float(np.linalg.norm(sensor[:2]-box)),
                                    physical_clearance_m=q['clearance_m'],pose_time_offset_s=q['sim']-t))

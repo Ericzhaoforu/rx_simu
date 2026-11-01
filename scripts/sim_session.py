@@ -124,6 +124,11 @@ def start(args):
     if args.task1:
         from prepare_task1 import prepare
         prepare(generated,args.seed,args.changes,args.dynamic,args.task1_blocked,args.task1_visibility_guard,args.course)
+    # A build that finishes during preparation invalidates the initial binary
+    # hashes. Refuse to launch rather than silently record a different library.
+    for relative,expected in provenance['files'].items():
+        if hashlib.sha256((ROOT/relative).read_bytes()).hexdigest()!=expected:
+            raise RuntimeError('Artifact changed during startup preparation; finish builds before retrying: '+relative)
     state = {'run_dir': str(run), 'firmware_revision': actual, 'processes': []}
 
     def spawn(name, command, cwd=ROOT):

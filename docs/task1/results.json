@@ -54,12 +54,23 @@
     "s2_c2_none",
     "s3_c2_none"
   ],
+  "recorded_harbor_cases": [
+    "harbor_s1_c1_none",
+    "harbor_s1_c1_cross",
+    "harbor_s1_c1_none_wind2_wave0.08"
+  ],
   "competition_coverage": {
     "passed": 2,
     "collision": 4,
     "not_started": 3,
     "failed": 0,
     "not_attempted": 0
+  },
+  "harbor_coverage": {
+    "passed": 2,
+    "collision": 1,
+    "not_started": 0,
+    "failed": 0
   },
   "competition_change_count": 1,
   "constraint_source": "User confirmation on 2026-11-01; blinking phases are not semantic changes.",
@@ -248,7 +259,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -492,7 +507,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -1355,7 +1373,10 @@
         "scripts/prepare_task1.py",
         "scripts/sim_session.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -1573,7 +1594,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -1659,7 +1684,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -1877,7 +1906,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -2116,7 +2149,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -2202,7 +2238,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -2288,7 +2328,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -2539,7 +2583,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -2630,7 +2677,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -2721,7 +2772,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -2880,7 +2935,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -3039,7 +3097,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -3165,7 +3226,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -3305,7 +3369,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -3445,7 +3512,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -3611,7 +3681,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -3826,7 +3899,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -4687,7 +4763,10 @@
       },
       "changed_runtime_sources": [
         "scripts/prepare_task1.py",
-        "scripts/sim_session.py"
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -4905,7 +4984,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -5217,7 +5300,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -5425,7 +5512,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -5697,7 +5788,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -5788,7 +5883,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -5879,7 +5978,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -5970,7 +6073,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -6061,7 +6168,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -6152,7 +6263,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -6241,6 +6356,664 @@
         "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp": "84c959f1003bad4d0986d7d3c8152d4fecd4fe310abf99f86756f7f34f12516c",
         "tools/task1_gazebo/Task1Scene.cc": "2dbbebfcffe16d47cf02c9d02f899f7325f9f79a0e177d8f249e83d381a57e9e",
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      },
+      "changed_runtime_sources": [
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
+      ],
+      "matches_current_runtime_sources": false,
+      "controller_parameters": {
+        "sim_time": 5.0,
+        "decel_lim_x": -0.08,
+        "decel_lim_theta": -0.2,
+        "max_vel_x": 0.3,
+        "max_vel_theta": 0.4,
+        "visibility_clearance_m": 0.0
+      },
+      "obstacle_layer_plugin": "nav2_costmap_2d::VoxelLayer"
+    },
+    "harbor_s1_c1_none": {
+      "case": "harbor_s1_c1_none",
+      "run": "runs/20261102_001502_task1_harbor_s1_c1_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.36901189261436523,
+        "yaw_rad": 0.08619526898869334
+      },
+      "clearance_m": 1.225274091529733,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.349563254325194,
+          "wrong_way_rad": 0.0028264523157370824
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.3797321736998605,
+          "wrong_way_rad": 0.0
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 278.704,
+          "resume_sim": 282.7,
+          "zero_command_delay_s": 0.14400000000000546,
+          "first_force_below_1N_delay_s": 1.6719999999999686,
+          "force_below_1N_dwell_confirmed_delay_s": 2.716000000000008,
+          "force_peak_before_resume_N": 27.599999999999987,
+          "stopped_dwell_confirmed_delay_s": 3.319999999999993,
+          "distance_to_stop_m": 0.45686626671870123,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.16940087469781648,
+      "post_completion_record_s": 11.399999999999977,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 410,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 410,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 410,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 410,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 410,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 410,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 410,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 410,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 410,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 410,
+            "missing": 0
+          }
+        },
+        "initially_off": [
+          "buoy_05"
+        ],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "20d3b127122190014b922d1674e2165caa07d086bd6bf2b38f4830b6ed3c4162",
+        "task1_scenario.json": "c1e0232cae16ff40c202f52ee69a06e7496783d5b785833e885b18088389eb5c",
+        "provenance.json": "dd0f100d0999dc2edf3e7871827ef74d17213c92bb5758725fb0875883a67b8b",
+        "buoy_map_result.json": "ad734f549ddd5f9fb8de58b23ef1ba648454ae173f2c32771812b229fcaa6137"
+      },
+      "task_started": true,
+      "execution_metrics": {
+        "planning_attempts": 13,
+        "planning_failures": 0,
+        "controller_failures": 0,
+        "reported_semantic_changes": 1,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.29999999999999716,
+            "wall_s": 0.338771426002495
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.22472728102002293
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.22237346705514938
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20325059606693685
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.21170948701910675
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.21533412102144212
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.5039999999999907,
+            "wall_s": 0.5717001729644835
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.22932788298930973
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20941758202388883
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2205903639551252
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20125574199482799
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.2227027959888801
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2013617380289361
+          }
+        ],
+        "total_planning_wall_s": 3.2725226561306044,
+        "max_planning_wall_s": 0.5717001729644835,
+        "semantic_pause_sim_s": [
+          3.995999999999981
+        ]
+      },
+      "outcome": "passed",
+      "runtime_source_sha256": {
+        "scripts/prepare_task1.py": "88e76457bbf03a8956f5a88fcccd49d11b298ffe5efa0b17c97d2c1f25d683f4",
+        "scripts/prepare_navigation.py": "44097cef02e6d0ea2e55b30cae23aa6b1660b6640c5bef424fa2f4c27af2b80a",
+        "scripts/generate_world.py": "770952a6a502d9dd73629e693dd2de51d3e7a69e3c7416c708209984c3b29786",
+        "scripts/sim_session.py": "f2e1a606f39d84b019fbc14087eaac4a50f141b9d3470b5687b3aa7e8ee49c6c",
+        "src/usv_sim/usv_sim/cloud_filter.py": "796312fcef2ad50d48584dfe4994ae9a0466c347153551009ad2892b2d8e0225",
+        "src/usv_sim/usv_sim/clearing_cloud.py": "f1112cdc38db626217979985eb32240ac9750827153c979101e328667b7bdb8e",
+        "src/robotx_task1/robotx_task1/mission.py": "d6f6b08d5bc93b42a065890c9317cde8397bb824737eb851279a1273e6b2a033",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "src/usv_nav2/launch/navigation.launch.py": "eb005cbb8af7211267bf22a883a9b369d67c1880e551e215bf6db8b881c2bdf5",
+        "src/usv_nav2/usv_nav2/launch_config.py": "442aeaf075c7f0c56ba59e94524e9f2d5599812ddd8e22ad7d85d21eea9425bc",
+        "src/usv_nav2/usv_nav2/task_lease.py": "796dadee4633f78f797e19c525a9346d43b10966e4a78bfc681024e250781391",
+        "src/robotx_task1_nav/src/plugins.cpp": "b7e10686ca12c22c9b25c1f34cbbd99c4ba511b2e413da996cf95931343757cf",
+        "src/robotx_task1_nav/src/rotate.cpp": "057ae4e432221347610d70826ded22be68ef2a057afaef1284274fe07f7542b2",
+        "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp": "d8d2ef07714a71df525b5e025b8c0d708c36f9ee39d5698aba4c8afb75706c95",
+        "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp": "30ce7be51db271ec7bb3a60659ac9e23cbe7f42a7bbd75955ac2eeef371278f9",
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp": "84c959f1003bad4d0986d7d3c8152d4fecd4fe310abf99f86756f7f34f12516c",
+        "tools/task1_gazebo/Task1Scene.cc": "157305e4eb25d7abf0eab7007ba719781611322fff7f20be0006c9c187299b29",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15",
+        "config/task1/harbor.json": "c69c7b67aa82f7614cef02860888bcb897e772762b0e2dbe043b489fec2a213a",
+        "models/task1_workboat/model.sdf": "cbadd119cca87b683c3c042aeb43b130c7612a865524d051a0bd351579ee55a0"
+      },
+      "changed_runtime_sources": [
+        "scripts/sim_session.py",
+        "config/task1/harbor.json"
+      ],
+      "matches_current_runtime_sources": false,
+      "controller_parameters": {
+        "sim_time": 5.0,
+        "decel_lim_x": -0.08,
+        "decel_lim_theta": -0.2,
+        "max_vel_x": 0.3,
+        "max_vel_theta": 0.4,
+        "visibility_clearance_m": 0.0
+      },
+      "obstacle_layer_plugin": "nav2_costmap_2d::VoxelLayer"
+    },
+    "harbor_s1_c1_cross": {
+      "case": "harbor_s1_c1_cross",
+      "run": "runs/20261102_002636_task1_harbor_s1_c1_cross",
+      "passed": false,
+      "normal_task_passed": false,
+      "endpoint": null,
+      "clearance_m": 0.0,
+      "collisions": 7809,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.353323205924339,
+          "wrong_way_rad": 0.0030912669709786122
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 278.504,
+          "resume_sim": 282.6,
+          "zero_command_delay_s": 0.04399999999998272,
+          "first_force_below_1N_delay_s": 0.6080000000000041,
+          "force_below_1N_dwell_confirmed_delay_s": 2.740000000000009,
+          "force_peak_before_resume_N": 28.199999999999996,
+          "stopped_dwell_confirmed_delay_s": 3.319999999999993,
+          "distance_to_stop_m": 0.4235347110235458,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "task cancelled",
+          "start_sim": 349.508,
+          "resume_sim": null,
+          "zero_command_delay_s": 0.11200000000002319,
+          "first_force_below_1N_delay_s": 2.004000000000019,
+          "force_below_1N_dwell_confirmed_delay_s": 6.112000000000023,
+          "force_peak_before_resume_N": 51.59999999999998,
+          "stopped_dwell_confirmed_delay_s": 3.900000000000034,
+          "distance_to_stop_m": 0.27777307093827086,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": null,
+      "post_completion_record_s": null,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 227,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 227,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 227,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 227,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 227,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 227,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 227,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 227,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 227,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 227,
+            "missing": 0
+          }
+        },
+        "initially_off": [
+          "buoy_05"
+        ],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": {
+        "passed": false,
+        "region": [
+          35.8,
+          38.2,
+          -1.7,
+          1.7
+        ],
+        "marking_observed": true,
+        "clearing_status": "not_observed_target_departure",
+        "peak_lethal_cells": 74,
+        "obstacle_left_region_sim": null,
+        "first_clear_sim": null,
+        "clear_delay_s": null,
+        "min_moving_obstacle_clearance_m": 0.0,
+        "criterion": "Actual global costmap marks the moving body at its crossing, then clears its former region after it leaves."
+      },
+      "evidence_sha256": {
+        "task1_result.json": "7906f1f0dca061757cab82ea925de3cd93b825d026928d7d9c20d91a1dc73500",
+        "task1_scenario.json": "15e3ea5efd0f781575ccffa91119f436cec2ea6bfa49af588fc19e12bbe1a924",
+        "provenance.json": "b9159069ec57b9956d8893269f0902e83b13040062fb661ab93bb30c3f95d674",
+        "buoy_map_result.json": "f96deb812b7573359f19e3ef571f32a6f3c14d22595ce00b93c7e391ed3bc69c",
+        "dynamic_map_result.json": "3a605cd749695770fced16e85063ec8dfd5fd598965f9a275abda8beb68f9402"
+      },
+      "task_started": true,
+      "execution_metrics": {
+        "planning_attempts": 8,
+        "planning_failures": 0,
+        "controller_failures": 0,
+        "reported_semantic_changes": 1,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.20159801503177732
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.215615350054577
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.23002321203239262
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.2092000120319426
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.22113157203420997
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20273867098148912
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.4000000000000057,
+            "wall_s": 0.40663651493377984
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.39999999999997726,
+            "wall_s": 0.44302942394278944
+          }
+        ],
+        "total_planning_wall_s": 2.129972771042958,
+        "max_planning_wall_s": 0.44302942394278944,
+        "semantic_pause_sim_s": [
+          4.096000000000004
+        ]
+      },
+      "outcome": "collision",
+      "runtime_source_sha256": {
+        "scripts/prepare_task1.py": "88e76457bbf03a8956f5a88fcccd49d11b298ffe5efa0b17c97d2c1f25d683f4",
+        "scripts/prepare_navigation.py": "44097cef02e6d0ea2e55b30cae23aa6b1660b6640c5bef424fa2f4c27af2b80a",
+        "scripts/generate_world.py": "770952a6a502d9dd73629e693dd2de51d3e7a69e3c7416c708209984c3b29786",
+        "scripts/sim_session.py": "f2e1a606f39d84b019fbc14087eaac4a50f141b9d3470b5687b3aa7e8ee49c6c",
+        "src/usv_sim/usv_sim/cloud_filter.py": "796312fcef2ad50d48584dfe4994ae9a0466c347153551009ad2892b2d8e0225",
+        "src/usv_sim/usv_sim/clearing_cloud.py": "f1112cdc38db626217979985eb32240ac9750827153c979101e328667b7bdb8e",
+        "src/robotx_task1/robotx_task1/mission.py": "d6f6b08d5bc93b42a065890c9317cde8397bb824737eb851279a1273e6b2a033",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "src/usv_nav2/launch/navigation.launch.py": "eb005cbb8af7211267bf22a883a9b369d67c1880e551e215bf6db8b881c2bdf5",
+        "src/usv_nav2/usv_nav2/launch_config.py": "442aeaf075c7f0c56ba59e94524e9f2d5599812ddd8e22ad7d85d21eea9425bc",
+        "src/usv_nav2/usv_nav2/task_lease.py": "796dadee4633f78f797e19c525a9346d43b10966e4a78bfc681024e250781391",
+        "src/robotx_task1_nav/src/plugins.cpp": "b7e10686ca12c22c9b25c1f34cbbd99c4ba511b2e413da996cf95931343757cf",
+        "src/robotx_task1_nav/src/rotate.cpp": "057ae4e432221347610d70826ded22be68ef2a057afaef1284274fe07f7542b2",
+        "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp": "d8d2ef07714a71df525b5e025b8c0d708c36f9ee39d5698aba4c8afb75706c95",
+        "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp": "30ce7be51db271ec7bb3a60659ac9e23cbe7f42a7bbd75955ac2eeef371278f9",
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp": "84c959f1003bad4d0986d7d3c8152d4fecd4fe310abf99f86756f7f34f12516c",
+        "tools/task1_gazebo/Task1Scene.cc": "157305e4eb25d7abf0eab7007ba719781611322fff7f20be0006c9c187299b29",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15",
+        "config/task1/harbor.json": "b7af2e110e829300cb31da76cbf56a0197b33ff6ad5a67542adcc1f72297e7a2",
+        "models/task1_workboat/model.sdf": "cbadd119cca87b683c3c042aeb43b130c7612a865524d051a0bd351579ee55a0"
+      },
+      "changed_runtime_sources": [
+        "scripts/sim_session.py"
+      ],
+      "matches_current_runtime_sources": false,
+      "controller_parameters": {
+        "sim_time": 5.0,
+        "decel_lim_x": -0.08,
+        "decel_lim_theta": -0.2,
+        "max_vel_x": 0.3,
+        "max_vel_theta": 0.4,
+        "visibility_clearance_m": 0.0
+      },
+      "obstacle_layer_plugin": "nav2_costmap_2d::VoxelLayer"
+    },
+    "harbor_s1_c1_none_wind2_wave0.08": {
+      "case": "harbor_s1_c1_none_wind2_wave0.08",
+      "run": "runs/20261102_003413_task1_harbor_s1_c1_none_wind2_wave0.08",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.37459865073347487,
+        "yaw_rad": 0.2157667284312743
+      },
+      "clearance_m": 1.2823390315186094,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.401840869615615,
+          "wrong_way_rad": 0.016246814587827618
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.633882322984524,
+          "wrong_way_rad": 0.6036091623254713
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 280.404,
+          "resume_sim": 284.5,
+          "zero_command_delay_s": 0.06799999999998363,
+          "first_force_below_1N_delay_s": 1.656000000000006,
+          "force_below_1N_dwell_confirmed_delay_s": 2.73599999999999,
+          "force_peak_before_resume_N": 25.19999999999999,
+          "stopped_dwell_confirmed_delay_s": 3.216000000000008,
+          "distance_to_stop_m": 0.40079445570235694,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.1440381715997838,
+      "post_completion_record_s": 11.299999999999955,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 490,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 490,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 490,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 490,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 490,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 490,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 490,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 490,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 490,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 490,
+            "missing": 0
+          }
+        },
+        "initially_off": [
+          "buoy_05"
+        ],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "35e73beb2b4fec62c9b52553b29ed4924b080eb54aac1c70a1f434aebeda67dc",
+        "task1_scenario.json": "c49a5a1f363a948b59425e8762ee4bec9c86279a4cb70b95306c5896fad8f62c",
+        "provenance.json": "cf8273875fcce7f2ac7235e764ad362e1607f439b57047e3fda61da131e69002",
+        "buoy_map_result.json": "97cf46d271f7edac125d86f4758d6db45ceb0d3d5319d781f506447e091f4af7"
+      },
+      "task_started": true,
+      "execution_metrics": {
+        "planning_attempts": 14,
+        "planning_failures": 0,
+        "controller_failures": 0,
+        "reported_semantic_changes": 1,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.5,
+            "wall_s": 0.5313510479172692
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.21620052598882467
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.2044487469829619
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.23565610207151622
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.21551472996361554
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20998857100494206
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.4159999999999968,
+            "wall_s": 0.4583961679600179
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.23719369899481535
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.21988587104715407
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.21680165303405374
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.20410154899582267
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2022400749847293
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.20563061302527785
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20312137703876942
+          }
+        ],
+        "total_planning_wall_s": 3.56053072900977,
+        "max_planning_wall_s": 0.5313510479172692,
+        "semantic_pause_sim_s": [
+          4.096000000000004
+        ]
+      },
+      "outcome": "passed",
+      "runtime_source_sha256": {
+        "scripts/prepare_task1.py": "88e76457bbf03a8956f5a88fcccd49d11b298ffe5efa0b17c97d2c1f25d683f4",
+        "scripts/prepare_navigation.py": "44097cef02e6d0ea2e55b30cae23aa6b1660b6640c5bef424fa2f4c27af2b80a",
+        "scripts/generate_world.py": "770952a6a502d9dd73629e693dd2de51d3e7a69e3c7416c708209984c3b29786",
+        "scripts/sim_session.py": "f2e1a606f39d84b019fbc14087eaac4a50f141b9d3470b5687b3aa7e8ee49c6c",
+        "src/usv_sim/usv_sim/cloud_filter.py": "796312fcef2ad50d48584dfe4994ae9a0466c347153551009ad2892b2d8e0225",
+        "src/usv_sim/usv_sim/clearing_cloud.py": "f1112cdc38db626217979985eb32240ac9750827153c979101e328667b7bdb8e",
+        "src/robotx_task1/robotx_task1/mission.py": "d6f6b08d5bc93b42a065890c9317cde8397bb824737eb851279a1273e6b2a033",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "src/usv_nav2/launch/navigation.launch.py": "eb005cbb8af7211267bf22a883a9b369d67c1880e551e215bf6db8b881c2bdf5",
+        "src/usv_nav2/usv_nav2/launch_config.py": "442aeaf075c7f0c56ba59e94524e9f2d5599812ddd8e22ad7d85d21eea9425bc",
+        "src/usv_nav2/usv_nav2/task_lease.py": "796dadee4633f78f797e19c525a9346d43b10966e4a78bfc681024e250781391",
+        "src/robotx_task1_nav/src/plugins.cpp": "b7e10686ca12c22c9b25c1f34cbbd99c4ba511b2e413da996cf95931343757cf",
+        "src/robotx_task1_nav/src/rotate.cpp": "057ae4e432221347610d70826ded22be68ef2a057afaef1284274fe07f7542b2",
+        "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp": "d8d2ef07714a71df525b5e025b8c0d708c36f9ee39d5698aba4c8afb75706c95",
+        "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp": "30ce7be51db271ec7bb3a60659ac9e23cbe7f42a7bbd75955ac2eeef371278f9",
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp": "84c959f1003bad4d0986d7d3c8152d4fecd4fe310abf99f86756f7f34f12516c",
+        "tools/task1_gazebo/Task1Scene.cc": "157305e4eb25d7abf0eab7007ba719781611322fff7f20be0006c9c187299b29",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15",
+        "config/task1/harbor.json": "b7af2e110e829300cb31da76cbf56a0197b33ff6ad5a67542adcc1f72297e7a2",
+        "models/task1_workboat/model.sdf": "cbadd119cca87b683c3c042aeb43b130c7612a865524d051a0bd351579ee55a0"
       },
       "changed_runtime_sources": [
         "scripts/sim_session.py"
@@ -6426,7 +7199,9 @@
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
         "tools/task1_gazebo/Task1Scene.cc",
-        "models/robotx_2026_robobuoy/model.sdf"
+        "models/robotx_2026_robobuoy/model.sdf",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -6508,7 +7283,9 @@
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
         "tools/task1_gazebo/Task1Scene.cc",
-        "models/robotx_2026_robobuoy/model.sdf"
+        "models/robotx_2026_robobuoy/model.sdf",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -6710,7 +7487,9 @@
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
         "tools/task1_gazebo/Task1Scene.cc",
-        "models/robotx_2026_robobuoy/model.sdf"
+        "models/robotx_2026_robobuoy/model.sdf",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -6963,7 +7742,9 @@
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
-        "tools/task1_gazebo/Task1Scene.cc"
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -7232,7 +8013,9 @@
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
-        "tools/task1_gazebo/Task1Scene.cc"
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -7480,7 +8263,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -7758,7 +8544,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -7957,7 +8746,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -8177,7 +8969,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -8421,7 +9216,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -8625,7 +9423,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -8870,7 +9671,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -9109,7 +9913,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -9315,7 +10122,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -9547,7 +10357,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -9798,7 +10611,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -10017,7 +10833,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -10243,7 +11062,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -11130,7 +11952,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -11419,7 +12244,10 @@
         "src/robotx_task1_nav/src/plugins.cpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp",
         "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -11579,7 +12407,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -11738,7 +12569,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -11897,7 +12731,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -12023,7 +12860,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -12163,7 +13003,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -12303,7 +13146,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -12469,7 +13315,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -12684,7 +13533,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -12994,7 +13846,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -13251,7 +14106,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -13401,7 +14259,10 @@
         "src/usv_nav2/launch/navigation.launch.py",
         "src/usv_nav2/usv_nav2/launch_config.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -14264,7 +15125,10 @@
         "scripts/prepare_task1.py",
         "scripts/sim_session.py",
         "src/robotx_task1_nav/src/plugins.cpp",
-        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp"
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -15125,7 +15989,10 @@
       },
       "changed_runtime_sources": [
         "scripts/prepare_task1.py",
-        "scripts/sim_session.py"
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -15322,7 +16189,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -15540,7 +16411,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -15758,7 +16633,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -16070,7 +16949,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -16288,7 +17171,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -16496,7 +17383,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -16768,7 +17659,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -16854,7 +17749,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -16945,7 +17844,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -17036,7 +17939,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -17127,7 +18034,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -17218,7 +18129,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -17304,7 +18219,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -17395,7 +18314,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -17486,7 +18409,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -17572,7 +18499,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -17663,7 +18594,11 @@
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
       },
       "changed_runtime_sources": [
-        "scripts/sim_session.py"
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
       ],
       "matches_current_runtime_sources": false,
       "controller_parameters": {
@@ -17752,6 +18687,664 @@
         "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp": "84c959f1003bad4d0986d7d3c8152d4fecd4fe310abf99f86756f7f34f12516c",
         "tools/task1_gazebo/Task1Scene.cc": "2dbbebfcffe16d47cf02c9d02f899f7325f9f79a0e177d8f249e83d381a57e9e",
         "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15"
+      },
+      "changed_runtime_sources": [
+        "scripts/prepare_task1.py",
+        "scripts/sim_session.py",
+        "tools/task1_gazebo/Task1Scene.cc",
+        "config/task1/harbor.json",
+        "models/task1_workboat/model.sdf"
+      ],
+      "matches_current_runtime_sources": false,
+      "controller_parameters": {
+        "sim_time": 5.0,
+        "decel_lim_x": -0.08,
+        "decel_lim_theta": -0.2,
+        "max_vel_x": 0.3,
+        "max_vel_theta": 0.4,
+        "visibility_clearance_m": 0.0
+      },
+      "obstacle_layer_plugin": "nav2_costmap_2d::VoxelLayer"
+    },
+    {
+      "case": "harbor_s1_c1_none",
+      "run": "runs/20261102_001502_task1_harbor_s1_c1_none",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.36901189261436523,
+        "yaw_rad": 0.08619526898869334
+      },
+      "clearance_m": 1.225274091529733,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.349563254325194,
+          "wrong_way_rad": 0.0028264523157370824
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.3797321736998605,
+          "wrong_way_rad": 0.0
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 278.704,
+          "resume_sim": 282.7,
+          "zero_command_delay_s": 0.14400000000000546,
+          "first_force_below_1N_delay_s": 1.6719999999999686,
+          "force_below_1N_dwell_confirmed_delay_s": 2.716000000000008,
+          "force_peak_before_resume_N": 27.599999999999987,
+          "stopped_dwell_confirmed_delay_s": 3.319999999999993,
+          "distance_to_stop_m": 0.45686626671870123,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.16940087469781648,
+      "post_completion_record_s": 11.399999999999977,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 410,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 410,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 410,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 410,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 410,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 410,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 410,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 410,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 410,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 410,
+            "missing": 0
+          }
+        },
+        "initially_off": [
+          "buoy_05"
+        ],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "20d3b127122190014b922d1674e2165caa07d086bd6bf2b38f4830b6ed3c4162",
+        "task1_scenario.json": "c1e0232cae16ff40c202f52ee69a06e7496783d5b785833e885b18088389eb5c",
+        "provenance.json": "dd0f100d0999dc2edf3e7871827ef74d17213c92bb5758725fb0875883a67b8b",
+        "buoy_map_result.json": "ad734f549ddd5f9fb8de58b23ef1ba648454ae173f2c32771812b229fcaa6137"
+      },
+      "task_started": true,
+      "execution_metrics": {
+        "planning_attempts": 13,
+        "planning_failures": 0,
+        "controller_failures": 0,
+        "reported_semantic_changes": 1,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.29999999999999716,
+            "wall_s": 0.338771426002495
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.22472728102002293
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.22237346705514938
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20325059606693685
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.21170948701910675
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.21533412102144212
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.5039999999999907,
+            "wall_s": 0.5717001729644835
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.22932788298930973
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20941758202388883
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.2205903639551252
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20125574199482799
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.2227027959888801
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2013617380289361
+          }
+        ],
+        "total_planning_wall_s": 3.2725226561306044,
+        "max_planning_wall_s": 0.5717001729644835,
+        "semantic_pause_sim_s": [
+          3.995999999999981
+        ]
+      },
+      "outcome": "passed",
+      "runtime_source_sha256": {
+        "scripts/prepare_task1.py": "88e76457bbf03a8956f5a88fcccd49d11b298ffe5efa0b17c97d2c1f25d683f4",
+        "scripts/prepare_navigation.py": "44097cef02e6d0ea2e55b30cae23aa6b1660b6640c5bef424fa2f4c27af2b80a",
+        "scripts/generate_world.py": "770952a6a502d9dd73629e693dd2de51d3e7a69e3c7416c708209984c3b29786",
+        "scripts/sim_session.py": "f2e1a606f39d84b019fbc14087eaac4a50f141b9d3470b5687b3aa7e8ee49c6c",
+        "src/usv_sim/usv_sim/cloud_filter.py": "796312fcef2ad50d48584dfe4994ae9a0466c347153551009ad2892b2d8e0225",
+        "src/usv_sim/usv_sim/clearing_cloud.py": "f1112cdc38db626217979985eb32240ac9750827153c979101e328667b7bdb8e",
+        "src/robotx_task1/robotx_task1/mission.py": "d6f6b08d5bc93b42a065890c9317cde8397bb824737eb851279a1273e6b2a033",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "src/usv_nav2/launch/navigation.launch.py": "eb005cbb8af7211267bf22a883a9b369d67c1880e551e215bf6db8b881c2bdf5",
+        "src/usv_nav2/usv_nav2/launch_config.py": "442aeaf075c7f0c56ba59e94524e9f2d5599812ddd8e22ad7d85d21eea9425bc",
+        "src/usv_nav2/usv_nav2/task_lease.py": "796dadee4633f78f797e19c525a9346d43b10966e4a78bfc681024e250781391",
+        "src/robotx_task1_nav/src/plugins.cpp": "b7e10686ca12c22c9b25c1f34cbbd99c4ba511b2e413da996cf95931343757cf",
+        "src/robotx_task1_nav/src/rotate.cpp": "057ae4e432221347610d70826ded22be68ef2a057afaef1284274fe07f7542b2",
+        "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp": "d8d2ef07714a71df525b5e025b8c0d708c36f9ee39d5698aba4c8afb75706c95",
+        "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp": "30ce7be51db271ec7bb3a60659ac9e23cbe7f42a7bbd75955ac2eeef371278f9",
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp": "84c959f1003bad4d0986d7d3c8152d4fecd4fe310abf99f86756f7f34f12516c",
+        "tools/task1_gazebo/Task1Scene.cc": "157305e4eb25d7abf0eab7007ba719781611322fff7f20be0006c9c187299b29",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15",
+        "config/task1/harbor.json": "c69c7b67aa82f7614cef02860888bcb897e772762b0e2dbe043b489fec2a213a",
+        "models/task1_workboat/model.sdf": "cbadd119cca87b683c3c042aeb43b130c7612a865524d051a0bd351579ee55a0"
+      },
+      "changed_runtime_sources": [
+        "scripts/sim_session.py",
+        "config/task1/harbor.json"
+      ],
+      "matches_current_runtime_sources": false,
+      "controller_parameters": {
+        "sim_time": 5.0,
+        "decel_lim_x": -0.08,
+        "decel_lim_theta": -0.2,
+        "max_vel_x": 0.3,
+        "max_vel_theta": 0.4,
+        "visibility_clearance_m": 0.0
+      },
+      "obstacle_layer_plugin": "nav2_costmap_2d::VoxelLayer"
+    },
+    {
+      "case": "harbor_s1_c1_cross",
+      "run": "runs/20261102_002636_task1_harbor_s1_c1_cross",
+      "passed": false,
+      "normal_task_passed": false,
+      "endpoint": null,
+      "clearance_m": 0.0,
+      "collisions": 7809,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.353323205924339,
+          "wrong_way_rad": 0.0030912669709786122
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 278.504,
+          "resume_sim": 282.6,
+          "zero_command_delay_s": 0.04399999999998272,
+          "first_force_below_1N_delay_s": 0.6080000000000041,
+          "force_below_1N_dwell_confirmed_delay_s": 2.740000000000009,
+          "force_peak_before_resume_N": 28.199999999999996,
+          "stopped_dwell_confirmed_delay_s": 3.319999999999993,
+          "distance_to_stop_m": 0.4235347110235458,
+          "physics_advancing": true,
+          "passed": true
+        },
+        {
+          "reason": "task cancelled",
+          "start_sim": 349.508,
+          "resume_sim": null,
+          "zero_command_delay_s": 0.11200000000002319,
+          "first_force_below_1N_delay_s": 2.004000000000019,
+          "force_below_1N_dwell_confirmed_delay_s": 6.112000000000023,
+          "force_peak_before_resume_N": 51.59999999999998,
+          "stopped_dwell_confirmed_delay_s": 3.900000000000034,
+          "distance_to_stop_m": 0.27777307093827086,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": null,
+      "post_completion_record_s": null,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 227,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 227,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 227,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 227,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 227,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 227,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 227,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 227,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 227,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 227,
+            "missing": 0
+          }
+        },
+        "initially_off": [
+          "buoy_05"
+        ],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": {
+        "passed": false,
+        "region": [
+          35.8,
+          38.2,
+          -1.7,
+          1.7
+        ],
+        "marking_observed": true,
+        "clearing_status": "not_observed_target_departure",
+        "peak_lethal_cells": 74,
+        "obstacle_left_region_sim": null,
+        "first_clear_sim": null,
+        "clear_delay_s": null,
+        "min_moving_obstacle_clearance_m": 0.0,
+        "criterion": "Actual global costmap marks the moving body at its crossing, then clears its former region after it leaves."
+      },
+      "evidence_sha256": {
+        "task1_result.json": "7906f1f0dca061757cab82ea925de3cd93b825d026928d7d9c20d91a1dc73500",
+        "task1_scenario.json": "15e3ea5efd0f781575ccffa91119f436cec2ea6bfa49af588fc19e12bbe1a924",
+        "provenance.json": "b9159069ec57b9956d8893269f0902e83b13040062fb661ab93bb30c3f95d674",
+        "buoy_map_result.json": "f96deb812b7573359f19e3ef571f32a6f3c14d22595ce00b93c7e391ed3bc69c",
+        "dynamic_map_result.json": "3a605cd749695770fced16e85063ec8dfd5fd598965f9a275abda8beb68f9402"
+      },
+      "task_started": true,
+      "execution_metrics": {
+        "planning_attempts": 8,
+        "planning_failures": 0,
+        "controller_failures": 0,
+        "reported_semantic_changes": 1,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999999574,
+            "wall_s": 0.20159801503177732
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.215615350054577
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.23002321203239262
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.2092000120319426
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.22113157203420997
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000001705,
+            "wall_s": 0.20273867098148912
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.4000000000000057,
+            "wall_s": 0.40663651493377984
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.39999999999997726,
+            "wall_s": 0.44302942394278944
+          }
+        ],
+        "total_planning_wall_s": 2.129972771042958,
+        "max_planning_wall_s": 0.44302942394278944,
+        "semantic_pause_sim_s": [
+          4.096000000000004
+        ]
+      },
+      "outcome": "collision",
+      "runtime_source_sha256": {
+        "scripts/prepare_task1.py": "88e76457bbf03a8956f5a88fcccd49d11b298ffe5efa0b17c97d2c1f25d683f4",
+        "scripts/prepare_navigation.py": "44097cef02e6d0ea2e55b30cae23aa6b1660b6640c5bef424fa2f4c27af2b80a",
+        "scripts/generate_world.py": "770952a6a502d9dd73629e693dd2de51d3e7a69e3c7416c708209984c3b29786",
+        "scripts/sim_session.py": "f2e1a606f39d84b019fbc14087eaac4a50f141b9d3470b5687b3aa7e8ee49c6c",
+        "src/usv_sim/usv_sim/cloud_filter.py": "796312fcef2ad50d48584dfe4994ae9a0466c347153551009ad2892b2d8e0225",
+        "src/usv_sim/usv_sim/clearing_cloud.py": "f1112cdc38db626217979985eb32240ac9750827153c979101e328667b7bdb8e",
+        "src/robotx_task1/robotx_task1/mission.py": "d6f6b08d5bc93b42a065890c9317cde8397bb824737eb851279a1273e6b2a033",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "src/usv_nav2/launch/navigation.launch.py": "eb005cbb8af7211267bf22a883a9b369d67c1880e551e215bf6db8b881c2bdf5",
+        "src/usv_nav2/usv_nav2/launch_config.py": "442aeaf075c7f0c56ba59e94524e9f2d5599812ddd8e22ad7d85d21eea9425bc",
+        "src/usv_nav2/usv_nav2/task_lease.py": "796dadee4633f78f797e19c525a9346d43b10966e4a78bfc681024e250781391",
+        "src/robotx_task1_nav/src/plugins.cpp": "b7e10686ca12c22c9b25c1f34cbbd99c4ba511b2e413da996cf95931343757cf",
+        "src/robotx_task1_nav/src/rotate.cpp": "057ae4e432221347610d70826ded22be68ef2a057afaef1284274fe07f7542b2",
+        "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp": "d8d2ef07714a71df525b5e025b8c0d708c36f9ee39d5698aba4c8afb75706c95",
+        "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp": "30ce7be51db271ec7bb3a60659ac9e23cbe7f42a7bbd75955ac2eeef371278f9",
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp": "84c959f1003bad4d0986d7d3c8152d4fecd4fe310abf99f86756f7f34f12516c",
+        "tools/task1_gazebo/Task1Scene.cc": "157305e4eb25d7abf0eab7007ba719781611322fff7f20be0006c9c187299b29",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15",
+        "config/task1/harbor.json": "b7af2e110e829300cb31da76cbf56a0197b33ff6ad5a67542adcc1f72297e7a2",
+        "models/task1_workboat/model.sdf": "cbadd119cca87b683c3c042aeb43b130c7612a865524d051a0bd351579ee55a0"
+      },
+      "changed_runtime_sources": [
+        "scripts/sim_session.py"
+      ],
+      "matches_current_runtime_sources": false,
+      "controller_parameters": {
+        "sim_time": 5.0,
+        "decel_lim_x": -0.08,
+        "decel_lim_theta": -0.2,
+        "max_vel_x": 0.3,
+        "max_vel_theta": 0.4,
+        "visibility_clearance_m": 0.0
+      },
+      "obstacle_layer_plugin": "nav2_costmap_2d::VoxelLayer"
+    },
+    {
+      "case": "harbor_s1_c1_none_wind2_wave0.08",
+      "run": "runs/20261102_003413_task1_harbor_s1_c1_none_wind2_wave0.08",
+      "passed": true,
+      "normal_task_passed": true,
+      "endpoint": {
+        "position_m": 0.37459865073347487,
+        "yaw_rad": 0.2157667284312743
+      },
+      "clearance_m": 1.2823390315186094,
+      "collisions": 0,
+      "circles": {
+        "CIRCLE_ENTRY": {
+          "complete": true,
+          "angle_rad": 6.401840869615615,
+          "wrong_way_rad": 0.016246814587827618
+        },
+        "CIRCLE_EXIT": {
+          "complete": true,
+          "angle_rad": 6.633882322984524,
+          "wrong_way_rad": 0.6036091623254713
+        }
+      },
+      "stops": [
+        {
+          "reason": "semantic revision changed",
+          "start_sim": 280.404,
+          "resume_sim": 284.5,
+          "zero_command_delay_s": 0.06799999999998363,
+          "first_force_below_1N_delay_s": 1.656000000000006,
+          "force_below_1N_dwell_confirmed_delay_s": 2.73599999999999,
+          "force_peak_before_resume_N": 25.19999999999999,
+          "stopped_dwell_confirmed_delay_s": 3.216000000000008,
+          "distance_to_stop_m": 0.40079445570235694,
+          "physics_advancing": true,
+          "passed": true
+        }
+      ],
+      "fault": null,
+      "semantic_timing": "physics effective history",
+      "drift_m": 0.1440381715997838,
+      "post_completion_record_s": 11.299999999999955,
+      "buoy_map": {
+        "passed": true,
+        "buoys": {
+          "entry": {
+            "observed": 490,
+            "missing": 0
+          },
+          "exit": {
+            "observed": 490,
+            "missing": 0
+          },
+          "buoy_01": {
+            "observed": 490,
+            "missing": 0
+          },
+          "buoy_02": {
+            "observed": 490,
+            "missing": 0
+          },
+          "buoy_03": {
+            "observed": 490,
+            "missing": 0
+          },
+          "buoy_04": {
+            "observed": 490,
+            "missing": 0
+          },
+          "buoy_05": {
+            "observed": 490,
+            "missing": 0
+          },
+          "buoy_06": {
+            "observed": 490,
+            "missing": 0
+          },
+          "buoy_07": {
+            "observed": 490,
+            "missing": 0
+          },
+          "buoy_08": {
+            "observed": 490,
+            "missing": 0
+          }
+        },
+        "initially_off": [
+          "buoy_05"
+        ],
+        "first_missing": [],
+        "criterion": "Every known physical buoy remains lethal in every recorded global map after task start, independently of its light phase."
+      },
+      "dynamic_map": null,
+      "evidence_sha256": {
+        "task1_result.json": "35e73beb2b4fec62c9b52553b29ed4924b080eb54aac1c70a1f434aebeda67dc",
+        "task1_scenario.json": "c49a5a1f363a948b59425e8762ee4bec9c86279a4cb70b95306c5896fad8f62c",
+        "provenance.json": "cf8273875fcce7f2ac7235e764ad362e1607f439b57047e3fda61da131e69002",
+        "buoy_map_result.json": "97cf46d271f7edac125d86f4758d6db45ceb0d3d5319d781f506447e091f4af7"
+      },
+      "task_started": true,
+      "execution_metrics": {
+        "planning_attempts": 14,
+        "planning_failures": 0,
+        "controller_failures": 0,
+        "reported_semantic_changes": 1,
+        "planning_duration_samples": [
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.5,
+            "wall_s": 0.5313510479172692
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.21620052598882467
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000000284,
+            "wall_s": 0.2044487469829619
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.23565610207151622
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.21551472996361554
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.20998857100494206
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.4159999999999968,
+            "wall_s": 0.4583961679600179
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.23719369899481535
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.21988587104715407
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.19999999999998863,
+            "wall_s": 0.21680165303405374
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.20410154899582267
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.2022400749847293
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.1999999999999318,
+            "wall_s": 0.20563061302527785
+          },
+          {
+            "outcome": "path_ready",
+            "sim_s": 0.20000000000004547,
+            "wall_s": 0.20312137703876942
+          }
+        ],
+        "total_planning_wall_s": 3.56053072900977,
+        "max_planning_wall_s": 0.5313510479172692,
+        "semantic_pause_sim_s": [
+          4.096000000000004
+        ]
+      },
+      "outcome": "passed",
+      "runtime_source_sha256": {
+        "scripts/prepare_task1.py": "88e76457bbf03a8956f5a88fcccd49d11b298ffe5efa0b17c97d2c1f25d683f4",
+        "scripts/prepare_navigation.py": "44097cef02e6d0ea2e55b30cae23aa6b1660b6640c5bef424fa2f4c27af2b80a",
+        "scripts/generate_world.py": "770952a6a502d9dd73629e693dd2de51d3e7a69e3c7416c708209984c3b29786",
+        "scripts/sim_session.py": "f2e1a606f39d84b019fbc14087eaac4a50f141b9d3470b5687b3aa7e8ee49c6c",
+        "src/usv_sim/usv_sim/cloud_filter.py": "796312fcef2ad50d48584dfe4994ae9a0466c347153551009ad2892b2d8e0225",
+        "src/usv_sim/usv_sim/clearing_cloud.py": "f1112cdc38db626217979985eb32240ac9750827153c979101e328667b7bdb8e",
+        "src/robotx_task1/robotx_task1/mission.py": "d6f6b08d5bc93b42a065890c9317cde8397bb824737eb851279a1273e6b2a033",
+        "src/robotx_task1/robotx_task1/core.py": "40cb5d02053738e8eacb8ec8b7e4501873492deb513d76241261cc1f4e9940cf",
+        "src/robotx_task1/robotx_task1/observer.py": "53de496ace12a9ec02207bec1ce7d6de0e2166fe0080efe40cc444e5e42e5c6f",
+        "src/usv_nav2/usv_nav2/rover_bridge.py": "03a478c8c6422b8934e7595f7b14221dd791cd0d544774288e757e37afbbba69",
+        "src/usv_nav2/launch/navigation.launch.py": "eb005cbb8af7211267bf22a883a9b369d67c1880e551e215bf6db8b881c2bdf5",
+        "src/usv_nav2/usv_nav2/launch_config.py": "442aeaf075c7f0c56ba59e94524e9f2d5599812ddd8e22ad7d85d21eea9425bc",
+        "src/usv_nav2/usv_nav2/task_lease.py": "796dadee4633f78f797e19c525a9346d43b10966e4a78bfc681024e250781391",
+        "src/robotx_task1_nav/src/plugins.cpp": "b7e10686ca12c22c9b25c1f34cbbd99c4ba511b2e413da996cf95931343757cf",
+        "src/robotx_task1_nav/src/rotate.cpp": "057ae4e432221347610d70826ded22be68ef2a057afaef1284274fe07f7542b2",
+        "src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp": "d8d2ef07714a71df525b5e025b8c0d708c36f9ee39d5698aba4c8afb75706c95",
+        "src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp": "30ce7be51db271ec7bb3a60659ac9e23cbe7f42a7bbd75955ac2eeef371278f9",
+        "src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp": "84c959f1003bad4d0986d7d3c8152d4fecd4fe310abf99f86756f7f34f12516c",
+        "tools/task1_gazebo/Task1Scene.cc": "157305e4eb25d7abf0eab7007ba719781611322fff7f20be0006c9c187299b29",
+        "models/robotx_2026_robobuoy/model.sdf": "f0db64357ebc01f44c59c761258ca5ae9ca3be4f29e70cd1ceeb34ffdbf52a15",
+        "config/task1/harbor.json": "b7af2e110e829300cb31da76cbf56a0197b33ff6ad5a67542adcc1f72297e7a2",
+        "models/task1_workboat/model.sdf": "cbadd119cca87b683c3c042aeb43b130c7612a865524d051a0bd351579ee55a0"
       },
       "changed_runtime_sources": [
         "scripts/sim_session.py"

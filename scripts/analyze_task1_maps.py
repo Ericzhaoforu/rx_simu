@@ -76,6 +76,8 @@ def analyze(run):
         p=row['pose'];xy=states[i]['data']['dynamic_pose']
         distances.append(vessel_clearance(scene['footprint'],p[0],p[1],p[2],[dict(x=xy[0],y=xy[1],size=[2.,3.])]))
     report=dict(passed=bool(marked and cleared),region=[x-1.2,x+1.2,-1.7,1.7],
+                marking_observed=bool(marked),
+                clearing_status='not_observed_target_departure' if left is None else 'observed_clear' if cleared else 'not_observed_clear',
                 peak_lethal_cells=max((c['lethal_cells'] for c in marked),default=0),
                 obstacle_left_region_sim=left,first_clear_sim=cleared['stamp'] if cleared else None,
                 clear_delay_s=cleared['stamp']-left if cleared else None,

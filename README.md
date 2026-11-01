@@ -10,6 +10,8 @@
 
 RobotX 2026 Task 1 使用独立的新 RoboBuoy 模型、已知 UAV 观测替身、规则规划和本地独立裁判。使用方法见 [Task 1 运行说明](docs/task1/runbook.md)，失败根因见 [调试记录](docs/task1/debug_log.md)。正式 UAV 感知和 RoboCommand 上报不在本轮实现范围。
 
+增加错位浮标、码头和横穿交通的港区测试，以及明确标注灯色、规划路径和实际航迹的 MP4，见 [2026-11-02 港区实验记录](docs/task1/experiments/20261102_harbor.md)。静态完整任务通过，横穿交通出现实体接触；成功和失败视频均保留。
+
 ## 启动
 
 本服务器的 Ubuntu 22.04、ROS 2 Humble、Garden 7.9 与既有 VRX 安装是环境基础。新增依赖安装在仓库的 `external/`，不要求 sudo，不覆盖既有工程。详细依赖和排障见 [运行说明](docs/runbook.md)。

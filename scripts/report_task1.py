@@ -120,8 +120,11 @@ def main():
     competition_coverage={label:sum(latest.get(k,{}).get('outcome')==label for k in match)
                           for label in ('passed','collision','not_started','failed')}
     competition_coverage['not_attempted']=sum(k not in latest for k in match)
+    harbor_coverage={label:sum(latest[k]['outcome']==label for k in harbor)
+                     for label in ('passed','collision','not_started','failed')}
     summary={'expected':expected,'competition_cases':match,'baseline_cases':baseline,'recorded_stress_cases':stress,'recorded_harbor_cases':harbor,
              'competition_coverage':competition_coverage,
+             'harbor_coverage':harbor_coverage,
              'competition_change_count':1,'constraint_source':'User confirmation on 2026-11-01; blinking phases are not semantic changes.',
              'latest':latest,'attempts':attempts,'model_checks':models,'lidar_checks':lidars,
              'scope':'Boat-side simulation; known UAV observation and local reporting substitutes; no official score claimed.'}
@@ -131,6 +134,7 @@ def main():
            '每项展示最近一次已完成的尝试，可能来自较早提交；运行目录的 provenance.json 与源码快照标识当时版本。新修改不能继承旧运行的通过结论。',
            '根据用户 2026-11-01 确认，正式比赛仅一次语义灯态切换；闪烁亮灭不计次数。一次切换为主验收，零切换为对照，两次切换仅作额外压力测试。',
            '比赛主验收最近记录：'+str(competition_coverage['passed'])+' 项通过，'+str(competition_coverage['collision'])+' 项接触碰撞，'+str(competition_coverage['not_started'])+' 项启动失败、任务未开始；启动失败不能算作已完成场景验证。',
+           '独立港区工程场景最近记录：'+str(harbor_coverage['passed'])+' 项通过，'+str(harbor_coverage['collision'])+' 项接触碰撞；不替代上面的 baseline 矩阵。',
            '正常任务与故障测试分开判定；程序报告 COMPLETE 不等于独立验收通过。尚未运行的组合明确列出。','',
            '| 范围 | 用例 | 判定 | 行为源码版本 | 位置 / 航向误差 | 最小净空 | 证据 |',
            '|---|---|---|---|---|---|---|']
@@ -165,6 +169,7 @@ def main():
     (out/'validation.md').write_text('\n'.join(lines)+'\n')
     print(json.dumps({'normal_passed':sum(latest[k]['passed'] for k in normal if k in latest),
                       'competition_passed':sum(latest[k]['passed'] for k in match if k in latest),
+                      'harbor_coverage':harbor_coverage,
                       'current_normal_passed':sum(latest[k]['passed'] and latest[k]['matches_current_runtime_sources'] for k in normal if k in latest),
                       'fault_passed':sum(latest[k]['passed'] for k in fault_keys if k in latest),
                       'not_started':[k for k in normal if latest.get(k,{}).get('outcome')=='not_started'],
