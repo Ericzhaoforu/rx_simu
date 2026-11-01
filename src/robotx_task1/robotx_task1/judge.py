@@ -27,6 +27,7 @@ def evaluate(run):
         if si<0 or mi<0:continue
         data=scenes[si]['data'];status=statuses[mi]['data'];phase=status['stage'];p=row['pose']
         obstacles=[dict(name=b['id'],x=b['x'],y=b['y'],size=[.508,.508]) for b in data['buoys']]
+        obstacles+=scene['task1'].get('infrastructure',[])
         if 'dynamic_pose' in data:obstacles.append(dict(name='moving',x=data['dynamic_pose'][0],y=data['dynamic_pose'][1],size=[2.,3.]))
         minimum=min(minimum,vessel_clearance(scene['footprint'],p[0],p[1],p[2],obstacles))
         if phase in ('CIRCLE_ENTRY','CIRCLE_EXIT'):

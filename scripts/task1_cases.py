@@ -2,7 +2,11 @@
 
 
 def case_key(case):
-    return f"s{case['seed']}_c{case['changes']}_{case['dynamic']}"
+    key=f"s{case['seed']}_c{case['changes']}_{case['dynamic']}"
+    if case.get('course','baseline')!='baseline':key=case['course']+'_'+key
+    if case.get('wind',0) or case.get('wave_gain',0):
+        key+=f"_wind{case.get('wind',0):g}_wave{case.get('wave_gain',0):g}"
+    return key
 
 
 def cases(group='all', stress=False):

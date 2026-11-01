@@ -123,7 +123,7 @@ def start(args):
     subprocess.run(command, check=True, stdout=(run/'generation.log').open('w'), stderr=subprocess.STDOUT)
     if args.task1:
         from prepare_task1 import prepare
-        prepare(generated,args.seed,args.changes,args.dynamic,args.task1_blocked,args.task1_visibility_guard)
+        prepare(generated,args.seed,args.changes,args.dynamic,args.task1_blocked,args.task1_visibility_guard,args.course)
     state = {'run_dir': str(run), 'firmware_revision': actual, 'processes': []}
 
     def spawn(name, command, cwd=ROOT):
@@ -241,6 +241,7 @@ def main():
     parser.add_argument('--task1-blocked', action='store_true', help='Synthetic full-width wall for the no-path safety test')
     parser.add_argument('--task1-visibility-guard', action='store_true', help='Experimental lidar stand-off; observed to stall, disabled by default')
     parser.add_argument('--seed', type=int, choices=(1,2,3), default=1)
+    parser.add_argument('--course', choices=('baseline','harbor'), default='baseline')
     parser.add_argument('--changes', type=int, choices=(0,1,2), default=0)
     parser.add_argument('--dynamic', choices=('none','cross','block'), default='none')
     args = parser.parse_args()

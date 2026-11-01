@@ -17,6 +17,8 @@ def main():
     p=argparse.ArgumentParser();p.add_argument('--group',choices=('base','dynamic','all'),default='base')
     p.add_argument('--seed',type=int,choices=(1,2,3));p.add_argument('--changes',type=int,choices=(0,1,2))
     p.add_argument('--dynamic',choices=('none','cross','block'));p.add_argument('--record-maps',action='store_true')
+    p.add_argument('--course',choices=('baseline','harbor'),default='baseline')
+    p.add_argument('--wind',type=float,default=0.);p.add_argument('--wave-gain',type=float,default=0.)
     p.add_argument('--record-sensors',action='store_true',help='Retain source clouds, scan, TF and odometry in a rosbag')
     p.add_argument('--visibility-guard',action='store_true',help='Test the experimental lidar stand-off separately')
     p.add_argument('--stress',action='store_true',help='Run two-change stress cases outside the confirmed match setting')
@@ -27,9 +29,11 @@ def main():
     if (ROOT/'runs/session.json').exists():raise RuntimeError('Stop the current managed session before running a cold-start suite')
     if a.changes==2 and not a.stress:p.error('--changes 2 requires --stress; competition cases change once')
     if a.stress and (a.fault or a.changes in (0,1)):p.error('--stress is only for two-change normal tasks')
+    if a.course=='harbor' and a.stress:p.error('Harbor cases follow the one-change match constraint')
     cases=selected_cases(a.group,a.stress)
     cases=[c for c in cases if all(getattr(a,k) is None or c[k]==getattr(a,k) for k in ('seed','changes','dynamic'))]
     if a.fault:cases=[dict(seed=1,changes=0,dynamic='none',fault=a.fault)]
+    for case in cases:case.update(course=a.course,wind=a.wind,wave_gain=a.wave_gain)
     known={case_key(c) for c in cases}
     if set(a.skip_case)-known:p.error('Unknown or filtered --skip-case: '+', '.join(sorted(set(a.skip_case)-known)))
     cases=[c for c in cases if case_key(c) not in a.skip_case]
@@ -37,10 +41,11 @@ def main():
     ledger=ROOT/'runs'/('task1_suite_'+datetime.datetime.now().strftime('%Y%m%d_%H%M%S')+'.json')
     results=[]
     for case in cases:
-        name=f"task1_s{case['seed']}_c{case['changes']}_{case['dynamic']}"
+        name='task1_'+case_key(case)
         if a.fault:name+='_'+a.fault
         command=[sys.executable,str(ROOT/'scripts/sim_session.py'),'start','--task1','--navigation','--control',
-                 '--name',name,'--seed',str(case['seed']),'--changes',str(case['changes']),'--dynamic',case['dynamic']]
+                 '--name',name,'--seed',str(case['seed']),'--changes',str(case['changes']),'--dynamic',case['dynamic'],
+                 '--course',a.course,'--wind',str(a.wind),'--wave-gain',str(a.wave_gain)]
         if a.fault=='no_path':command.append('--task1-blocked')
         if a.visibility_guard:command.append('--task1-visibility-guard')
         old=(ROOT/'runs/latest.txt').read_text().strip() if (ROOT/'runs/latest.txt').exists() else None
@@ -61,7 +66,7 @@ def main():
             if a.record_sensors:
                 recorders.append(subprocess.Popen(['ros2','bag','record','--use-sim-time','--storage','sqlite3',
                     '--output',str(run/'sensors'),'/usv/lidar/points','/usv/lidar/filtered','/usv/lidar/marking','/usv/lidar/clearing','/scan','/tf','/tf_static',
-                    '/clock','/usv/odom','/usv/cmd_vel'],stdout=(run/'record_sensors.log').open('w'),stderr=subprocess.STDOUT))
+                    '/clock','/usv/odom','/usv/cmd_vel','/task1/reference_path'],stdout=(run/'record_sensors.log').open('w'),stderr=subprocess.STDOUT))
             command=[sys.executable,str(ROOT/'scripts/validate_task1.py')]
             if a.fault:command=[sys.executable,str(ROOT/'scripts/validate_task1_fault.py'),a.fault]
             elif a.no_video:command.append('--no-video')

@@ -64,7 +64,7 @@ def main():
         log.write(json.dumps(event, allow_nan=False) + '\n')
         log.flush()
 
-    for topic in ('/plan', '/local_plan', '/transformed_global_plan'):
+    for topic in ('/plan', '/task1/reference_path', '/local_plan', '/transformed_global_plan'):
         node.create_subscription(NavPath, topic, lambda msg, t=topic: receive(t, msg),
                                  qos_profile_sensor_data)
     qos = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)

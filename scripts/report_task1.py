@@ -18,7 +18,8 @@ RUNTIME_SOURCES=[
     'src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp',
     'src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp',
     'src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp',
-    'tools/task1_gazebo/Task1Scene.cc','models/robotx_2026_robobuoy/model.sdf']
+    'tools/task1_gazebo/Task1Scene.cc','models/robotx_2026_robobuoy/model.sdf',
+    'config/task1/harbor.json','models/task1_workboat/model.sdf']
 
 
 def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -35,7 +36,9 @@ def main():
         source=run/'generated/task1_scenario.json';result=run/'task1_result.json'
         if not source.exists() or not result.exists():continue
         scenario=json.loads(source.read_text());j=json.loads(result.read_text());fault=run/'task1_fault_result.json'
-        key=f"s{scenario['seed']}_c{len(scenario['changes'])}_{scenario['dynamic']}"
+        scene=json.loads((run/'generated/scene.json').read_text())
+        key=case_key(dict(seed=scenario['seed'],changes=len(scenario['changes']),dynamic=scenario['dynamic'],
+                          course=scenario.get('course','baseline'),wind=scene.get('wind_mps',0),wave_gain=scene.get('wave_gain',0)))
         parameters=run/'generated/nav2_wamv.yaml'
         config=json.loads(parameters.read_text()) if parameters.exists() else {}
         guard=config.get('controller_server',{}).get('ros__parameters',{}).get('FollowPath',{}).get('Task1Hull.visibility_clearance',0.)
@@ -113,10 +116,11 @@ def main():
     fault_keys=['fault_'+f for f in FAULTS]
     expected=normal+fault_keys
     stress=[case_key(c) for c in cases(stress=True) if case_key(c) in latest]
+    harbor=[k for k in latest if k.startswith('harbor_')]
     competition_coverage={label:sum(latest.get(k,{}).get('outcome')==label for k in match)
                           for label in ('passed','collision','not_started','failed')}
     competition_coverage['not_attempted']=sum(k not in latest for k in match)
-    summary={'expected':expected,'competition_cases':match,'baseline_cases':baseline,'recorded_stress_cases':stress,
+    summary={'expected':expected,'competition_cases':match,'baseline_cases':baseline,'recorded_stress_cases':stress,'recorded_harbor_cases':harbor,
              'competition_coverage':competition_coverage,
              'competition_change_count':1,'constraint_source':'User confirmation on 2026-11-01; blinking phases are not semantic changes.',
              'latest':latest,'attempts':attempts,'model_checks':models,'lidar_checks':lidars,
@@ -130,8 +134,8 @@ def main():
            '正常任务与故障测试分开判定；程序报告 COMPLETE 不等于独立验收通过。尚未运行的组合明确列出。','',
            '| 范围 | 用例 | 判定 | 行为源码版本 | 位置 / 航向误差 | 最小净空 | 证据 |',
            '|---|---|---|---|---|---|---|']
-    for key in expected+stress:
-        category='比赛主验收' if key in match else '零切换对照' if key in baseline else '额外压力测试' if key in stress else '异常响应'
+    for key in expected+stress+harbor:
+        category='港区工程测试' if key in harbor else '比赛主验收' if key in match else '零切换对照' if key in baseline else '额外压力测试' if key in stress else '异常响应'
         r=latest.get(key)
         if not r:lines.append(f'| {category} | {key} | 未验证 | — | — | — | — |');continue
         endpoint=r.get('endpoint')

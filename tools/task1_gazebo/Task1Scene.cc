@@ -93,7 +93,18 @@ class Task1Scene final : public gz::sim::System,
         else if(elapsed<150)y=0;
         else y=std::min(14.,.175*(elapsed-150));
       }
-      const double x=28.; // Cross between marker columns, never through a fixed buoy.
+      double x=28.; // Legacy diagnostic fixture.
+      if(config_.contains("dynamic_motion")) {
+        const auto &m=config_["dynamic_motion"];
+        x=m["x"].get<double>();const double y0=m["y_min"].get<double>(),y1=m["y_max"].get<double>();
+        const double speed=m["speed_mps"].get<double>();
+        const double since=std::max(0.,elapsed-m["depart_after_s"].get<double>());
+        y=std::min(y1,y0+speed*since);
+        if(mode=="block") {
+          const double held=m["hold_y"].get<double>(),arrival=(held-y0)/speed,wait=m["hold_s"].get<double>();
+          if(since>=arrival)y=std::min(y1,held+speed*std::max(0.,since-arrival-wait));
+        }
+      }
       state_["dynamic_pose"]={x,y};
       if(moving_!=gz::sim::kNullEntity)
         gz::sim::Model(moving_).SetWorldPoseCmd(ecm,gz::math::Pose3d(x,y,.45,0,0,0));
