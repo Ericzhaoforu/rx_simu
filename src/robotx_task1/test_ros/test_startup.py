@@ -82,8 +82,10 @@ class RosStartup(unittest.TestCase):
             mission.on_observation(msg);self.assertEqual(mission.last_revision,1)
             newer=copy.deepcopy(msg);newer.header.stamp=mission.get_clock().now().to_msg();newer.revision=2;newer.buoys[2].state=1
             mission.started=True;mission.stage='TRANSIT';mission.motion='EXECUTING'
+            mission.corridor_path=Path();mission.full_plan_failures=2
             mission.on_observation(newer)
             self.assertEqual(mission.motion,'STOPPING');self.assertEqual(mission.generation,1)
+            self.assertIsNone(mission.corridor_path);self.assertEqual(mission.full_plan_failures,0)
             mission.on_observation(msg);self.assertEqual(mission.last_revision,2);self.assertEqual(mission.generation,1)
             future=copy.deepcopy(newer);future.header.stamp.sec+=2;future.revision=3
             mission.on_observation(future);self.assertEqual(mission.last_revision,2)

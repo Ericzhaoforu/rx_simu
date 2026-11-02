@@ -3,6 +3,7 @@ import math
 import unittest
 import numpy as np
 from robotx_task1.route_policy import RouteConfig, arrival_profile, assess_routes, route_metrics, remaining_path, route_conflict
+from robotx_task1.route_policy import observation_goal,bounded_observation_path
 from robotx_task1.traffic import Track
 
 
@@ -91,6 +92,18 @@ class RoutePolicyTests(unittest.TestCase):
     def test_invalid_configuration_is_rejected(self):
         for kw in ({'speed':0.},{'horizon':float('nan')},{'max_wait':-1.}):
             with self.assertRaises(ValueError):RouteConfig(**kw)
+
+    def test_observation_proposal_stays_forward_on_compatible_reference(self):
+        point=observation_goal(self.direct,[0,0,0],[20,0,0])
+        self.assertGreaterEqual(point[0],3.);self.assertLess(point[0],3.5)
+        self.assertIsNone(observation_goal(self.direct,[0,0,math.pi],[20,0,0]))
+        self.assertIsNone(observation_goal(self.direct,[0,0,0],[25,0,0]))
+        self.assertIsNone(observation_goal(self.direct,[16,0,0],[20,0,0]))
+
+    def test_observation_path_cannot_hide_a_long_detour_or_different_endpoint(self):
+        self.assertTrue(bounded_observation_path([[0,0,0],[3,0,0]],self.direct,[3,0,0]))
+        self.assertFalse(bounded_observation_path([[0,0,0],[0,4,0],[3,0,0]],self.direct,[3,0,0]))
+        self.assertFalse(bounded_observation_path([[0,0,0],[2,0,0]],self.direct,[3,0,0]))
 
 
 if __name__=='__main__':unittest.main()

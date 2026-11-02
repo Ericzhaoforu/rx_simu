@@ -65,6 +65,39 @@ def remaining_path(path, pose, spacing=.4):
     return np.asarray(sampled)
 
 
+def observation_goal(reference,pose,goal,distance=3.):
+    """Propose a nearby point on the same corridor; this does NOT certify safety.
+
+    The normal rule planner must find a fresh full-hull-safe forward path to
+    this point, and both traffic assessments must permit it before execution.
+    """
+    if reference is None or len(reference)<2 or not 1.<=distance<=3.:return None
+    reference=np.asarray(reference);pose=np.asarray(pose);goal=np.asarray(goal)
+    if (np.linalg.norm(reference[-1,:2]-goal[:2])>.5 or abs(wrap(reference[-1,2]-goal[2]))>.25
+            or np.linalg.norm(goal[:2]-pose[:2])<6.):return None
+    near=(np.linalg.norm(reference[:,:2]-pose[:2],axis=1)<=2.)&(np.abs(wrap(reference[:,2]-pose[2]))<=1.2)
+    if not near.any():return None
+    points=remaining_path(reference,pose)
+    arc=np.r_[0.,np.cumsum(np.linalg.norm(np.diff(points[:,:2],axis=0),axis=1))]
+    indices=np.flatnonzero(arc>=distance)
+    if not len(indices):return None
+    target=points[indices[0]];delta=target[:2]-pose[:2]
+    if (abs(wrap(math.atan2(delta[1],delta[0])-pose[2]))>.8
+            or abs(wrap(target[2]-pose[2]))>.7):return None
+    return target.tolist()
+
+
+def bounded_observation_path(path,reference,target):
+    """Reject a detour disguised as a short observation step; not a hull check."""
+    path=np.asarray(path);reference=np.asarray(reference);target=np.asarray(target)
+    if len(path)<2 or not np.isfinite(path).all():return False
+    length=np.linalg.norm(np.diff(path[:,:2],axis=0),axis=1).sum()
+    corridor=remaining_path(reference,path[0])
+    distance=cKDTree(corridor[:,:2]).query(path[:,:2])[0]
+    return bool(length<=5. and distance.max()<=.75 and np.linalg.norm(path[-1,:2]-target[:2])<.1
+                and abs(wrap(path[-1,2]-target[2]))<.1)
+
+
 def arrival_profile(path, pose, config=RouteConfig()):
     """Stopped departure, curvature cap, forward acceleration, terminal braking.
 

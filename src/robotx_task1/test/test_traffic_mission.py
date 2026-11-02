@@ -3,6 +3,7 @@ import time
 from types import SimpleNamespace as NS
 import unittest
 from nav_msgs.msg import Path
+from geometry_msgs.msg import PoseStamped
 from robotx_task1.mission import Mission
 from robotx_task1.traffic import TrafficLease
 
@@ -15,6 +16,8 @@ class TrafficMissionTests(unittest.TestCase):
              reason='',last_revision=1,bits=0,pose=[0,0,0],circle=None,target=[20,0,0],
              generation=1,request_generation=1,yield_until=None,traffic_yield_wait=60.,
              route_wait_until=None,preferred_path_stamp=None,route_stamp=10.,route_wall=time.monotonic(),
+             corridor_path=None,full_plan_failures=0,observation_distance=3.,
+             plan_is_observation=False,executing_observation=False,planned_target=[20,0,0],
              traffic=TrafficLease(),last_path=Path(),events=[],permissions=[],plans=0,follows=0)
         m.last_path.header.stamp.sec=8
         m.odom=NS(twist=NS(twist=NS(linear=NS(x=0.,y=0.),angular=NS(z=0.))))
@@ -35,6 +38,9 @@ class TrafficMissionTests(unittest.TestCase):
              revision=1,eta_s=60.,wait_s=0.,reference_eta_s=-1.,reference_wait_s=-1.,
              switch_cost_s=0.,prefer_wait=False,reason='test')
         m.candidate_route_ready=lambda:Mission.candidate_route_ready(m)
+        m.plan_failed=lambda status,reason='no legal path':Mission.plan_failed(m,status,reason)
+        m.path_points=Mission.path_points
+        m.observation_completed=lambda:Mission.observation_completed(m)
         return m
 
     def test_stopped_vessel_can_replan_while_old_path_is_blocked(self):
@@ -145,6 +151,32 @@ class TrafficMissionTests(unittest.TestCase):
         Mission.tick(m);self.assertEqual(m.plans,0);self.assertFalse(m.permissions[-1])
         m.stamp=12.;m.traffic.update(12.,8.,True,'clear',12.,time.monotonic())
         Mission.tick(m);self.assertEqual(m.plans,1);self.assertFalse(m.permissions[-1])
+
+    def test_observation_goal_requires_prior_corridor_and_two_failed_full_searches(self):
+        m=self.mission();m.bits=3;m.corridor_path=Path()
+        for x in (0.,20.):
+            p=PoseStamped();p.pose.position.x=x;p.pose.orientation.w=1.;m.corridor_path.poses.append(p)
+        m.full_plan_failures=1;self.assertEqual(Mission.next_plan_target(m),m.target)
+        m.full_plan_failures=2;goal=Mission.next_plan_target(m)
+        self.assertTrue(m.plan_is_observation);self.assertGreaterEqual(goal[0],3.);self.assertLess(goal[0],3.5)
+        self.assertEqual(m.target,[20,0,0])
+        m.bits=1;self.assertEqual(Mission.next_plan_target(m),m.target)
+        self.assertFalse(m.plan_is_observation)
+
+    def test_observation_controller_success_does_not_complete_the_transit(self):
+        m=self.mission('EXECUTING',True);m.executing_observation=True;m.cancel_requested=False
+        m.result_future=NS(done=lambda:True,result=lambda:NS(status=4))
+        m.advance=lambda:self.fail('An observation goal is not the mission goal')
+        Mission.poll_actions(m)
+        self.assertEqual(m.stage,'TRANSIT');self.assertEqual(m.target,[20,0,0])
+        self.assertEqual(m.motion,'STOPPING');self.assertFalse(m.permissions[-1])
+        self.assertEqual(m.full_plan_failures,0);self.assertIsNone(m.still_since)
+
+    def test_failed_observation_goal_tries_shorter_bound_without_granting_motion(self):
+        m=self.mission('PLANNING',True);m.plan_is_observation=True;m.full_plan_failures=2
+        Mission.plan_failed(m,6)
+        self.assertEqual(m.observation_distance,2.);self.assertEqual(m.motion,'WAIT_CLEAR')
+        self.assertEqual(m.last_retry,10.);self.assertEqual(m.follows,0)
 
 
 if __name__=='__main__':unittest.main()

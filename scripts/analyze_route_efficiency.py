@@ -15,6 +15,31 @@ def rows(path):
     return [json.loads(line) for line in path.open()]
 
 
+def route_switches(run,events,motion):
+    """Same-revision accepted-route changes; source-timed FCU pose, no truth."""
+    from robotx_task1.route_policy import assess_routes
+    raw=run/'visualization/raw/events.jsonl'
+    if not raw.exists():return None
+    plans=[e for e in rows(raw) if e['topic']=='/task1/reference_path' and e.get('poses')]
+    hull=json.loads((run/'generated/scene.json').read_text())['footprint']
+    previous=None;changes=[]
+    for event in events:
+        if (event['event']!='path_ready' or event['stage']!='TRANSIT'
+                or event.get('purpose')=='observation'):continue
+        plan=min(plans,key=lambda e:abs(e['sim']-event['sim'])) if plans else None
+        if plan is None or abs(plan['sim']-event['sim'])>1. or plan['frame']!='map':
+            previous=None;changes.append(dict(sim=event['sim'],assessable=False));continue
+        candidate=np.asarray(plan['poses']).reshape(-1,3)
+        if previous is not None and previous[0]==event['revision']:
+            ekf=min(motion,key=lambda e:abs(e['sim']-event['sim']))['ekf']
+            decision,_=assess_routes(candidate,previous[1],[ekf[0],ekf[1],ekf[3]],hull,[],event['sim'])
+            changes.append(dict(sim=event['sim'],assessable=decision['reference_eta_s'] is not None,
+                                mean_deviation_m=decision['mean_route_deviation_m'],
+                                corridor_switch=decision['switch_cost_s']>0.))
+        previous=event['revision'],candidate
+    return changes
+
+
 def summarize(run):
     run=Path(run).resolve()
     result=json.loads((run/'task1_result.json').read_text())
@@ -43,7 +68,7 @@ def summarize(run):
         execution=next((p for p in events if e['sim']<=p['sim']<=end['sim'] and p['event']=='execution_started'),None)
         if execution:
             actual=end['sim']-execution['sim']
-            predictions.append(dict(path_stamp=e['path_stamp'],predicted_s=e['eta_s'],actual_s=actual,
+            predictions.append(dict(path_stamp=e['path_stamp'],purpose=e.get('purpose','mission'),predicted_s=e['eta_s'],actual_s=actual,
                                     error_s=actual-e['eta_s']))
     route_path=run/'route_decisions.jsonl'
     route=rows(route_path) if route_path.exists() else []
@@ -51,6 +76,7 @@ def summarize(run):
     map_result=json.loads(maps.read_text()) if maps.exists() else {}
     evidence=['task1_result.json','task1_mission.jsonl','task1.jsonl']
     if route:evidence.append('route_decisions.jsonl')
+    switches=route_switches(run,events,motion)
     return dict(run=str(run),workspace_commit=json.loads((run/'provenance.json').read_text())['workspace_commit'],
                 passed=result['passed'],complete=complete is not None,
                 duration_s=complete-start if complete is not None else None,
@@ -59,7 +85,11 @@ def summarize(run):
                 transit_distance_m=float(np.linalg.norm(np.diff(transit_xy,axis=0),axis=1).sum()) if len(transit_xy)>1 else 0.,
                 transit_reverse_progress_m=backward,
                 accepted_transit_paths=len(ready),traffic_yields=sum(e['event']=='traffic_yield' for e in events),
+                geometric_transit_switches=(sum(e.get('corridor_switch',False) for e in switches)
+                    if switches is not None and all(e['assessable'] for e in switches) else None),
+                geometric_switch_details=switches,
                 route_wait_decisions=sum(e['event']=='route_wait_selected' for e in events),
+                observation_steps=sum(e['event']=='observation_point_reached' for e in events),
                 planning_failures=sum(e['event']=='plan_failed' for e in events),
                 stale_stops=sum(e['event']=='stop_requested' and 'stale' in e.get('reason','') for e in events),
                 collision_contacts=result['collision_contacts'],min_clearance_m=result['min_clearance_m'],
@@ -73,7 +103,7 @@ def summarize(run):
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('runs',type=Path,nargs='+')
     parser.add_argument('--output',type=Path,required=True);args=parser.parse_args()
-    data=dict(method='VRX truth for distance only. Reverse progress is cumulative negative displacement along the transit start-to-goal axis, not reverse thrust. Whole-task duration includes entry/exit circles and waits. ETA errors include only routes completed without cancellation.',
+    data=dict(method='VRX truth for distance only. Reverse progress is cumulative negative displacement along the transit start-to-goal axis, not reverse thrust. Whole-task duration includes entry/exit circles and waits. ETA errors include only routes completed without cancellation. Geometric switches compare successive accepted same-revision transit paths with compatible references, using FCU pose and a 0.75 m mean-deviation threshold; semantic changes are excluded. Missing or incompatible evidence makes that count unknown.',
               runs=[summarize(run) for run in args.runs])
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(data,indent=2)+'\n')

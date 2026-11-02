@@ -237,7 +237,9 @@ class Review:
         draw=ImageDraw.Draw(image);draw.rounded_rectangle((1304,714,1900,1060),radius=10,fill=PANEL)
         status=self.data.status(t);sem=self.data.semantic(t);i=prior_index(self.times,t);row=self.data.rows[i]
         text(draw,(1322,727),f"任务时间 {t-self.data.t0:6.1f} s    回放 2.5×",23)
-        text(draw,(1322,766),STAGES.get(status['stage'],status['stage'])+' / '+MOTIONS.get(status['motion'],status['motion']),23)
+        motion=MOTIONS.get(status['motion'],status['motion'])
+        if status.get('route_purpose')=='observation':motion+='（前移观察）'
+        text(draw,(1322,766),STAGES.get(status['stage'],status['stage'])+' / '+motion,23)
         text(draw,(1322,805),f"灯态版本 {sem['revision']}   已变灯 {sem.get('changes_applied',0)} / 1 次",21)
         _,active=self.plan(t,status)
         text(draw,(1322,841),'紫虚线：当前执行路径' if active else '灰虚线：上一条路径，当前未执行',21,PLAN if active else MUTED)

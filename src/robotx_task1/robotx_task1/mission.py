@@ -19,6 +19,7 @@ from tf2_ros import Buffer, TransformListener
 from robotx_task1_interfaces.msg import BuoyArray, MissionContext, MotionPermission, TrafficSafety, RouteAssessment
 from .core import CircleTracker, passage_events, wrap
 from .traffic import TrafficLease
+from .route_policy import observation_goal, bounded_observation_path
 
 
 def seconds(stamp):return stamp.sec+stamp.nanosec/1e9
@@ -45,6 +46,8 @@ class Mission(Node):
         self.yield_until=None
         self.route_wait_until=None;self.preferred_path_stamp=None
         self.route_assessment=None;self.route_stamp=-1.;self.route_wall=0.
+        self.corridor_path=None;self.full_plan_failures=0;self.observation_distance=3.
+        self.plan_is_observation=False;self.executing_observation=False;self.planned_target=None
         run=self.get_parameter('run_dir').value
         self.log=(Path(run)/'task1_mission.jsonl').open('w') if run else None
         self.obs=None;self.buoys=[];self.pose=None;self.odom=None;self.pose_stamp=-1.;self.pose_wall=0.
@@ -127,6 +130,7 @@ class Mission(Node):
         self.obs=msg;self.buoys=data;self.last_source_stamp=t;self.last_revision=msg.revision;self.obs_wall=time.monotonic()
         if changed and self.started and self.stage not in ('COMPLETE','ABORTED','WAIT_SURVEY'):
             self.preferred_path_stamp=None
+            self.corridor_path=None;self.full_plan_failures=0;self.observation_distance=3.
             self.interrupt('semantic revision changed')
             self.event('semantic_update_reported',source_stamp=t,
                        changes=[b for b in data if old_states.get(b['id'])!=b['state']],report_sink='local_only')
@@ -237,6 +241,7 @@ class Mission(Node):
     def advance(self):
         self.yield_until=None
         self.route_wait_until=None;self.preferred_path_stamp=None
+        self.corridor_path=None;self.full_plan_failures=0;self.observation_distance=3.
         if self.stage=='APPROACH_ENTRY':
             self.stage='CIRCLE_ENTRY';self.arc_index=1;self.circle=CircleTracker([self.entry['x'],self.entry['y']],-1,self.radius,self.circle_minimum);self.circle.update(self.pose)
         elif self.stage in ('CIRCLE_ENTRY','CIRCLE_EXIT'):
@@ -256,16 +261,46 @@ class Mission(Node):
         self.select_target();self.motion='STOPPING';self.still_since=None;self.reason='stage transition; wait for vessel stop'
         self.event('stage_target',target=self.target)
 
+    @staticmethod
+    def path_points(path):
+        return [[p.pose.position.x,p.pose.position.y,yaw(p.pose.orientation)] for p in path.poses]
+
+    def next_plan_target(self):
+        self.plan_is_observation=False
+        if self.stage=='TRANSIT' and self.bits==3 and self.full_plan_failures>=2 and self.corridor_path:
+            point=observation_goal(self.path_points(self.corridor_path),self.pose,self.target,self.observation_distance)
+            if point is not None:
+                self.plan_is_observation=True;return point
+        return self.target
+
+    def plan_failed(self,status,reason='no legal path'):
+        self.last_retry=self.now()
+        if self.stage=='TRANSIT':
+            if self.plan_is_observation:
+                self.observation_distance-=1.
+                if self.observation_distance<1.:self.full_plan_failures=0;self.observation_distance=3.
+            else:self.full_plan_failures+=1
+        self.motion='WAIT_CLEAR';self.reason=reason
+        self.event('plan_failed',status=status,purpose='observation' if self.plan_is_observation else 'mission',reason=reason)
+
+    def observation_completed(self):
+        self.executing_observation=False;self.full_plan_failures=0;self.observation_distance=3.
+        self.motion='STOPPING';self.still_since=None;self.yield_until=None;self.route_wait_until=None
+        self.reason='observation point reached; wait for fresh map and replan mission goal'
+        self.permission(False)
+        self.event('observation_point_reached',observation_target=self.planned_target,mission_target=self.target,ekf_pose=self.pose)
+
     def request_plan(self):
         if not self.plan_client.server_is_ready() or not self.follow_client.server_is_ready():return
         self.route_wait_until=None
+        self.planned_target=self.next_plan_target();target=self.planned_target
         self.publish_context();goal=ComputePathToPose.Goal();goal.planner_id='Task1';goal.use_start=False
         goal.goal=PoseStamped();goal.goal.header.frame_id='map';goal.goal.header.stamp=self.get_clock().now().to_msg()
-        goal.goal.pose.position.x=float(self.target[0]);goal.goal.pose.position.y=float(self.target[1])
-        goal.goal.pose.orientation.z=math.sin(self.target[2]/2);goal.goal.pose.orientation.w=math.cos(self.target[2]/2)
+        goal.goal.pose.position.x=float(target[0]);goal.goal.pose.position.y=float(target[1])
+        goal.goal.pose.orientation.z=math.sin(target[2]/2);goal.goal.pose.orientation.w=math.cos(target[2]/2)
         self.plan_future=self.plan_client.send_goal_async(goal);self.plan_handle=None;self.plan_result=None
         self.request_generation=self.generation;self.motion='PLANNING';self.last_retry=self.now()
-        self.event('planning',target=self.target)
+        self.event('planning',target=self.target,planned_target=target,purpose='observation' if self.plan_is_observation else 'mission')
 
     def poll_actions(self):
         if self.plan_future and self.plan_future.done():
@@ -279,12 +314,16 @@ class Mission(Node):
                     # Back off from completion, not request time. A ten-second
                     # failed search otherwise starts another in this same tick,
                     # repeatedly holding the costmap lock before it can update.
-                    self.last_retry=self.now()
-                    self.motion='WAIT_CLEAR';self.reason='no legal path';self.event('plan_failed',status=result.status)
+                    self.plan_failed(result.status)
+                elif (self.plan_is_observation and not bounded_observation_path(self.path_points(result.result.path),
+                        self.path_points(self.corridor_path),self.planned_target)):
+                    self.plan_failed(6,'observation route exceeds short same-corridor bound')
                 else:
+                    if not self.plan_is_observation:self.full_plan_failures=0;self.observation_distance=3.
                     self.last_path=result.result.path;self.candidate_pub.publish(self.last_path)
                     self.motion='CHECKING_TRAFFIC';self.reason='waiting for candidate path traffic assessment'
-                    self.event('path_candidate',poses=len(self.last_path.poses),target=self.target)
+                    self.event('path_candidate',poses=len(self.last_path.poses),target=self.target,
+                               planned_target=self.planned_target,purpose='observation' if self.plan_is_observation else 'mission')
         if self.send_future and self.send_future.done():
             self.follow_handle=self.send_future.result();self.send_future=None
             if not self.follow_handle.accepted:
@@ -299,7 +338,9 @@ class Mission(Node):
             self.follow_handle=None;self.result_future=None;self.cancel_requested=False
             self.event('controller_result',status=result.status,cancelled=was_cancel)
             if not was_cancel and self.motion=='EXECUTING':
-                if result.status==4:self.advance()
+                if result.status==4:
+                    if self.executing_observation:self.observation_completed()
+                    else:self.advance()
                 else:self.interrupt('controller failed; wait and replan')
 
     def tick(self):
@@ -329,13 +370,17 @@ class Mission(Node):
                             d=self.route_assessment
                             self.event('route_selected',source_stamp=self.route_stamp,path_stamp=seconds(d.path_stamp),
                                        eta_s=d.eta_s,reference_eta_s=d.reference_eta_s,switch_cost_s=d.switch_cost_s,
+                                       purpose='observation' if self.plan_is_observation else 'mission',
                                        preference_budget_expired=self.now()>=self.yield_until)
+                        self.executing_observation=self.plan_is_observation
+                        if self.stage=='TRANSIT' and not self.plan_is_observation:self.corridor_path=self.last_path
                         self.preferred_path_stamp=self.last_path.header.stamp
                         self.publish_context()
                         self.path_pub.publish(self.last_path)
                         goal=FollowPath.Goal();goal.path=self.last_path;goal.controller_id='FollowPath';goal.goal_checker_id='goal_checker'
                         self.send_future=self.follow_client.send_goal_async(goal);self.motion='STARTING'
-                        self.event('path_ready',poses=len(goal.path.poses),target=self.target)
+                        self.event('path_ready',poses=len(goal.path.poses),target=self.target,
+                                   planned_target=self.planned_target,purpose='observation' if self.plan_is_observation else 'mission')
                     elif not self.traffic.clear:
                         self.motion='WAIT_CLEAR';self.reason='candidate path blocked by traffic';self.last_retry=self.now()
                         self.event('path_blocked_traffic',source_stamp=self.traffic.stamp)
@@ -358,6 +403,7 @@ class Mission(Node):
         self.permission(allow)
         status=dict(sim=self.now(),stage=self.stage,motion=self.motion,revision=self.last_revision,
                     target=self.target,pose=self.pose,reason=self.reason,passed_colors=self.bits,
+                    route_purpose='observation' if self.executing_observation else 'mission',
                     circle_angle=self.circle.angle if self.circle else None)
         self.status_pub.publish(String(data=json.dumps(status)))
 
