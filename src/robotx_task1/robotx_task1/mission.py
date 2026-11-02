@@ -44,7 +44,7 @@ class Mission(Node):
         self.stop_yaw=self.get_parameter('stop_yaw_rate').value;self.stop_dwell=self.get_parameter('stop_dwell').value
         self.traffic_yield_wait=self.get_parameter('traffic_yield_wait').value
         self.yield_until=None
-        self.route_wait_until=None;self.preferred_path_stamp=None
+        self.route_wait_until=None;self.route_wait_started=None;self.preferred_path_stamp=None
         self.route_assessment=None;self.route_stamp=-1.;self.route_wall=0.
         self.corridor_path=None;self.full_plan_failures=0;self.observation_distance=3.
         self.plan_is_observation=False;self.executing_observation=False;self.planned_target=None
@@ -130,6 +130,7 @@ class Mission(Node):
         self.obs=msg;self.buoys=data;self.last_source_stamp=t;self.last_revision=msg.revision;self.obs_wall=time.monotonic()
         if changed and self.started and self.stage not in ('COMPLETE','ABORTED','WAIT_SURVEY'):
             self.preferred_path_stamp=None
+            self.route_wait_started=None
             self.corridor_path=None;self.full_plan_failures=0;self.observation_distance=3.
             self.interrupt('semantic revision changed')
             self.event('semantic_update_reported',source_stamp=t,
@@ -164,7 +165,7 @@ class Mission(Node):
 
     def on_route(self,msg):
         stamp=seconds(msg.header.stamp)
-        values=[getattr(msg,key) for key in ('eta_s','wait_s','reference_eta_s','reference_wait_s','switch_cost_s','conflict_eta_s')]
+        values=[getattr(msg,key) for key in ('eta_s','wait_s','reference_eta_s','reference_wait_s','switch_cost_s','conflict_eta_s','observation_budget_s')]
         if (msg.header.frame_id!='map' or stamp<=self.route_stamp or msg.revision!=self.last_revision
                 or not -.05<=self.now()-stamp<=1. or not all(math.isfinite(v) for v in values)):
             return
@@ -180,12 +181,18 @@ class Mission(Node):
                 or seconds(decision.path_stamp)!=seconds(self.last_path.header.stamp)
                 or seconds(decision.reference_stamp)!=expected):
             self.reason='waiting for source-timed arrival assessment';return False
-        if self.yield_until is None:self.yield_until=self.now()+self.traffic_yield_wait
-        prefer=decision.prefer_wait and self.now()<self.yield_until
+        elapsed=0. if self.route_wait_started is None else self.now()-self.route_wait_started
+        observe_remaining=max(0.,decision.observation_budget_s-elapsed)
+        budget_open=(self.yield_until is None or self.now()<self.yield_until) and elapsed<self.traffic_yield_wait
+        prefer=decision.prefer_wait and budget_open
+        observe=observe_remaining>0. and budget_open
         future_blocked=decision.wait_s!=0.
-        if prefer or future_blocked:
+        if prefer or observe or future_blocked:
+            if self.route_wait_started is None:self.route_wait_started=self.now()
+            if self.yield_until is None:self.yield_until=self.route_wait_started+self.traffic_yield_wait
             predicted=decision.reference_wait_s if prefer else decision.wait_s
             wait=min(15.,max(5.,predicted))
+            if observe:wait=min(15.,observe_remaining)
             if prefer:wait=min(wait,max(0.,self.yield_until-self.now()))
             self.route_wait_until=self.now()+wait
             self.motion='WAIT_ROUTE';self.reason=decision.reason
@@ -193,7 +200,9 @@ class Mission(Node):
                        path_stamp=seconds(decision.path_stamp),reference_stamp=expected,
                        eta_s=decision.eta_s,wait_s=decision.wait_s,
                        reference_eta_s=decision.reference_eta_s,reference_wait_s=decision.reference_wait_s,
-                       switch_cost_s=decision.switch_cost_s,prefer_reference=prefer,recheck_after_s=wait)
+                       switch_cost_s=decision.switch_cost_s,prefer_reference=prefer,recheck_after_s=wait,
+                       observation_budget_s=decision.observation_budget_s,observation_only=observe,
+                       wait_elapsed_s=elapsed)
             return False
         return True
 
@@ -240,7 +249,7 @@ class Mission(Node):
 
     def advance(self):
         self.yield_until=None
-        self.route_wait_until=None;self.preferred_path_stamp=None
+        self.route_wait_until=None;self.route_wait_started=None;self.preferred_path_stamp=None
         self.corridor_path=None;self.full_plan_failures=0;self.observation_distance=3.
         if self.stage=='APPROACH_ENTRY':
             self.stage='CIRCLE_ENTRY';self.arc_index=1;self.circle=CircleTracker([self.entry['x'],self.entry['y']],-1,self.radius,self.circle_minimum);self.circle.update(self.pose)
@@ -286,6 +295,7 @@ class Mission(Node):
     def observation_completed(self):
         self.executing_observation=False;self.full_plan_failures=0;self.observation_distance=3.
         self.motion='STOPPING';self.still_since=None;self.yield_until=None;self.route_wait_until=None
+        self.route_wait_started=None
         self.reason='observation point reached; wait for fresh map and replan mission goal'
         self.permission(False)
         self.event('observation_point_reached',observation_target=self.planned_target,mission_target=self.target,ekf_pose=self.pose)
@@ -355,7 +365,8 @@ class Mission(Node):
             else:
                 if not self.traffic.clear and self.motion in ('EXECUTING','STARTING'):
                     self.interrupt('LiDAR traffic: '+self.traffic.reason)
-                    self.yield_until=self.now()+self.traffic_yield_wait
+                    if self.route_wait_started is None:self.route_wait_started=self.now()
+                    self.yield_until=self.route_wait_started+self.traffic_yield_wait
                     self.event('traffic_yield',source_stamp=self.traffic.stamp,
                                track_id=self.traffic_message.track_id,
                                conflict_after_s=self.traffic_message.conflict_after_s)
@@ -371,7 +382,8 @@ class Mission(Node):
                             self.event('route_selected',source_stamp=self.route_stamp,path_stamp=seconds(d.path_stamp),
                                        eta_s=d.eta_s,reference_eta_s=d.reference_eta_s,switch_cost_s=d.switch_cost_s,
                                        purpose='observation' if self.plan_is_observation else 'mission',
-                                       preference_budget_expired=self.now()>=self.yield_until)
+                                       preference_budget_expired=self.yield_until is not None and self.now()>=self.yield_until)
+                        self.route_wait_started=None;self.yield_until=None
                         self.executing_observation=self.plan_is_observation
                         if self.stage=='TRANSIT' and not self.plan_is_observation:self.corridor_path=self.last_path
                         self.preferred_path_stamp=self.last_path.header.stamp

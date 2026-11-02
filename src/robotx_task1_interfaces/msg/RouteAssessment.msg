@@ -10,5 +10,8 @@ float64 reference_eta_s
 float64 reference_wait_s
 float64 switch_cost_s
 float64 conflict_eta_s
+# Affordable total observation time while the reference departure is unknown.
+# Zero disables this option. This does not certify that the reference will clear.
+float64 observation_budget_s
 bool prefer_wait
 string reason

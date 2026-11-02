@@ -167,7 +167,7 @@ class TrafficGuard(Node):
         msg.path_stamp=copy.deepcopy(self.path_stamp)
         if reference is not None:msg.reference_stamp=copy.deepcopy(self.reference_stamp)
         msg.revision=self.marker_revision
-        for key in ('eta_s','wait_s','reference_eta_s','reference_wait_s','switch_cost_s','conflict_eta_s'):
+        for key in ('eta_s','wait_s','reference_eta_s','reference_wait_s','switch_cost_s','conflict_eta_s','observation_budget_s'):
             setattr(msg,key,float(decision[key]) if decision[key] is not None else -1.)
         msg.prefer_wait=decision['prefer_wait'];msg.reason=decision['reason']
         self.route_pub.publish(msg);self.last_route_stamp=stamp

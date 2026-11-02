@@ -204,7 +204,19 @@ def assess_routes(candidate, reference, pose, footprint, tracks, stamp, config=R
     new_score=score(current)+switch_cost
     old_score=score(old)+config.replan_time if old else math.inf
     prefer=old is not None and math.isfinite(old_score) and old_score+config.improvement<new_score
+    # An observed stop is not evidence of a permanent closure. Price a bounded
+    # period of gathering more observations before paying for a costly switch.
+    # This is an affordable observation budget, NOT a predicted departure time:
+    # the old route remains blocked and must be freshly planned before use.
+    observation_budget=0.
+    if old is not None and old['wait_s'] is None and current['wait_s']==0.:
+        affordable=min(config.max_wait,max(0.,new_score-old['eta_s']-config.replan_time-config.improvement))
+        stationary=dict(poses=np.asarray([pose]),eta=np.zeros(1),earliest=np.zeros(1),
+                        latest=np.array([affordable]))
+        if affordable>=config.wait_step and route_conflict(stationary,footprint,tracks,stamp,0.,config,possible_stop=True) is None:
+            observation_budget=affordable
     reason=('wait for previous corridor to reduce arrival time and switching cost' if prefer else
+            'observe blocked reference for a bounded budget; departure time is unknown' if observation_budget else
             'candidate has no predicted clear departure within wait horizon' if current['wait_s'] is None else
             'wait for candidate arrival conflict to clear' if current['wait_s']>0 else
             'candidate arrival estimate is preferable')
@@ -214,6 +226,7 @@ def assess_routes(candidate, reference, pose, footprint, tracks, stamp, config=R
                 reference_score_s=old_score if math.isfinite(old_score) else None,
                 conflict_eta_s=current['conflict_eta_s'],stop_conflict_eta_s=current['stop_conflict_eta_s'],
                 reference_stop_conflict_eta_s=old['stop_conflict_eta_s'] if old else None,
+                observation_budget_s=observation_budget,
                 mean_route_deviation_m=deviation,prefer_wait=prefer,reason=reason,
                 assessed_travel_horizon_s=config.horizon)
     return result,current['profile']

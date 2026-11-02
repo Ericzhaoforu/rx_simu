@@ -55,12 +55,26 @@ class RoutePolicyTests(unittest.TestCase):
         self.assertGreater(result['switch_cost_s'],10.)
         self.assertLess(result['reference_score_s'],result['candidate_score_s'])
 
-    def test_stationary_blockage_selects_available_detour_instead_of_endless_wait(self):
+    def test_stationary_blockage_offers_bounded_observation_without_claiming_clearance(self):
         t=Track(1,10.,np.array([[8.,-1.],[10.,1.]]),np.zeros(2),True)
         result,_=assess_routes(self.detour,self.direct,[0,0,0],self.hull,[t],10.)
         self.assertIsNone(result['reference_wait_s'])
         self.assertFalse(result['prefer_wait'])
         self.assertEqual(result['wait_s'],0.)
+        self.assertGreater(result['observation_budget_s'],0.)
+        self.assertLessEqual(result['observation_budget_s'],60.)
+
+    def test_observation_budget_is_rejected_when_stationary_vessel_would_be_hit(self):
+        blockage=Track(1,10.,np.array([[8.,-1.],[10.,1.]]),np.zeros(2),True)
+        approaching=Track(2,10.,np.array([[-41.,-1.],[-39.,1.]]),np.array([1.,0.]),True)
+        result,_=assess_routes(self.detour,self.direct,[0,0,0],self.hull,[blockage,approaching],10.)
+        self.assertEqual(result['wait_s'],0.)
+        self.assertEqual(result['observation_budget_s'],0.)
+
+    def test_insufficient_savings_cannot_justify_speculative_wait(self):
+        blockage=Track(1,10.,np.array([[8.,-1.],[10.,1.]]),np.zeros(2),True)
+        result,_=assess_routes(self.detour,self.direct,[0,0,0],self.hull,[blockage],10.,RouteConfig(improvement=1000.))
+        self.assertEqual(result['observation_budget_s'],0.)
 
     def test_lost_track_does_not_disappear_from_arrival_evaluation(self):
         t=Track(1,10.,np.array([[8.,-1.],[10.,1.]]),np.array([0.,.25]),True)

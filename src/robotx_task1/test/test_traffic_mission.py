@@ -15,7 +15,7 @@ class TrafficMissionTests(unittest.TestCase):
              follow_handle=None,send_future=None,plan_future=None,plan_result=None,result_future=None,
              reason='',last_revision=1,bits=0,pose=[0,0,0],circle=None,target=[20,0,0],
              generation=1,request_generation=1,yield_until=None,traffic_yield_wait=60.,
-             route_wait_until=None,preferred_path_stamp=None,route_stamp=10.,route_wall=time.monotonic(),
+             route_wait_until=None,route_wait_started=None,preferred_path_stamp=None,route_stamp=10.,route_wall=time.monotonic(),
              corridor_path=None,full_plan_failures=0,observation_distance=3.,
              plan_is_observation=False,executing_observation=False,planned_target=[20,0,0],
              traffic=TrafficLease(),last_path=Path(),events=[],permissions=[],plans=0,follows=0)
@@ -36,7 +36,7 @@ class TrafficMissionTests(unittest.TestCase):
         m.traffic_message=NS(track_id=1,conflict_after_s=3.)
         m.route_assessment=NS(path_stamp=m.last_path.header.stamp,reference_stamp=Path().header.stamp,
              revision=1,eta_s=60.,wait_s=0.,reference_eta_s=-1.,reference_wait_s=-1.,
-             switch_cost_s=0.,prefer_wait=False,reason='test')
+             switch_cost_s=0.,observation_budget_s=0.,prefer_wait=False,reason='test')
         m.candidate_route_ready=lambda:Mission.candidate_route_ready(m)
         m.plan_failed=lambda status,reason='no legal path':Mission.plan_failed(m,status,reason)
         m.path_points=Mission.path_points
@@ -124,6 +124,28 @@ class TrafficMissionTests(unittest.TestCase):
         m=self.mission('CHECKING_TRAFFIC',True);m.yield_until=9.;m.route_assessment.prefer_wait=True
         self.assertTrue(Mission.candidate_route_ready(m))
         self.assertEqual(m.follows,0)
+
+    def test_wait_budget_does_not_start_during_clear_travel(self):
+        m=self.mission('CHECKING_TRAFFIC',True)
+        self.assertTrue(Mission.candidate_route_ready(m))
+        self.assertIsNone(m.yield_until);self.assertIsNone(m.route_wait_started)
+
+    def test_unknown_departure_only_spends_finite_observation_budget(self):
+        m=self.mission('CHECKING_TRAFFIC',True);m.route_assessment.observation_budget_s=30.
+        self.assertFalse(Mission.candidate_route_ready(m))
+        self.assertEqual(m.route_wait_started,10.);self.assertEqual(m.route_wait_until,25.)
+        self.assertTrue(m.events[-1][1]['observation_only'])
+        m.motion='CHECKING_TRAFFIC';m.stamp=35.;m.route_stamp=35.
+        self.assertFalse(Mission.candidate_route_ready(m));self.assertEqual(m.route_wait_until,40.)
+        m.motion='CHECKING_TRAFFIC';m.stamp=40.;m.route_stamp=40.
+        self.assertTrue(Mission.candidate_route_ready(m));self.assertEqual(m.follows,0)
+
+    def test_sensor_interrupt_cannot_renew_observation_budget(self):
+        m=self.mission('CHECKING_TRAFFIC',True);m.route_assessment.observation_budget_s=60.
+        m.route_wait_started=-55.;m.cancel_requested=False
+        Mission.interrupt(m,'observation, EKF or LiDAR traffic assessment stale')
+        self.assertEqual(m.route_wait_started,-55.)
+        self.assertTrue(Mission.candidate_route_ready(m));self.assertEqual(m.follows,0)
 
     def test_stale_arrival_assessment_cannot_start_candidate(self):
         m=self.mission('CHECKING_TRAFFIC',True);m.route_stamp=8.
