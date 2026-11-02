@@ -256,7 +256,7 @@ class Review:
             index=prior_index(self.traffic_times,t)
             assessment=self.traffic[index] if index>=0 else None
             if assessment and t-assessment['source_stamp']<=.4:
-                label='LiDAR 交通预测：通道可行' if assessment['clear'] else 'LiDAR 交通预测：停车让行'
+                label='LiDAR 20 s 近场：未见冲突' if assessment['clear'] else 'LiDAR 20 s 近场：停车让行'
                 text(draw,(1322,998),label,21,MUTED if assessment['clear'] else TRAFFIC)
             else:text(draw,(1322,998),'LiDAR 交通预测：等待新观测',21,TRAFFIC)
         draw.rounded_rectangle((20,910,1284,1060),radius=10,fill=PANEL)
@@ -271,7 +271,7 @@ class Review:
                 and route['revision']==status['revision']):
             reference=f"{route['reference_eta_s']:.0f} s" if route['reference_eta_s'] is not None else '无有效参考'
             wait=f"{route['wait_s']:.0f} s" if route['wait_s'] is not None else '60 s 内无清空预测'
-            text(draw,(40,1004),f"预测行驶 ETA {route['eta_s']:.0f} s   原路 {reference}   候选需等 {wait}   切换代价 {route['switch_cost_s']:.0f} s",19,MUTED)
+            text(draw,(40,1004),f"候选行驶 ETA {route['eta_s']:.0f} s   原路 {reference}   候选等待 {wait}   切换代价 {route['switch_cost_s']:.0f} s",19,MUTED)
         else:
             text(draw,(40,1004),'灯标文字保持语义颜色；“亮／暗”表示闪烁相位。灯态来自已知观测，非视觉识别。',19,MUTED)
         return image,source_t

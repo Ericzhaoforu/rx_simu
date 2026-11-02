@@ -11,9 +11,36 @@ from robotx_task1_interfaces.msg import Buoy, BuoyArray, MissionContext, RouteAs
 from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped
 from rclpy.parameter import Parameter
+from rclpy.time import Time
 
 
 class RosStartup(unittest.TestCase):
+    def test_latest_context_is_valid_with_older_but_fresh_sensor_source(self):
+        rclpy.init();guard=None
+        try:
+            guard=TrafficGuard(parameter_overrides=[Parameter('footprint',value=json.dumps([[-2.,-1.],[2.,-1.],[2.,1.],[-2.,1.]]))])
+            guard.marker_revision=1;now=guard.get_clock().now().nanoseconds
+            reference=Path();reference.header.frame_id='map';reference.header.stamp=Time(nanoseconds=now-5_000_000_000).to_msg()
+            for x in (0.,20.):
+                p=PoseStamped();p.pose.position.x=x;p.pose.orientation.w=1.;reference.poses.append(p)
+            guard.on_reference(reference)
+            candidate=copy.deepcopy(reference);candidate.header.stamp=Time(nanoseconds=now-100_000_000).to_msg()
+            guard.on_path(candidate)
+            context=MissionContext();context.header.frame_id='map';context.header.stamp=Time(nanoseconds=now).to_msg()
+            context.revision=1;context.enforce_passage=True;context.preferred_path_stamp=reference.header.stamp
+            guard.on_context(context)
+            sensor=copy.deepcopy(candidate.header);sensor.stamp=Time(nanoseconds=now-250_000_000).to_msg()
+            received=[];guard.route_pub=type('Publisher',(),dict(publish=lambda _,msg:received.append(msg)))()
+            guard.assess_route(sensor,[],[0.,0.,0.])
+            self.assertEqual(received[-1].reference_stamp,reference.header.stamp)
+            self.assertEqual(received[-1].header.stamp,sensor.stamp)
+            guard.mission_context.header.stamp=Time(nanoseconds=now-2_000_000_000).to_msg()
+            guard.last_route_stamp=-float('inf');guard.assess_route(sensor,[],[0.,0.,0.])
+            self.assertEqual(received[-1].reference_stamp,Time().to_msg())
+        finally:
+            if guard:guard.destroy_node()
+            rclpy.try_shutdown()
+
     def test_guard_publishes_source_timed_route_assessment(self):
         rclpy.init();guard=None
         try:

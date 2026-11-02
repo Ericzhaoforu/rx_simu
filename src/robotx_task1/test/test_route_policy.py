@@ -2,7 +2,7 @@
 import math
 import unittest
 import numpy as np
-from robotx_task1.route_policy import RouteConfig, arrival_profile, assess_routes, route_metrics, remaining_path
+from robotx_task1.route_policy import RouteConfig, arrival_profile, assess_routes, route_metrics, remaining_path, route_conflict
 from robotx_task1.traffic import Track
 
 
@@ -37,6 +37,14 @@ class RoutePolicyTests(unittest.TestCase):
         t=Track(1,10.,np.array([[8.,9.],[10.,12.]]),np.array([0.,.25]),True)
         result=route_metrics(self.direct,[0,0,0],self.hull,[t],10.,self.config)
         self.assertEqual(result['wait_s'],0.)
+
+    def test_wait_checks_occupancy_before_departure_not_just_after_it(self):
+        t=Track(1,10.,np.array([[-1.,-41.],[1.,-39.]]),np.array([0.,1.]),True)
+        profile=arrival_profile(self.direct,[0,0,0])
+        # Moving away immediately can be clear; sitting here for 60 seconds
+        # would let the target cross the hull after about forty seconds.
+        self.assertIsNone(route_conflict(profile,self.hull,[t],10.,0.,self.config))
+        self.assertEqual(route_conflict(profile,self.hull,[t],10.,60.,self.config),0.)
 
     def test_waiting_for_crossing_beats_long_detour_with_switching_cost(self):
         t=Track(1,10.,np.array([[8.,-5.],[10.,-2.]]),np.array([0.,.25]),True)

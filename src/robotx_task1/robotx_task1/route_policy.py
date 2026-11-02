@@ -112,6 +112,9 @@ def route_conflict(profile, footprint, tracks, stamp, delay, config, possible_st
     eta=profile['eta'][selected]
     boxes=hull_bounds(profile['poses'][selected],footprint)
     low=profile['earliest'][selected]+delay;high=profile['latest'][selected]+delay
+    # The vessel occupies its departure pose for the entire proposed wait,
+    # not only at departure. A target crossing it earlier forbids that wait.
+    if delay>0:low[0]=0.
     earliest=None
     for track in tracks:
         if not track.moving:continue

@@ -12,6 +12,8 @@ RUNTIME_SOURCES=[
     'scripts/sim_session.py','src/usv_sim/usv_sim/cloud_filter.py','src/usv_sim/usv_sim/clearing_cloud.py',
     'src/robotx_task1/robotx_task1/mission.py','src/robotx_task1/robotx_task1/core.py',
     'src/robotx_task1/robotx_task1/traffic.py','src/robotx_task1/robotx_task1/traffic_guard.py',
+    'src/robotx_task1/robotx_task1/route_policy.py','src/robotx_task1_interfaces/msg/RouteAssessment.msg',
+    'src/robotx_task1_interfaces/msg/MissionContext.msg',
     'src/robotx_task1_interfaces/msg/TrafficSafety.msg',
     'src/robotx_task1/robotx_task1/observer.py','src/usv_nav2/usv_nav2/rover_bridge.py',
     'src/usv_nav2/launch/navigation.launch.py','src/usv_nav2/usv_nav2/launch_config.py',
@@ -20,6 +22,7 @@ RUNTIME_SOURCES=[
     'src/robotx_task1_nav/include/robotx_task1_nav/rules.hpp',
     'src/robotx_task1_nav/include/robotx_task1_nav/dubins_estimate.hpp',
     'src/robotx_task1_nav/include/robotx_task1_nav/hull_grid.hpp',
+    'src/robotx_task1_nav/include/robotx_task1_nav/route_preference.hpp',
     'src/robotx_task1_nav/include/robotx_task1_nav/traffic_layer.hpp','src/robotx_task1_nav/plugins.xml',
     'tools/task1_gazebo/Task1Scene.cc','models/robotx_2026_robobuoy/model.sdf',
     'config/task1/harbor.json','models/task1_workboat/model.sdf']

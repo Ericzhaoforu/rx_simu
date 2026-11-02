@@ -159,7 +159,8 @@ class TrafficGuard(Node):
         start=time.monotonic()
         context=self.mission_context
         reference=(self.reference if context is not None and context.revision==self.marker_revision
-                   and context.enforce_passage and -.1<=stamp-seconds(context.header.stamp)<=1.
+                   and context.enforce_passage
+                   and -.1<=self.get_clock().now().nanoseconds/1e9-seconds(context.header.stamp)<=1.
                    and seconds(context.preferred_path_stamp)==seconds(self.reference_stamp) else None)
         decision,profile=assess_routes(self.path,reference,pose,self.footprint,tracks,stamp,self.route_config)
         msg=RouteAssessment();msg.header=copy.deepcopy(header);msg.header.frame_id='map'
