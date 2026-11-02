@@ -276,6 +276,10 @@ class Mission(Node):
             result=self.plan_result.result();self.plan_result=None;self.plan_handle=None
             if self.request_generation==self.generation and self.motion=='PLANNING':
                 if result.status!=4 or not result.result.path.poses:
+                    # Back off from completion, not request time. A ten-second
+                    # failed search otherwise starts another in this same tick,
+                    # repeatedly holding the costmap lock before it can update.
+                    self.last_retry=self.now()
                     self.motion='WAIT_CLEAR';self.reason='no legal path';self.event('plan_failed',status=result.status)
                 else:
                     self.last_path=result.result.path;self.candidate_pub.publish(self.last_path)

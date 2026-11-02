@@ -11,7 +11,7 @@ class TrafficMissionTests(unittest.TestCase):
     def mission(self,motion='STOPPING',clear=False):
         m=NS(stage='TRANSIT',motion=motion,started=True,started_at=0.,stamp=10.,last_retry=0.,
              still_since=8.,stop_dwell=1.5,stop_speed=.04,stop_yaw=.04,
-             follow_handle=None,send_future=None,plan_future=None,plan_result=None,
+             follow_handle=None,send_future=None,plan_future=None,plan_result=None,result_future=None,
              reason='',last_revision=1,bits=0,pose=[0,0,0],circle=None,target=[20,0,0],
              generation=1,request_generation=1,yield_until=None,traffic_yield_wait=60.,
              route_wait_until=None,preferred_path_stamp=None,route_stamp=10.,route_wall=time.monotonic(),
@@ -136,6 +136,15 @@ class TrafficMissionTests(unittest.TestCase):
         self.assertEqual(m.motion,'STOPPING')
         self.assertFalse(m.permissions[-1])
         self.assertIn(('stale_inputs',dict(ages_s=dict(traffic_source=.5))),m.events)
+
+    def test_failed_search_backoff_starts_when_search_finishes(self):
+        m=self.mission('PLANNING',True)
+        m.plan_result=NS(done=lambda:True,result=lambda:NS(status=6,result=NS(path=Path())))
+        Mission.poll_actions(m);self.assertEqual(m.motion,'WAIT_CLEAR')
+        self.assertEqual(m.last_retry,10.)
+        Mission.tick(m);self.assertEqual(m.plans,0);self.assertFalse(m.permissions[-1])
+        m.stamp=12.;m.traffic.update(12.,8.,True,'clear',12.,time.monotonic())
+        Mission.tick(m);self.assertEqual(m.plans,1);self.assertFalse(m.permissions[-1])
 
 
 if __name__=='__main__':unittest.main()
