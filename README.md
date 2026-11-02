@@ -83,13 +83,13 @@ git log --oneline -5
 git diff
 ```
 
-GitHub：[Ericzhaoforu/usv_nav](https://github.com/Ericzhaoforu/usv_nav)（私有仓库），本地远端为 `origin`，主分支为 `main`。首次导入保留附件字节内容和包内 MIT 许可证，后续修改通过提交追踪。
+GitHub：[Ericzhaoforu/rx_simu](https://github.com/Ericzhaoforu/rx_simu)（公开仓库），本地远端为 `origin`，主分支为 `main`。首次导入保留附件字节内容和包内 MIT 许可证，后续修改通过提交追踪。
 
-有仓库访问权限的账号可克隆：
+克隆仓库：
 
 ```bash
-git clone https://github.com/Ericzhaoforu/usv_nav.git
-cd usv_nav
+git clone https://github.com/Ericzhaoforu/rx_simu.git
+cd rx_simu
 ```
 
 GitHub 克隆只包含受版本管理的文件；`runs/` 内的视频、rosbag 和历史实验归档仍保存在服务器，报告中的对应本地链接不会随克隆自动下载。
