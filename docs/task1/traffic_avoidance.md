@@ -99,3 +99,5 @@ python3 scripts/run_task1_suite.py --course harbor --fault traffic_exit --no-vid
 这些异常测试必须保持飞控和物理仿真运行；其通过只表示按预期停车，与完整任务通过分开记录。
 
 `replay_task1_traffic.py` 可以只读回放既有传感器记录，使用记录的 FCU TF、静态地图和已知浮标观测。它不启动控制，也不能代替闭环验收。
+
+最终当前行为的横穿、封路、感知进程故障和 ETA 实测见 [等待与路线选择实验](experiments/20261102_route_decisions.md)；旧版碰撞修复三次成功不计作本版重复回归。
