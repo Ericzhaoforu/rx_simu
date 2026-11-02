@@ -22,6 +22,7 @@ class TrafficMissionTests(unittest.TestCase):
         m.last_path.header.stamp.sec=8
         m.odom=NS(twist=NS(twist=NS(linear=NS(x=0.,y=0.),angular=NS(z=0.))))
         m.now=lambda:m.stamp;m.publish_context=lambda:None;m.poll_actions=lambda:None
+        m.publish_speed_limit=lambda:100.
         m.inputs_valid=lambda:True;m.permission=lambda value:m.permissions.append(value)
         m.input_ages=lambda:dict(traffic_source=m.now()-m.traffic.stamp)
         m.status_pub=NS(publish=lambda msg:None);m.path_pub=NS(publish=lambda msg:None)

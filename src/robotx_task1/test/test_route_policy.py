@@ -3,7 +3,7 @@ import math
 import unittest
 import numpy as np
 from robotx_task1.route_policy import RouteConfig, arrival_profile, assess_routes, route_metrics, remaining_path, route_conflict
-from robotx_task1.route_policy import observation_goal,bounded_observation_path
+from robotx_task1.route_policy import observation_goal,bounded_observation_path,terminal_scale
 from robotx_task1.traffic import Track
 
 
@@ -15,7 +15,7 @@ class RoutePolicyTests(unittest.TestCase):
         self.config=RouteConfig()
 
     def test_arrivals_include_acceleration_and_braking_and_are_monotonic(self):
-        p=arrival_profile(self.direct,[0,0,0])
+        p=arrival_profile(self.direct,[0,0,0],RouteConfig(terminal_ratio=1.))
         self.assertGreater(p['eta'][-1],20/.3)
         self.assertLess(p['eta'][-1],20/.3+6.)
         self.assertTrue(np.all(np.diff(p['eta'])>0))
@@ -24,8 +24,25 @@ class RoutePolicyTests(unittest.TestCase):
         self.assertLessEqual(np.linalg.norm(np.diff(p['poses'][:,:2],axis=0),axis=1).max(),.400001)
 
     def test_heading_only_motion_has_finite_nonzero_time(self):
-        p=arrival_profile(np.array([[0.,0.,0.],[0.,0.,math.pi/2]]),[0,0,0])
+        p=arrival_profile(np.array([[0.,0.,0.],[0.,0.,math.pi/2]]),[0,0,0],RouteConfig(terminal_ratio=1.))
         self.assertAlmostEqual(p['eta'][-1],math.pi/2/.4)
+
+    def test_terminal_speed_policy_is_shared_with_arrival_model(self):
+        self.assertEqual(float(terminal_scale(4.)),.5)
+        self.assertEqual(float(terminal_scale(4.01)),1.)
+        fast=arrival_profile(self.direct,[0,0,0],RouteConfig(terminal_ratio=1.))
+        slow=arrival_profile(self.direct,[0,0,0])
+        self.assertGreater(slow['eta'][-1]-fast['eta'][-1],10.)
+        rotation=arrival_profile(np.array([[0.,0.,0.],[0.,0.,math.pi/2]]),[0,0,0])
+        self.assertAlmostEqual(rotation['eta'][-1],math.pi/2/.2)
+
+    def test_short_terminal_leg_respects_triangular_and_capped_speed_profiles(self):
+        a,d,v=.2,.08,.15
+        for distance in [.05,.4]:
+            p=arrival_profile(np.array([[0.,0.,0.],[distance,0.,0.]]),[0,0,0])
+            peak=math.sqrt(2*distance/(1/a+1/d))
+            expected=math.sqrt(2*distance*(1/a+1/d)) if peak<=v else distance/v+.5*v*(1/a+1/d)
+            self.assertAlmostEqual(p['eta'][-1],expected)
 
     def test_crossing_has_a_finite_wait_that_changes_arrival_conflict(self):
         t=Track(1,10.,np.array([[8.,-5.],[10.,-2.]]),np.array([0.,.25]),True)
@@ -104,7 +121,7 @@ class RoutePolicyTests(unittest.TestCase):
         self.assertLess(len(p),5)
 
     def test_invalid_configuration_is_rejected(self):
-        for kw in ({'speed':0.},{'horizon':float('nan')},{'max_wait':-1.}):
+        for kw in ({'speed':0.},{'horizon':float('nan')},{'max_wait':-1.},{'terminal_ratio':1.1}):
             with self.assertRaises(ValueError):RouteConfig(**kw)
 
     def test_observation_proposal_stays_forward_on_compatible_reference(self):

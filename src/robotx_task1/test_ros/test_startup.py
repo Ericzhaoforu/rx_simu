@@ -15,6 +15,20 @@ from rclpy.time import Time
 
 
 class RosStartup(unittest.TestCase):
+    def test_terminal_speed_limit_reduces_and_restores_dwb_caps(self):
+        rclpy.init();mission=Mission()
+        try:
+            messages=[];mission.speed_limit_pub=type('Publisher',(),dict(publish=lambda _,msg:messages.append(msg)))()
+            mission.stage='TRANSIT';mission.pose=[0.,0.,0.];mission.planned_target=[3.,0.,0.]
+            self.assertEqual(mission.publish_speed_limit(),50.)
+            self.assertTrue(messages[-1].percentage)
+            mission.planned_target=[5.,0.,0.]
+            self.assertEqual(mission.publish_speed_limit(),100.)
+            mission.stage='CIRCLE_EXIT';mission.planned_target=[1.,0.,0.]
+            self.assertEqual(mission.publish_speed_limit(),100.)
+            self.assertFalse(mission.started)
+        finally:mission.destroy_node();rclpy.try_shutdown()
+
     def test_latest_context_is_valid_with_older_but_fresh_sensor_source(self):
         rclpy.init();guard=None
         try:

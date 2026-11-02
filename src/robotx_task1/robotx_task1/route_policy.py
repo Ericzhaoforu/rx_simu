@@ -17,6 +17,8 @@ class RouteConfig:
     yaw_rate: float = .4
     acceleration: float = .2
     deceleration: float = .08
+    terminal_distance: float = 4.
+    terminal_ratio: float = .5
     horizon: float = 90.
     max_wait: float = 60.
     wait_step: float = 5.
@@ -29,9 +31,10 @@ class RouteConfig:
     stop_risk_cost: float = 30.
 
     def __post_init__(self):
-        for name in ('speed','yaw_rate','acceleration','deceleration','horizon','wait_step'):
+        for name in ('speed','yaw_rate','acceleration','deceleration','horizon','wait_step','terminal_distance','terminal_ratio'):
             if not math.isfinite(getattr(self,name)) or getattr(self,name)<=0:
                 raise ValueError('Invalid route '+name)
+        if self.terminal_ratio>1.:raise ValueError('Terminal speed cannot exceed cruise speed')
         for name in ('max_wait','timing_fraction','margin','switch_base','switch_distance_weight',
                      'improvement','replan_time','stop_risk_cost'):
             if not math.isfinite(getattr(self,name)) or getattr(self,name)<0:
@@ -40,6 +43,11 @@ class RouteConfig:
 
 def wrap(angle):
     return np.arctan2(np.sin(angle),np.cos(angle))
+
+
+def terminal_scale(distance, config=RouteConfig()):
+    """Same final-approach speed policy for DWB and the arrival predictor."""
+    return np.where(np.asarray(distance)<=config.terminal_distance,config.terminal_ratio,1.)
 
 
 def remaining_path(path, pose, spacing=.4):
@@ -109,18 +117,25 @@ def arrival_profile(path, pose, config=RouteConfig()):
         return dict(poses=points,eta=np.zeros(1),earliest=np.zeros(1),latest=np.ones(1),length=0.)
     ds=np.linalg.norm(np.diff(points[:,:2],axis=0),axis=1)
     angle=np.abs(wrap(np.diff(points[:,2])))
-    edge_limit=np.minimum(config.speed,config.yaw_rate*ds/np.maximum(angle,1e-8))
-    speed=np.full(len(points),config.speed)
+    scale=terminal_scale(np.linalg.norm(points[:,:2]-points[-1,:2],axis=1),config)
+    edge_scale=np.minimum(scale[:-1],scale[1:])
+    edge_limit=edge_scale*np.minimum(config.speed,config.yaw_rate*ds/np.maximum(angle,1e-8))
+    speed=config.speed*scale
     speed[:-1]=np.minimum(speed[:-1],edge_limit);speed[1:]=np.minimum(speed[1:],edge_limit)
     speed[0]=speed[-1]=0.
     for i in range(1,len(speed)):
         speed[i]=min(speed[i],math.sqrt(speed[i-1]**2+2*config.acceleration*ds[i-1]))
     for i in range(len(speed)-2,-1,-1):
         speed[i]=min(speed[i],math.sqrt(speed[i+1]**2+2*config.deceleration*ds[i]))
-    dt=np.maximum(2*ds/np.maximum(speed[:-1]+speed[1:],1e-6),angle/config.yaw_rate)
+    dt=np.maximum(2*ds/np.maximum(speed[:-1]+speed[1:],1e-6),angle/(config.yaw_rate*edge_scale))
     # A very short two-pose route still accelerates and brakes between endpoints.
     rest=(speed[:-1]+speed[1:]<1e-6)&(ds>1e-6)
-    dt[rest]=np.maximum(np.sqrt(2*ds[rest]*(1/config.acceleration+1/config.deceleration)),angle[rest]/config.yaw_rate)
+    # Even the two-endpoint case must respect the configured speed cap.
+    acceleration_time=np.sqrt(2*ds[rest]*(1/config.acceleration+1/config.deceleration))
+    cap=edge_limit[rest]
+    capped_time=ds[rest]/np.maximum(cap,1e-6)+.5*cap*(1/config.acceleration+1/config.deceleration)
+    peak=np.sqrt(2*ds[rest]/(1/config.acceleration+1/config.deceleration))
+    dt[rest]=np.maximum(np.where(peak<=cap,acceleration_time,capped_time),angle[rest]/(config.yaw_rate*edge_scale[rest]))
     eta=np.r_[0.,np.cumsum(dt)]
     return dict(poses=points,eta=eta,earliest=np.maximum(0.,eta*(1-config.timing_fraction)-1.),
                 latest=eta*(1+config.timing_fraction)+1.,length=float(ds.sum()))

@@ -113,6 +113,7 @@ def navigation(out):
     visibility=dict(visibility_clearance=clearance,lidar_x=scene['lidar_xyz'][0],lidar_y=scene['lidar_xyz'][1])
     planner['Task1'].update(visibility)
     controller=params['controller_server']['ros__parameters']
+    controller['speed_limit_topic']='/task1/speed_limit'
     # The boat still drifts below 0.03 m/s. Preserve that motion in DWB's
     # initial state and allow for the measured, slower braking response.
     controller['min_x_velocity_threshold']=.005

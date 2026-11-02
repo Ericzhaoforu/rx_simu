@@ -12,6 +12,7 @@ from rclpy.time import Time
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry, Path as NavPath
 from nav2_msgs.action import ComputePathToPose, FollowPath
+from nav2_msgs.msg import SpeedLimit
 from mavros_msgs.msg import State
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
@@ -19,7 +20,7 @@ from tf2_ros import Buffer, TransformListener
 from robotx_task1_interfaces.msg import BuoyArray, MissionContext, MotionPermission, TrafficSafety, RouteAssessment
 from .core import CircleTracker, passage_events, wrap
 from .traffic import TrafficLease
-from .route_policy import observation_goal, bounded_observation_path
+from .route_policy import observation_goal, bounded_observation_path, terminal_scale
 
 
 def seconds(stamp):return stamp.sec+stamp.nanosec/1e9
@@ -64,6 +65,7 @@ class Mission(Node):
         self.follow_client=ActionClient(self,FollowPath,'/follow_path')
         self.context_pub=self.create_publisher(MissionContext,'/task1/context',10)
         self.permission_pub=self.create_publisher(MotionPermission,'/task1/motion_permission',10)
+        self.speed_limit_pub=self.create_publisher(SpeedLimit,'/task1/speed_limit',1)
         self.status_pub=self.create_publisher(String,'/task1/status',10)
         self.events_pub=self.create_publisher(String,'/task1/events',10)
         self.path_pub=self.create_publisher(NavPath,'/task1/reference_path',10)
@@ -210,6 +212,15 @@ class Mission(Node):
         m=MotionPermission();m.header.stamp=self.get_clock().now().to_msg();m.header.frame_id='map'
         m.revision=self.last_revision;m.allow=allow;m.reason=self.reason;self.permission_pub.publish(m)
 
+    def publish_speed_limit(self):
+        target=self.planned_target or self.target
+        scale=1.
+        if self.stage=='TRANSIT' and self.pose is not None and target is not None:
+            scale=float(terminal_scale(math.hypot(self.pose[0]-target[0],self.pose[1]-target[1])))
+        m=SpeedLimit();m.header.stamp=self.get_clock().now().to_msg();m.percentage=True
+        m.speed_limit=100.*scale;self.speed_limit_pub.publish(m)
+        return m.speed_limit
+
     def publish_context(self):
         m=MissionContext();m.header.stamp=self.get_clock().now().to_msg();m.header.frame_id='map'
         m.revision=self.last_revision;m.phase=self.stage;m.enforce_passage=self.stage=='TRANSIT';m.passed_colors=self.bits
@@ -354,6 +365,7 @@ class Mission(Node):
                 else:self.interrupt('controller failed; wait and replan')
 
     def tick(self):
+        speed_limit=self.publish_speed_limit()
         self.publish_context();self.poll_actions()
         if self.started and self.stage not in ('COMPLETE','ABORTED'):
             if self.now()-self.started_at>1200:self.abort('1200 sim-second task timeout')
@@ -414,6 +426,7 @@ class Mission(Node):
                and self.stage not in ('COMPLETE','ABORTED'))
         self.permission(allow)
         status=dict(sim=self.now(),stage=self.stage,motion=self.motion,revision=self.last_revision,
+                    speed_limit_percent=speed_limit,
                     target=self.target,pose=self.pose,reason=self.reason,passed_colors=self.bits,
                     route_purpose='observation' if self.executing_observation else 'mission',
                     circle_angle=self.circle.angle if self.circle else None)
