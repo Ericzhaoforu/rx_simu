@@ -61,8 +61,10 @@ python3 scripts/run_task1_suite.py --seed 1 --changes 1 --record-maps
 
 ```bash
 source scripts/env.sh
+export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 python3 scripts/run_task1_suite.py --course harbor --group base --seed 1 --changes 1 --record-maps
 python3 scripts/run_task1_suite.py --course harbor --group dynamic --seed 1 --changes 1 --dynamic cross --record-maps --record-sensors
+python3 scripts/run_task1_suite.py --course harbor --group dynamic --seed 1 --changes 1 --dynamic block --record-maps --record-sensors
 python3 scripts/run_task1_suite.py --course harbor --group base --seed 1 --changes 1 --wind 2 --wave-gain 0.08 --record-maps
 ```
 
@@ -74,6 +76,19 @@ python3 scripts/run_task1_suite.py --course harbor --group base --seed 1 --chang
 python3 scripts/annotate_task1.py runs/实际运行目录
 # 单帧审核，秒数相对任务开始：
 python3 scripts/annotate_task1.py runs/实际运行目录 --preview 260
+```
+
+等待/绕行改进的同场景对照与沿途 ETA 图，可在完整运行后生成；不要使用未完成的任务作完整耗时对照：
+
+```bash
+python3 scripts/analyze_route_efficiency.py runs/旧完整运行 runs/新完整运行 --output runs/新完整运行/route_efficiency.json
+python3 scripts/plot_route_decisions.py runs/旧完整横穿运行 runs/新完整横穿运行 --output runs/新完整横穿运行/visualization
+```
+
+`route_efficiency.json` 单列策略等待、未知释放时间的观察等待、前移观察、几何换路和恢复过的规划/控制失败；限速命令与船体实际速度分别核验。只有完成并停录后才导出实验包，脚本拒绝覆盖已有归档：
+
+```bash
+python3 scripts/export_task1_record.py runs/实际运行目录
 ```
 
 输出 `visualization/task1_annotated.mp4`：左侧是真实 Gazebo 相机加数据标注，右侧为同次发布的局部代价地图和状态。紫色虚线为当前执行的规划路径，青色实线为实际 VRX 航迹，黄色星号为当前阶段末端目标；停车/重规划时旧路径改为灰色。红绿保留给浮标，ID、灯态文字和闪烁亮暗相位分别标清。相机标注按相机源时间投影，地图按回放时间取最近的历史记录；显示源时间差，不使用未来消息填补空缺。
