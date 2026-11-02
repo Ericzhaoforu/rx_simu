@@ -20,6 +20,8 @@ def speed_caps(run,motion):
     """Validate recorded DWB commands after a stable 50% limit, separately from vessel speed."""
     states=[e for e in rows(run/'task1_judge.jsonl') if e['type']=='status' and 'speed_limit_percent' in e['data']]
     if not states:return None
+    controller=json.loads((run/'generated/nav2_wamv.yaml').read_text())['controller_server']['ros__parameters']['FollowPath']
+    linear_cap=.5*controller['max_vel_x'];angular_cap=.5*controller['max_vel_theta']
     times=[e['stamp'] for e in states];began=[];start=times[0];previous=None
     for e in states:
         if e['data']['speed_limit_percent']!=previous:start=e['stamp']
@@ -39,9 +41,10 @@ def speed_caps(run,motion):
         limits[purpose]=dict(samples=len(samples),nonzero_commands=positive,max_command_linear_mps=linear,
             max_command_yaw_rps=angular,max_actual_forward_mps=max(abs(r['truth'][4]) for r in samples),
             max_actual_lateral_mps=max(abs(r['truth'][5]) for r in samples),
-            command_cap_passed=positive>=10 and linear<=.150001 and angular<=.200001)
+            command_cap_passed=positive>=10 and linear<=linear_cap+1e-6 and angular<=angular_cap+1e-6)
     last_limited=max((e['stamp'] for e in states if e['data']['speed_limit_percent']==50.),default=None)
-    return dict(by_purpose=limits,restored_to_100_after_terminal=last_limited is not None and any(
+    return dict(expected_linear_cap_mps=linear_cap,expected_yaw_cap_rps=angular_cap,
+        by_purpose=limits,restored_to_100_after_terminal=last_limited is not None and any(
         e['stamp']>last_limited and e['data']['speed_limit_percent']==100. for e in states),
         method='Source-timed status, command samples after 1s at 50%. Actual vessel velocity is measured separately; a command cap does not imply an instantaneous physical speed cap.')
 
@@ -126,6 +129,7 @@ def summarize(run):
                 planning_failures=sum(e['event']=='plan_failed' for e in events),
                 controller_failures=sum(e['event']=='controller_result' and e['status'] not in (4,5) for e in events),
                 stale_stops=sum(e['event']=='stop_requested' and 'stale' in e.get('reason','') for e in events),
+                transit_stale_stops=sum(e['event']=='stop_requested' and e['stage']=='TRANSIT' and 'stale' in e.get('reason','') for e in events),
                 collision_contacts=result['collision_contacts'],min_clearance_m=result['min_clearance_m'],
                 min_traffic_clearance_m=map_result.get('min_moving_obstacle_clearance_m'),
                 endpoint_error=result.get('endpoint_error'),completed_route_eta_errors=predictions,
