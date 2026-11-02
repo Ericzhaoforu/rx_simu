@@ -14,6 +14,8 @@ RobotX 2026 Task 1 使用独立的新 RoboBuoy 模型、已知 UAV 观测替身�
 
 ## 启动
 
+首次使用先阅读 [环境要求与依赖安装](requirements/README.md)：包含系统与 Python 依赖、固定版本、独立 VRX/ArduPilot 来源、构建和安装后的检查。当前已验证的是本服务器环境，新机器从零安装尚未完整复测。
+
 本服务器的 Ubuntu 22.04、ROS 2 Humble、Garden 7.9 与既有 VRX 安装是环境基础。新增依赖安装在仓库的 `external/`，不要求 sudo，不覆盖既有工程。详细依赖和排障见 [运行说明](docs/runbook.md)。
 
 ```bash
@@ -43,6 +45,7 @@ python3 scripts/sim_session.py stop
 | 路径 | 用途 |
 |---|---|
 | [AGENTS.md](AGENTS.md) | 工作约定，包括遇到问题先自主 debug、修复后回归验证 |
+| [requirements/README.md](requirements/README.md) | 环境要求、依赖版本、安装构建与复现前置条件 |
 | [docs/validation_plan.md](docs/validation_plan.md) | 当前 VRX、ArduRover 和 Nav2 验证计划 |
 | [docs/environment_baseline.md](docs/environment_baseline.md) | 服务器调查结果、版本和待补依赖 |
 | [docs/navigation_handoff.md](docs/navigation_handoff.md) | 原始交接附件，原文保存 |
@@ -81,3 +84,5 @@ git diff
 ```
 
 当前没有配置远端。首次导入保留附件字节内容和包内 MIT 许可证，后续修改通过提交追踪。
+
+GitHub 克隆只包含受版本管理的文件；`runs/` 内的视频、rosbag 和历史实验归档仍保存在服务器，报告中的对应本地链接不会随克隆自动下载。
