@@ -32,6 +32,8 @@ def checkpoints(data):
         decision=next(r for r in decisions if r['source_stamp']==selection['source_stamp']
                       and r['path_stamp']==selection['path_stamp'])
         config=next(r['configuration'] for r in decisions if r['path_stamp']==selection['path_stamp'] and 'configuration' in r)
+        # Historical records before the terminal-cap change ran at full speed.
+        config=dict(config);config.setdefault('terminal_ratio',1.)
         plan=next((e for e in data.plans if abs(e['stamp']-selection['path_stamp'])<1e-6),None)
         if plan is None:continue
         execution=next((e for e in data.mission if e['event']=='execution_started' and e['sim']>=selection['sim']),None)
