@@ -180,25 +180,41 @@ class TrafficGuard(Node):
                 self.profile_stamp=seconds(self.path_stamp)
             self.route_log.write(json.dumps(row,allow_nan=False)+'\n');self.route_log.flush()
 
+    def ready_cloud(self,now):
+        """Use the newest observation with both source-time FCU transforms.
+
+        Under CPU contention FIFO can spend its entire freshness budget on
+        queued clouds. Skipping superseded samples must never refresh their
+        timestamps or substitute a latest-time transform. Keep newer samples
+        awaiting their own TF; the independent costmaps still receive clouds.
+        """
+        count=len(self.pending)
+        self.pending=deque((m for m in self.pending
+            if -.05<=now-seconds(m.header.stamp)<=.35
+            and seconds(m.header.stamp)>self.tracker.stamp),maxlen=5)
+        for msg in sorted(self.pending,key=lambda m:seconds(m.header.stamp),reverse=True):
+            try:
+                source_time=Time.from_msg(msg.header.stamp)
+                transform=self.tf.lookup_transform('map',msg.header.frame_id,source_time).transform
+                boat=self.tf.lookup_transform('map','base_link',source_time).transform
+            except TransformException:
+                continue
+            stamp=seconds(msg.header.stamp)
+            self.pending=deque((m for m in self.pending if seconds(m.header.stamp)>stamp),maxlen=5)
+            return msg,transform,boat,count-len(self.pending)-1
+        return None
+
     def process(self):
         if not self.pending or self.static_map is None or self.markers is None:
             return
-        msg = self.pending[0]
-        stamp = seconds(msg.header.stamp)
         now = self.get_clock().now().nanoseconds / 1e9
         if not -.05 <= now-self.marker_stamp <= .35:
             return
-        if not -.05 <= now - stamp <= .35 or stamp <= self.tracker.stamp:
-            self.pending.popleft()
-            return
-        try:
-            source_time = Time.from_msg(msg.header.stamp)
-            transform = self.tf.lookup_transform('map', msg.header.frame_id, source_time).transform
-            boat = self.tf.lookup_transform('map', 'base_link', source_time).transform
-        except TransformException:
-            # Wait briefly for the matching FCU transform, without restamping.
-            return
-        self.pending.popleft()
+        started=time.monotonic()
+        ready=self.ready_cloud(now)
+        if ready is None:return
+        msg,transform,boat,skipped=ready
+        stamp = seconds(msg.header.stamp)
         p, q = transform.translation, transform.rotation
         points = xyz_view(msg).reshape(-1, 3)
         points = points[np.isfinite(points).all(axis=1)]
@@ -221,7 +237,9 @@ class TrafficGuard(Node):
         result.track_id = risk['track_id'] if risk else 0
         result.conflict_after_s = risk['future_s'] if risk else -1.
         self.publisher.publish(result)
-        row = dict(source_stamp=stamp, evaluated_at=now, path_stamp=seconds(self.path_stamp),
+        row = dict(source_stamp=stamp, evaluated_at=self.get_clock().now().nanoseconds/1e9,
+                   processing_started_at=now,safety_compute_wall_s=time.monotonic()-started,
+                   superseded_clouds=skipped,path_stamp=seconds(self.path_stamp),
                    horizon=self.horizon,speed_bound=self.speed,margin=self.margin,
                    acquisition_range=self.tracker.observation_range,continuation_range=self.continuation_range,
                    clear=result.clear, risk=risk, pose=pose, corridor=swept.tolist(),
