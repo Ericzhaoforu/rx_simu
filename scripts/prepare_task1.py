@@ -104,7 +104,7 @@ def navigation(out):
     params=json.loads((out/'nav2_wamv.yaml').read_text())
     planner=params['planner_server']['ros__parameters']
     planner['planner_plugins']=['GridBased','Task1']
-    planner['Task1']={'plugin':'robotx_task1_nav/RulePlanner','search_time_limit':10.}
+    planner['Task1']={'plugin':'robotx_task1_nav/RulePlanner','search_time_limit':10.,'continuity_weight':.2}
     # Remain outside the near-field blind zone for the lowest marking height.
     # Fixed surveyed buoy bodies still use their normal physical collision checks.
     clearance=0.

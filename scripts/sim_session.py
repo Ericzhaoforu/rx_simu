@@ -219,9 +219,13 @@ def navigation(args):
     if task1:
         commands['cloud_filter']+=['-p','publish_clearing_cloud:=true']
         footprint=json.loads((generated/'scene.json').read_text())['footprint']
-        speed=json.loads((generated/'nav2_wamv.yaml').read_text())['controller_server']['ros__parameters']['FollowPath']['max_vel_x']
+        dynamics=json.loads((generated/'nav2_wamv.yaml').read_text())['controller_server']['ros__parameters']['FollowPath']
+        speed=dynamics['max_vel_x']
         commands['traffic_guard']=['ros2','run','robotx_task1','traffic_guard','--ros-args','-p','use_sim_time:=true',
                                    '-p','footprint:='+json.dumps(json.dumps(footprint)),'-p','speed_bound:='+str(speed),
+                                   '-p','route_yaw_rate:='+str(dynamics['max_vel_theta']),
+                                   '-p','route_acceleration:='+str(dynamics['acc_lim_x']),
+                                   '-p','route_deceleration:='+str(abs(dynamics['decel_lim_x'])),
                                    '-p','run_dir:='+str(run)]
         commands['task1_mission']=['ros2','run','robotx_task1','mission','--ros-args','-p','use_sim_time:=true','-p','run_dir:='+str(run)]
         commands['task1_judge']=['ros2','run','robotx_task1','judge','--ros-args','-p','use_sim_time:=true','-p','run_dir:='+str(run)]

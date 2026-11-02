@@ -67,7 +67,7 @@ def main():
                 recorders.append(subprocess.Popen(['ros2','bag','record','--use-sim-time','--storage','sqlite3',
                     '--output',str(run/'sensors'),'/usv/lidar/points','/usv/lidar/filtered','/usv/lidar/marking','/usv/lidar/clearing','/scan','/tf','/tf_static',
                     '/clock','/usv/odom','/usv/cmd_vel','/task1/reference_path','/task1/traffic_safety',
-                    '/task1/observations','/map','/task1/candidate_path','/task1/traffic_costmap'],
+                    '/task1/observations','/map','/task1/candidate_path','/task1/traffic_costmap','/task1/route_assessment'],
                     stdout=(run/'record_sensors.log').open('w'),stderr=subprocess.STDOUT))
             command=[sys.executable,str(ROOT/'scripts/validate_task1.py')]
             if a.fault:command=[sys.executable,str(ROOT/'scripts/validate_task1_fault.py'),a.fault]

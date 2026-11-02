@@ -1,4 +1,5 @@
 #include "robotx_task1_nav/hull_grid.hpp"
+#include "robotx_task1_nav/route_preference.hpp"
 #include <nav2_costmap_2d/footprint_collision_checker.hpp>
 #include <iostream>
 using namespace robotx_task1_nav;
@@ -21,5 +22,12 @@ int main(){
   check(hull.collides({0,0,0}),"unknown interior rejected");
   map.setCost(100,100,0);hull.reset(map,fp);check(!hull.collides({0,0,0}),"cleared cells disappear on refresh");
   map.setCost(140,100,254);hull.reset(map,fp);check(hull.collides({0,0,0}),"cell square touching hull edge rejected");
-  std::cout<<"10 hull and visibility checks passed\n";
+  RoutePreference preference;std::vector<Pose> route={{0,0,0},{1,0,0},{2,0,0}};
+  check(preference.reset(map,route,{0,0,0},{2,0,0}),"same-goal reference accepted");
+  check(preference.distance({1,2,0})>preference.distance({1,0,0})+1.,"continuity favors previous corridor");
+  check(map.getCost(140,100)==254&&hull.collides({0,0,0}),"preference cannot clear a collision");
+  check(!preference.reset(map,route,{0,0,0},{3,0,0}),"changed target invalidates preference");
+  check(preference.distance({1,2,0})==0.,"invalid reference has no residual cost");
+  check(!preference.reset(map,route,{0,0,pi},{2,0,0}),"opposite-direction leg is not reused");
+  std::cout<<"16 hull, visibility and route preference checks passed\n";
 }

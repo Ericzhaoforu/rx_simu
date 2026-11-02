@@ -1,13 +1,46 @@
 """Run on a separate ROS_DOMAIN_ID; catches Node reserved-name and API errors."""
 import unittest
 import copy
+import json
+import time
 import rclpy
 from robotx_task1.mission import Mission
 from robotx_task1.observer import KnownObserver
-from robotx_task1_interfaces.msg import Buoy, BuoyArray
+from robotx_task1.traffic_guard import TrafficGuard
+from robotx_task1_interfaces.msg import Buoy, BuoyArray, MissionContext, RouteAssessment
+from nav_msgs.msg import Path
+from geometry_msgs.msg import PoseStamped
+from rclpy.parameter import Parameter
 
 
 class RosStartup(unittest.TestCase):
+    def test_guard_publishes_source_timed_route_assessment(self):
+        rclpy.init();guard=None
+        try:
+            guard=TrafficGuard(parameter_overrides=[Parameter('footprint',value=json.dumps([[-2.,-1.],[2.,-1.],[2.,1.],[-2.,1.]]))])
+            path=Path();path.header.frame_id='map';path.header.stamp=guard.get_clock().now().to_msg()
+            for x in (0.,20.):
+                p=PoseStamped();p.pose.position.x=x;p.pose.orientation.w=1.;path.poses.append(p)
+            guard.on_path(path);guard.marker_revision=1
+            context=MissionContext();context.header=copy.deepcopy(path.header);context.revision=1;context.enforce_passage=True
+            guard.on_context(context)
+            self.assertIsNotNone(guard.context)  # rclpy's context was not overwritten.
+            received=[]
+            sub=guard.create_subscription(RouteAssessment,'/task1/route_assessment',received.append,10)
+            guard.assess_route(path.header,[],[0.,0.,0.])
+            deadline=time.monotonic()+2.
+            while not received and time.monotonic()<deadline:rclpy.spin_once(guard,timeout_sec=.05)
+            self.assertTrue(received)
+            self.assertEqual(received[0].header.stamp,path.header.stamp)
+            self.assertEqual(received[0].path_stamp,path.header.stamp)
+            self.assertEqual(received[0].revision,1)
+            self.assertEqual(received[0].wait_s,0.)
+            self.assertGreater(received[0].eta_s,20/.3)
+            guard.destroy_subscription(sub)
+        finally:
+            if guard:guard.destroy_node()
+            rclpy.try_shutdown()
+
     def test_stale_revision_and_semantic_cancel(self):
         rclpy.init();mission=Mission()
         try:
