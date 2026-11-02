@@ -76,14 +76,21 @@ def main():
         for i,e in enumerate(e for e in data.plans if start<=e['sim']<=end):
             path=data.path(e);ax.plot(path[:,0],path[:,1],'--',color=PLAN,alpha=.55,lw=1,label='已接受参考路径' if i==0 else None)
         ax.plot(motion[:,0],motion[:,1],color=TRACK,lw=2.5,label='VRX 实际穿越航迹',zorder=11)
+        shown=set()
         for event in data.mission:
-            if event['event']=='traffic_yield':
-                row=min(rows,key=lambda r:abs(r['sim']-event['sim']));ax.scatter(*row['truth'][:2],marker='s',s=65,color='#d97706',zorder=12)
+            if event['stage']!='TRANSIT':continue
+            if event['event'] in ('traffic_yield','route_wait_selected'):
+                kind=event['event'];row=min(rows,key=lambda r:abs(r['sim']-event['sim']))
+                label=('近场交通保护停车' if kind=='traffic_yield' else '策略停等（含原地观察）') if kind not in shown else None
+                ax.scatter(*row['truth'][:2],marker='s' if kind=='traffic_yield' else 'o',s=65,
+                           facecolors='#d97706' if kind=='traffic_yield' else 'none',edgecolors='#d97706',zorder=12,label=label)
+                shown.add(kind)
         ax.scatter(55,5,marker='*',s=160,color='#7c3aed',label='穿越目标',zorder=12)
         setup(ax,f"{title}：{m['transit_distance_m']:.1f} m / {m['transit_duration_s']:.1f} s\n"
-              f"交通让行 {m['traffic_yields']} 次；反向进度 {m['transit_reverse_progress_m']:.2f} m；超时停车 {m['stale_stops']} 次",[0,70,-23,24])
+              f"策略停等 {m['route_wait_decisions']} 次；通道切换 {m['geometric_transit_switches']} 次\n"
+              f"反向进度 {m['transit_reverse_progress_m']:.2f} m；整场超时停车 {m['stale_stops']} 次",[0,70,-23,24])
         ax.legend(loc='lower left',fontsize=9)
-    fig.suptitle('同一港区、一次灯变、横穿障碍 · 方块为交通让行点；灯色为穿越结束时状态')
+    fig.suptitle('同一港区、一次灯变、横穿障碍 · 灯色为穿越结束时状态')
     fig.savefig(args.output/'route_comparison.png',dpi=140);plt.close(fig)
     arrivals=checkpoints(new)
     best=max(arrivals,key=lambda r:len(r['arrivals']))

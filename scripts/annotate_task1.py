@@ -273,7 +273,8 @@ class Review:
                 and route['revision']==status['revision']):
             reference=f"{route['reference_eta_s']:.0f} s" if route['reference_eta_s'] is not None else '无有效参考'
             wait=f"{route['wait_s']:.0f} s" if route['wait_s'] is not None else '60 s 内无清空预测'
-            if route.get('observation_budget_s',0)>0:wait+=f" / 观测预算 {route['observation_budget_s']:.0f} s"
+            if route.get('observation_budget_s',0)>0:
+                reference+='（释放未知）';wait=f"观测总预算 {route['observation_budget_s']:.0f} s"
             text(draw,(40,1004),f"候选行驶 ETA {route['eta_s']:.0f} s   原路 {reference}   候选等待 {wait}   切换代价 {route['switch_cost_s']:.0f} s",19,MUTED)
         else:
             text(draw,(40,1004),'灯标文字保持语义颜色；“亮／暗”表示闪烁相位。灯态来自已知观测，非视觉识别。',19,MUTED)

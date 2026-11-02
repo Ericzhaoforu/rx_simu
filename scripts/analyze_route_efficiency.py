@@ -89,6 +89,7 @@ def summarize(run):
                     if switches is not None and all(e['assessable'] for e in switches) else None),
                 geometric_switch_details=switches,
                 route_wait_decisions=sum(e['event']=='route_wait_selected' for e in events),
+                observation_wait_decisions=sum(e['event']=='route_wait_selected' and e.get('observation_only',False) for e in events),
                 observation_steps=sum(e['event']=='observation_point_reached' for e in events),
                 planning_failures=sum(e['event']=='plan_failed' for e in events),
                 stale_stops=sum(e['event']=='stop_requested' and 'stale' in e.get('reason','') for e in events),
