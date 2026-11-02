@@ -11,6 +11,8 @@ ROOT=Path(__file__).resolve().parents[1]
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('run',type=Path);p.add_argument('stamp',type=float)
+    p.add_argument('--reference-stamp',type=float,help='Check this accepted map-frame path against the recorded full-hull costs')
+    p.add_argument('--no-search',action='store_true',help='Export/check only; do not run the two search diagnostics')
     a=p.parse_args();run=a.run;t=a.stamp;raw=run/'visualization/raw'
     def records(name):return [json.loads(l) for l in (run/name).read_text().splitlines()]
     event=max((e for e in records('visualization/raw/events.jsonl') if e['topic']=='/global_costmap/costmap' and e['stamp']<=t),key=lambda e:e['stamp'])
@@ -41,9 +43,16 @@ def main():
     results={}
     task=config['planner_server']['ros__parameters']['Task1']
     visibility=[str(task.get(k,0.)) for k in ('visibility_clearance','lidar_x','lidar_y')]
-    for mode in ('euclidean','dubins'):
+    for mode in (() if a.no_search else ('euclidean','dubins')):
         r=subprocess.run([str(ROOT/'build/task1_search/replay'),str(data),mode,*visibility],capture_output=True,text=True,check=True)
         results[mode]=r.stdout.strip()
+    if a.reference_stamp is not None:
+        path=next(e for e in records('visualization/raw/events.jsonl') if e['topic']=='/task1/reference_path'
+                  and abs(e['stamp']-a.reference_stamp)<1e-6 and e['frame']=='map')
+        reference=out/f'{t:.3f}.reference.txt';np.savetxt(reference,np.asarray(path['poses']).reshape(-1,3))
+        r=subprocess.run([str(ROOT/'build/task1_search/replay'),str(data),'reference',str(reference),*visibility],
+                         capture_output=True,text=True,check=True)
+        results['reference_check']=json.loads(r.stdout);results['reference_stamp']=a.reference_stamp
     results.update(map_stamp=event['stamp'],requested_stamp=t,source=str(run),limitation='Recorded OccupancyGrid quantizes nonlethal costs; offline search only.')
     (out/f'{t:.3f}.json').write_text(json.dumps(results,indent=2)+'\n');print(json.dumps(results))
 

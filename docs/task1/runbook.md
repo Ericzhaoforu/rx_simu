@@ -153,4 +153,6 @@ visualization 中提供参考路径/真值/EKF 航迹、期望末端与误差、
 
 复现记录地图上的搜索：`cmake -S tools/task1_search -B build/task1_search -DCMAKE_BUILD_TYPE=Release && cmake --build build/task1_search`，再执行 `python3 scripts/replay_task1_search.py runs/运行目录 仿真时刻`。它比较欧氏与 Dubins 估计，使用飞控 EKF 起点和当时语义，输出路径及耗时。OccupancyGrid 已量化非致命栅格代价，因此这是离线诊断，不能代替实时闭环。
 
+增加 `--reference-stamp 路径源时刻 --no-search` 可单独核查已接受参考路径在该张地图上的船体碰撞、规则余量和正横事件，输出 JSON 与逐采样点 CSV。此检查只读记录，不连接控制；即使采样可行，也不能代替起点连接、重新规划、动态交通评估和实际闭环。
+
 交通碰撞修复的新增节点、预测层、复测与保护进程故障命令见 [交通让行说明](traffic_avoidance.md)。完整 Task1 驱动现在在解锁前检查两张 costmap 中的浮标占据，并保留 `startup_costmap_check.json`；新层不能覆盖原来的浮标、静态边界和传感器占据。`traffic_avoidance.json` 与 `visualization/traffic_avoidance.png` 用于查看预警、零指令、实际推力、停止和恢复。规划耗时以 `path_candidate` 为结束事件，候选交通检查的等待不再计入搜索耗时。
