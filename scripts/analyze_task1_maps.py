@@ -103,6 +103,17 @@ def analyze(run):
                 'initial_plan_requires_avoidance':pad_clearance<=0.,
                 'mission_stops_while_held':[s for s in result['stops'] if min(held)<=s['start_sim']<=max(held)],
                 'interpretation':'Holding an obstacle nearby does not prove wait/resume behavior. The initial planned footprint must actually intersect the later held obstacle to establish a blocked-route challenge.'}
+            # A semantic light change can invalidate the first transit plan.
+            # Also inspect the route actually accepted before the hold began.
+            references=[e for e in events if e['topic']=='/task1/reference_path' and e.get('poses')
+                        and transit<=e['sim']<=min(held)]
+            active=max(references,key=lambda e:e['sim']) if references else None
+            if active:
+                active_clearance=min(vessel_clearance(padded,*p,obstacle) for p in active['poses'])
+                report['block_response'].update(active_reference_path_stamp=active['stamp'],
+                    active_reference_accepted_sim=active['sim'],active_reference_padded_clearance_m=active_clearance,
+                    active_reference_requires_avoidance=active_clearance<=0.)
+            report['block_response']['interpretation']='The first transit plan may predate the light change. The accepted reference before the hold is checked separately; an intersecting padded hull establishes a blocked-route challenge. Geometry alone does not prove successful wait/resume or task completion.'
     (run/'dynamic_map_result.json').write_text(json.dumps(report,indent=2)+'\n')
     return report
 

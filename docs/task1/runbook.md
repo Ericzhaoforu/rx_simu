@@ -61,8 +61,10 @@ python3 scripts/run_task1_suite.py --seed 1 --changes 1 --record-maps
 
 ```bash
 source scripts/env.sh
+export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 python3 scripts/run_task1_suite.py --course harbor --group base --seed 1 --changes 1 --record-maps
 python3 scripts/run_task1_suite.py --course harbor --group dynamic --seed 1 --changes 1 --dynamic cross --record-maps --record-sensors
+python3 scripts/run_task1_suite.py --course harbor --group dynamic --seed 1 --changes 1 --dynamic block --record-maps --record-sensors
 python3 scripts/run_task1_suite.py --course harbor --group base --seed 1 --changes 1 --wind 2 --wave-gain 0.08 --record-maps
 ```
 
@@ -74,6 +76,19 @@ python3 scripts/run_task1_suite.py --course harbor --group base --seed 1 --chang
 python3 scripts/annotate_task1.py runs/实际运行目录
 # 单帧审核，秒数相对任务开始：
 python3 scripts/annotate_task1.py runs/实际运行目录 --preview 260
+```
+
+等待/绕行改进的同场景对照与沿途 ETA 图，可在完整运行后生成；不要使用未完成的任务作完整耗时对照：
+
+```bash
+python3 scripts/analyze_route_efficiency.py runs/旧完整运行 runs/新完整运行 --output runs/新完整运行/route_efficiency.json
+python3 scripts/plot_route_decisions.py runs/旧完整横穿运行 runs/新完整横穿运行 --output runs/新完整横穿运行/visualization
+```
+
+`route_efficiency.json` 单列策略等待、未知释放时间的观察等待、前移观察、几何换路和恢复过的规划/控制失败；限速命令与船体实际速度分别核验。只有完成并停录后才导出实验包，脚本拒绝覆盖已有归档：
+
+```bash
+python3 scripts/export_task1_record.py runs/实际运行目录
 ```
 
 输出 `visualization/task1_annotated.mp4`：左侧是真实 Gazebo 相机加数据标注，右侧为同次发布的局部代价地图和状态。紫色虚线为当前执行的规划路径，青色实线为实际 VRX 航迹，黄色星号为当前阶段末端目标；停车/重规划时旧路径改为灰色。红绿保留给浮标，ID、灯态文字和闪烁亮暗相位分别标清。相机标注按相机源时间投影，地图按回放时间取最近的历史记录；显示源时间差，不使用未来消息填补空缺。
@@ -116,7 +131,7 @@ visualization 中提供参考路径/真值/EKF 航迹、期望末端与误差、
 
 `/task1/observations` 为 BuoyArray：map 坐标、源时间戳、完整十个 ID、碰撞半径、语义状态、revision、survey_complete。已知 UAV 替身从 Gazebo 场景取得这些信息；没有读取船体真值定位。将来接视觉时保持此契约和来源时间，不把旧观测改成新时间戳。
 
-任务机先检查全部调查记录，再依次接近入口、顺时针完整绕圈、合法穿越、逆时针完整绕出口。全局规划含位置、航向和红/绿通过标志；使用权重 1.4 的 A*、0.4 m 状态格、36 航向、0.6 m 前向运动边、逐 0.1 m 碰撞/规则检查、3 s 搜索预算。穿越段仅生成可前向跟踪的曲线，不生成原地转向段；错误侧正横边界留 1 m 纵向余量，判断更近的遮挡浮标时留 0.3 m 余量。独立裁判仍按原始正横规则计量。局部 DWB 增加硬性规则 critic 和可恢复的末端转向 critic。动态障碍由物理 LiDAR 感知，未向规划器发布障碍物真值轨迹。
+任务机先检查全部调查记录，再依次接近入口、顺时针完整绕圈、合法穿越、逆时针完整绕出口。全局规划含位置、航向和红/绿通过标志；使用权重 1.4 的 A*、0.4 m 状态格、36 航向、0.6 m 前向运动边、逐 0.1 m 碰撞/规则检查、10 s 搜索预算。穿越段仅生成可前向跟踪的曲线，不生成原地转向段；错误侧正横边界留 1 m 纵向余量，判断更近的遮挡浮标时留 0.3 m 余量。独立裁判仍按原始正横规则计量。局部 DWB 增加硬性规则 critic 和可恢复的末端转向 critic。动态障碍由物理 LiDAR 感知，未向规划器发布障碍物真值轨迹。
 
 语义变化时版本作废并取消动作；运动许可为 0.5 s 租约。EKF 平动低于 0.04 m/s、角速低于 0.04 rad/s，持续 1.5 s 后才重新规划。该余量来自实测 EKF 与真值速度的短时差异。独立裁判另外用真值低于 0.05 m/s / 0.05 rad/s、持续 1 s 检查停车；发零、推进器反馈、停车距离和仿真帧推进分别报告。闪烁暗相位不增加版本，也不触发重规划。
 
@@ -137,7 +152,7 @@ visualization 中提供参考路径/真值/EKF 航迹、期望末端与误差、
 | 输入速度归零阈值 | x/y/角速度均 0.005，保留低速漂移供 DWB 预测 |
 | DWB 速度采样 | 前向 15、侧向 1、角速度 25 |
 | 导航到点窗口 | 0.4 m、0.2 rad；独立真值验收 0.5 m、0.25 rad |
-| WAM-V 碰撞外廓 | 约 5.371 m × 2.537 m，使用包含推进器的实际凸包；另加 0.5 m padding |
+| WAM-V 碰撞外廓 | 约 5.371 m × 2.537 m，使用包含推进器的实际凸包；局部 padding 0.5 m，全局 1.0 m |
 | 膨胀半径、衰减系数 | 4.5 m、1.0 |
 | 全局地图 | 100 m × 100 m 水域，0.2 m 栅格，2 Hz 更新 |
 | 局部地图 | 30 m × 30 m 滚动窗口，0.05 m 栅格，5 Hz 更新 |
@@ -152,5 +167,7 @@ visualization 中提供参考路径/真值/EKF 航迹、期望末端与误差、
 规划耗时按每次事件的单调墙钟记录在 `results.json` 的 `execution_metrics`，灯变到重新行驶的暂停则按仿真时钟记录。Task1 当前搜索预算为 10 s，预算耗尽时保持停车后重试；最终到达并不表示每次搜索都在预算内成功。
 
 复现记录地图上的搜索：`cmake -S tools/task1_search -B build/task1_search -DCMAKE_BUILD_TYPE=Release && cmake --build build/task1_search`，再执行 `python3 scripts/replay_task1_search.py runs/运行目录 仿真时刻`。它比较欧氏与 Dubins 估计，使用飞控 EKF 起点和当时语义，输出路径及耗时。OccupancyGrid 已量化非致命栅格代价，因此这是离线诊断，不能代替实时闭环。
+
+增加 `--reference-stamp 路径源时刻 --no-search` 可单独核查已接受参考路径在该张地图上的船体碰撞、规则余量和正横事件，输出 JSON 与逐采样点 CSV。此检查只读记录，不连接控制；即使采样可行，也不能代替起点连接、重新规划、动态交通评估和实际闭环。
 
 交通碰撞修复的新增节点、预测层、复测与保护进程故障命令见 [交通让行说明](traffic_avoidance.md)。完整 Task1 驱动现在在解锁前检查两张 costmap 中的浮标占据，并保留 `startup_costmap_check.json`；新层不能覆盖原来的浮标、静态边界和传感器占据。`traffic_avoidance.json` 与 `visualization/traffic_avoidance.png` 用于查看预警、零指令、实际推力、停止和恢复。规划耗时以 `path_candidate` 为结束事件，候选交通检查的等待不再计入搜索耗时。

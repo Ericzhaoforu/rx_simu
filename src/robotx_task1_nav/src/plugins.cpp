@@ -2,6 +2,7 @@
 #include "robotx_task1_nav/dubins_estimate.hpp"
 #include "robotx_task1_nav/hull_grid.hpp"
 #include "robotx_task1_nav/traffic_layer.hpp"
+#include "robotx_task1_nav/route_preference.hpp"
 #include <mutex>
 #include <set>
 #include <nav2_core/global_planner.hpp>
@@ -70,6 +71,10 @@ class RulePlanner : public nav2_core::GlobalPlanner {
   Input input_;
   Visibility visibility_;
   double search_time_limit_=3.;
+  double continuity_weight_=.2;
+  std::mutex reference_mutex_;
+  nav_msgs::msg::Path reference_;
+  rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr reference_sub_;
  public:
   void configure(const rclcpp_lifecycle::LifecycleNode::WeakPtr &node,std::string name,
                  std::shared_ptr<tf2_ros::Buffer>,std::shared_ptr<nav2_costmap_2d::Costmap2DROS> map) override {
@@ -79,8 +84,17 @@ class RulePlanner : public nav2_core::GlobalPlanner {
     node_->get_parameter(key,search_time_limit_);
     if(!std::isfinite(search_time_limit_)||search_time_limit_<=0.)
       throw std::runtime_error("invalid Task1 search time limit");
+    const auto continuity=name+".continuity_weight";
+    if(!node_->has_parameter(continuity))node_->declare_parameter(continuity,continuity_weight_);
+    node_->get_parameter(continuity,continuity_weight_);
+    if(!std::isfinite(continuity_weight_)||continuity_weight_<0.)throw std::runtime_error("invalid route continuity weight");
+    reference_sub_=node_->create_subscription<nav_msgs::msg::Path>("/task1/reference_path",10,
+      [this](const nav_msgs::msg::Path::SharedPtr p){
+        std::lock_guard<std::mutex> lock(reference_mutex_);
+        if(p->header.frame_id=="map"&&rclcpp::Time(p->header.stamp)>rclcpp::Time(reference_.header.stamp))reference_=*p;
+      });
   }
-  void cleanup()override{input_.os.reset();input_.cs.reset();map_.reset();node_.reset();}
+  void cleanup()override{reference_sub_.reset();input_.os.reset();input_.cs.reset();map_.reset();node_.reset();}
   void activate()override{}
   void deactivate()override{}
   nav_msgs::msg::Path createPlan(const geometry_msgs::msg::PoseStamped &start,
@@ -91,6 +105,16 @@ class RulePlanner : public nav2_core::GlobalPlanner {
     nav2_costmap_2d::FootprintCollisionChecker<nav2_costmap_2d::Costmap2D*> checker(cm);
     auto footprint=map_->getRobotFootprint();
     HullGrid occupied;occupied.reset(*cm,footprint,buoys);
+    RoutePreference preference;
+    const Pose from=pose(start.pose),to=pose(goal.pose);
+    {
+      std::lock_guard<std::mutex> guard(reference_mutex_);
+      if(ctx.enforce_passage&&continuity_weight_>0.&&
+         rclcpp::Time(ctx.preferred_path_stamp)==rclcpp::Time(reference_.header.stamp)){
+        std::vector<Pose> points;for(const auto &p:reference_.poses)points.push_back(pose(p.pose));
+        preference.reset(*cm,points,from,to);
+      }
+    }
     auto cost=[&](const Pose &p){
       unsigned int mx,my;if(!cm->worldToMap(p.x,p.y,mx,my))return std::numeric_limits<double>::infinity();
       if(cm->getCost(mx,my)>=253)return std::numeric_limits<double>::infinity();
@@ -107,10 +131,9 @@ class RulePlanner : public nav2_core::GlobalPlanner {
           if(((a.y>xy[1])!=(c.y>xy[1]))&&xy[0]<(c.x-a.x)*(xy[1]-a.y)/(c.y-a.y)+a.x)inside=!inside;
         }if(inside||distance<b.r)return std::numeric_limits<double>::infinity();
       }
-      return 1.5*cm->getCost(mx,my)/252.;
+      return 1.5*cm->getCost(mx,my)/252.+continuity_weight_*preference.distance(p);
     };
     std::vector<Pose> path;
-    const Pose from=pose(start.pose),to=pose(goal.pose);
     if(ctx.circle_direction!=0) {
       double cx=ctx.circle_center.x,cy=ctx.circle_center.y;
       double a0=std::atan2(from.y-cy,from.x-cx),a1=std::atan2(to.y-cy,to.x-cx);

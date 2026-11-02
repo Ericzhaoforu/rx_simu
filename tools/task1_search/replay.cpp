@@ -9,8 +9,11 @@
 #include <iostream>
 using namespace robotx_task1_nav;
 int main(int argc,char **argv) {
-  if(argc!=3&&argc!=6)throw std::runtime_error("replay INPUT euclidean|dubins [visibility_range lidar_x lidar_y]");
-  const double visibility=argc==6?std::stod(argv[3]):0.,lx=argc==6?std::stod(argv[4]):0.,ly=argc==6?std::stod(argv[5]):0.;
+  const bool reference_mode=argc>=3&&std::string(argv[2])=="reference";
+  const int optional=reference_mode?4:3;
+  if(argc!=optional&&argc!=optional+3)throw std::runtime_error("replay INPUT euclidean|dubins [visibility_range lidar_x lidar_y], or INPUT reference PATH [visibility_range lidar_x lidar_y]");
+  const double visibility=argc==optional+3?std::stod(argv[optional]):0.,
+               lx=argc==optional+3?std::stod(argv[optional+1]):0.,ly=argc==optional+3?std::stod(argv[optional+2]):0.;
   std::ifstream in(argv[1]);unsigned w,h,n;double res,ox,oy;
   in>>w>>h>>res>>ox>>oy;
   Pose start,goal;int bits;
@@ -38,6 +41,31 @@ int main(int argc,char **argv) {
       }if(inside||d<b.r)return INFINITY;
     }return float(1.5*map.getCost(mx,my)/252.);
   };
+  if(reference_mode) {
+    std::ifstream source(argv[3]);std::vector<Pose> path;Pose point;
+    while(source>>point.x>>point.y>>point.h)path.push_back(point);
+    if(path.empty())throw std::runtime_error("empty reference path");
+    size_t first=0;double nearest=std::numeric_limits<double>::infinity();
+    for(size_t i=0;i<path.size();++i){
+      const double d=std::hypot(path[i].x-start.x,path[i].y-start.y)+.8*std::abs(wrap(path[i].h-start.h));
+      if(d<nearest){nearest=d;first=i;}
+    }
+    size_t collision=0,rule=0,side=0;int passed=bits;
+    std::ofstream detail(std::string(argv[1])+".reference.csv");
+    detail<<"index,x,y,yaw,collision_clear,rule_clear,passage_bits\n";
+    for(size_t i=first;i<path.size();++i){
+      const Pose p=path[i];const bool clear=std::isfinite(cost(p)),legal=rule_clearance(p,buoys);
+      const int event=i>first?passage(path[i-1],p,buoys):0;
+      collision+=!clear;rule+=!legal;side+=event<0;if(event>=0)passed|=event;
+      detail<<i<<','<<p.x<<','<<p.y<<','<<p.h<<','<<clear<<','<<legal<<','<<event<<'\n';
+    }
+    // Sample validation only: this does not create a connector from the FCU
+    // pose, replan a path, grant motion or establish future traffic clearance.
+    std::cout<<"{\"first_index\":"<<first<<",\"samples\":"<<path.size()-first
+      <<",\"collision_blocked\":"<<collision<<",\"rule_blocked\":"<<rule
+      <<",\"illegal_passages\":"<<side<<",\"passed_colors\":"<<passed<<"}\n";
+    return 0;
+  }
   DubinsEstimate dubins(goal);
   std::function<double(const Pose&)> estimate;
   if(std::string(argv[2])=="dubins")estimate=[&](const Pose &p){return dubins(p);};

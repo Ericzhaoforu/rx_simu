@@ -4,7 +4,7 @@
 每项展示最近一次已完成的尝试，可能来自较早提交；运行目录的 provenance.json 与源码快照标识当时版本。新修改不能继承旧运行的通过结论。
 根据用户 2026-11-01 确认，正式比赛仅一次语义灯态切换；闪烁亮灭不计次数。一次切换为主验收，零切换为对照，两次切换仅作额外压力测试。
 比赛主验收最近记录：2 项通过，4 项接触碰撞，3 项启动失败、任务未开始；启动失败不能算作已完成场景验证。
-独立港区工程场景最近记录：3 项通过，0 项接触碰撞；不替代上面的 baseline 矩阵。
+独立港区工程场景最近记录：4 项通过，0 项接触碰撞；不替代上面的 baseline 矩阵。
 正常任务与故障测试分开判定；程序报告 COMPLETE 不等于独立验收通过。尚未运行的组合明确列出。
 
 | 范围 | 用例 | 判定 | 行为源码版本 | 位置 / 航向误差 | 最小净空 | 证据 |
@@ -34,15 +34,16 @@
 | 异常响应 | fault_role_change | 通过 | 较早；需回归 | 不适用／未完成 | 6.440 m | [20261101_203255_task1_s1_c0_none_role_change](../../runs/20261101_203255_task1_s1_c0_none_role_change/task1_fault_result.json) |
 | 异常响应 | fault_no_path | 通过 | 较早；需回归 | 不适用／未完成 | 7.164 m | [20261101_203408_task1_s1_c0_none_no_path](../../runs/20261101_203408_task1_s1_c0_none_no_path/task1_fault_result.json) |
 | 异常响应 | fault_late_change | 通过 | 较早；需回归 | 不适用／未完成 | 1.153 m | [20261101_203521_task1_s1_c0_none_late_change](../../runs/20261101_203521_task1_s1_c0_none_late_change/task1_fault_result.json) |
-| 异常响应 | fault_traffic_gap | 通过 | 当前 | 不适用／未完成 | 6.022 m | [20261102_040257_task1_harbor_s1_c0_none_traffic_gap](../../runs/20261102_040257_task1_harbor_s1_c0_none_traffic_gap/task1_fault_result.json) |
-| 异常响应 | fault_traffic_exit | 通过 | 当前 | 不适用／未完成 | 6.034 m | [20261102_040415_task1_harbor_s1_c0_none_traffic_exit](../../runs/20261102_040415_task1_harbor_s1_c0_none_traffic_exit/task1_fault_result.json) |
+| 异常响应 | fault_traffic_gap | 通过 | 当前 | 不适用／未完成 | 6.121 m | [20261102_173517_task1_harbor_s1_c0_none_traffic_gap](../../runs/20261102_173517_task1_harbor_s1_c0_none_traffic_gap/task1_fault_result.json) |
+| 异常响应 | fault_traffic_exit | 通过 | 当前 | 不适用／未完成 | 6.070 m | [20261102_173704_task1_harbor_s1_c0_none_traffic_exit](../../runs/20261102_173704_task1_harbor_s1_c0_none_traffic_exit/task1_fault_result.json) |
 | 额外压力测试 | s1_c2_none | 通过 | 较早；需回归 | 0.378 m / 0.049 rad | 1.021 m | [20261101_182043_task1_s1_c2_none](../../runs/20261101_182043_task1_s1_c2_none/task1_result.json) |
 | 额外压力测试 | s1_c2_cross | 失败 | 较早；需回归 | 不适用／未完成 | 0.720 m | [20261101_213330_task1_s1_c2_cross](../../runs/20261101_213330_task1_s1_c2_cross/task1_result.json) |
 | 额外压力测试 | s2_c2_none | 通过 | 较早；需回归 | 0.373 m / 0.051 rad | 1.216 m | [20261101_185028_task1_s2_c2_none](../../runs/20261101_185028_task1_s2_c2_none/task1_result.json) |
 | 额外压力测试 | s3_c2_none | 通过 | 较早；需回归 | 0.378 m / 0.041 rad | 1.105 m | [20261101_192014_task1_s3_c2_none](../../runs/20261101_192014_task1_s3_c2_none/task1_result.json) |
 | 港区工程测试 | harbor_s1_c1_none | 通过 | 较早；需回归 | 0.369 m / 0.086 rad | 1.225 m | [20261102_001502_task1_harbor_s1_c1_none](../../runs/20261102_001502_task1_harbor_s1_c1_none/task1_result.json) |
-| 港区工程测试 | harbor_s1_c1_cross | 通过 | 当前 | 0.364 m / 0.014 rad | 1.471 m | [20261102_042050_task1_harbor_s1_c1_cross](../../runs/20261102_042050_task1_harbor_s1_c1_cross/task1_result.json) |
+| 港区工程测试 | harbor_s1_c1_cross | 通过 | 当前 | 0.245 m / 0.155 rad | 1.307 m | [20261102_171813_task1_harbor_s1_c1_cross](../../runs/20261102_171813_task1_harbor_s1_c1_cross/task1_result.json) |
 | 港区工程测试 | harbor_s1_c1_none_wind2_wave0.08 | 通过 | 较早；需回归 | 0.375 m / 0.216 rad | 1.282 m | [20261102_003413_task1_harbor_s1_c1_none_wind2_wave0.08](../../runs/20261102_003413_task1_harbor_s1_c1_none_wind2_wave0.08/task1_result.json) |
+| 港区工程测试 | harbor_s1_c1_block | 通过 | 当前 | 0.371 m / 0.044 rad | 1.272 m | [20261102_170326_task1_harbor_s1_c1_block](../../runs/20261102_170326_task1_harbor_s1_c1_block/task1_result.json) |
 
 额外观测距离为非默认实验，不替代上面的默认配置验收：
 
