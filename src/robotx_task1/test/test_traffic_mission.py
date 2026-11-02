@@ -20,6 +20,7 @@ class TrafficMissionTests(unittest.TestCase):
         m.odom=NS(twist=NS(twist=NS(linear=NS(x=0.,y=0.),angular=NS(z=0.))))
         m.now=lambda:m.stamp;m.publish_context=lambda:None;m.poll_actions=lambda:None
         m.inputs_valid=lambda:True;m.permission=lambda value:m.permissions.append(value)
+        m.input_ages=lambda:dict(traffic_source=m.now()-m.traffic.stamp)
         m.status_pub=NS(publish=lambda msg:None);m.path_pub=NS(publish=lambda msg:None)
         m.event=lambda event,**kw:m.events.append((event,kw))
         m.request_plan=lambda:setattr(m,'plans',m.plans+1)
@@ -134,6 +135,7 @@ class TrafficMissionTests(unittest.TestCase):
         m=self.mission('EXECUTING',True);m.stamp=10.5;Mission.tick(m)
         self.assertEqual(m.motion,'STOPPING')
         self.assertFalse(m.permissions[-1])
+        self.assertIn(('stale_inputs',dict(ages_s=dict(traffic_source=.5))),m.events)
 
 
 if __name__=='__main__':unittest.main()

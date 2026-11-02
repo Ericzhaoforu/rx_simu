@@ -28,6 +28,7 @@ STAGES={'APPROACH_ENTRY':'驶向入口','CIRCLE_ENTRY':'入口顺时针绕行','
         'CIRCLE_EXIT':'出口逆时针绕行','COMPLETE':'任务完成','ABORTED':'任务终止'}
 MOTIONS={'EXECUTING':'执行路径','PLANNING':'正在重规划','STARTING':'等待控制器',
          'CHECKING_TRAFFIC':'检查候选路径的交通冲突',
+         'WAIT_ROUTE':'等待通道，定时重新比较',
          'STOPPING':'停车中','WAIT_CLEAR':'停等可行路径','COMPLETE':'完成后观察','ABORTED':'已终止'}
 
 
@@ -100,6 +101,9 @@ class Review:
         traffic_file=data.run/'traffic_guard.jsonl'
         self.traffic=[json.loads(l) for l in traffic_file.read_text().splitlines()] if traffic_file.exists() else []
         self.traffic_times=[r['evaluated_at'] for r in self.traffic]
+        route_file=data.run/'route_decisions.jsonl'
+        self.routes=[json.loads(l) for l in route_file.read_text().splitlines()] if route_file.exists() else []
+        self.route_times=[r['evaluated_at'] for r in self.routes]
 
     def event(self,topic,t):
         i=prior_index(self.event_times.get(topic,[]),t)
@@ -261,7 +265,15 @@ class Review:
         star(draw,(688,937),12);text(draw,(712,921),'当前阶段末端目标',21)
         draw.line((992,937,1052,937),fill='#ffffff',width=2);text(draw,(1064,921),'船体轮廓',21)
         text(draw,(40,965),'红灯留在船右舷   绿灯留在船左舷   灭灯浮标仍是实体障碍',21)
-        text(draw,(40,1004),'灯标文字保持语义颜色；“亮／暗”表示闪烁相位。灯态来自已知观测，非视觉识别。',19,MUTED)
+        route_index=prior_index(self.route_times,t)
+        route=self.routes[route_index] if route_index>=0 else None
+        if (status['stage']=='TRANSIT' and route and 0<=t-route['source_stamp']<=1.
+                and route['revision']==status['revision']):
+            reference=f"{route['reference_eta_s']:.0f} s" if route['reference_eta_s'] is not None else '无有效参考'
+            wait=f"{route['wait_s']:.0f} s" if route['wait_s'] is not None else '60 s 内无清空预测'
+            text(draw,(40,1004),f"预测行驶 ETA {route['eta_s']:.0f} s   原路 {reference}   候选需等 {wait}   切换代价 {route['switch_cost_s']:.0f} s",19,MUTED)
+        else:
+            text(draw,(40,1004),'灯标文字保持语义颜色；“亮／暗”表示闪烁相位。灯态来自已知观测，非视觉识别。',19,MUTED)
         return image,source_t
 
 
@@ -295,6 +307,8 @@ def main():
               'source_sha256':{name:hashlib.sha256((data.run/name).read_bytes()).hexdigest() for name in
                   ['task1_overview.mp4','task1_video.json','task1.jsonl','task1_judge.jsonl','task1_mission.jsonl','visualization/raw/events.jsonl','generated/scene.json']},
               'output_sha256':hashlib.sha256(path.read_bytes()).hexdigest()}
+    if review.routes:
+        manifest['source_sha256']['route_decisions.jsonl']=hashlib.sha256((data.run/'route_decisions.jsonl').read_bytes()).hexdigest()
     (data.output/'task1_annotated.json').write_text(json.dumps(manifest,indent=2)+'\n');print(path,flush=True)
 
 

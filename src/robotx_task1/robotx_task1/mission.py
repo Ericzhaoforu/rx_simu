@@ -212,6 +212,14 @@ class Mission(Node):
                 time.monotonic()-self.obs_wall<=self.observation_timeout and
                 -.1<=self.now()-self.pose_stamp<=.5 and time.monotonic()-self.pose_wall<=.5)
 
+    def input_ages(self):
+        """Diagnostic only; record which original freshness gate actually failed."""
+        sim,wall=self.now(),time.monotonic()
+        values=dict(observation_source=sim-self.last_source_stamp,observation_receipt=wall-self.obs_wall,
+                    ekf_source=sim-self.pose_stamp,ekf_receipt=wall-self.pose_wall,
+                    traffic_source=sim-self.traffic.stamp,traffic_receipt=wall-self.traffic.received)
+        return {key:(value if math.isfinite(value) else None) for key,value in values.items()}
+
     def traffic_permits_path(self):
         return (self.last_path is not None and
                 self.traffic.permits(self.now(),time.monotonic(),seconds(self.last_path.header.stamp)))
@@ -295,7 +303,9 @@ class Mission(Node):
         if self.started and self.stage not in ('COMPLETE','ABORTED'):
             if self.now()-self.started_at>1200:self.abort('1200 sim-second task timeout')
             elif not self.inputs_valid() or not self.traffic.valid(self.now(),time.monotonic()):
-                if self.motion not in ('STOPPING','IDLE'):self.interrupt('observation, EKF or LiDAR traffic assessment stale')
+                if self.motion not in ('STOPPING','IDLE'):
+                    self.event('stale_inputs',ages_s=self.input_ages())
+                    self.interrupt('observation, EKF or LiDAR traffic assessment stale')
                 self.still_since=None
             else:
                 if not self.traffic.clear and self.motion in ('EXECUTING','STARTING'):
