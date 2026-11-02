@@ -5,6 +5,7 @@ Truth is used for independent travel distance / progress evaluation only.
 Arrival predictions come from the source-stamped route assessment log.
 """
 import argparse
+import bisect
 import hashlib
 import json
 from pathlib import Path
@@ -13,6 +14,36 @@ import numpy as np
 
 def rows(path):
     return [json.loads(line) for line in path.open()]
+
+
+def speed_caps(run,motion):
+    """Validate recorded DWB commands after a stable 50% limit, separately from vessel speed."""
+    states=[e for e in rows(run/'task1_judge.jsonl') if e['type']=='status' and 'speed_limit_percent' in e['data']]
+    if not states:return None
+    times=[e['stamp'] for e in states];began=[];start=times[0];previous=None
+    for e in states:
+        if e['data']['speed_limit_percent']!=previous:start=e['stamp']
+        began.append(start);previous=e['data']['speed_limit_percent']
+    groups={}
+    for row in motion:
+        i=bisect.bisect_right(times,row['sim'])-1
+        if i<0:continue
+        state=states[i]['data']
+        if (row['sim']-times[i]>.2 or row['sim']-began[i]<1. or state['speed_limit_percent']!=50.
+                or state['motion']!='EXECUTING' or 'command' not in row):continue
+        groups.setdefault(state.get('route_purpose','mission'),[]).append(row)
+    limits={}
+    for purpose,samples in groups.items():
+        positive=sum(abs(r['command'][0])+abs(r['command'][1])>1e-4 for r in samples)
+        linear=max(abs(r['command'][0]) for r in samples);angular=max(abs(r['command'][1]) for r in samples)
+        limits[purpose]=dict(samples=len(samples),nonzero_commands=positive,max_command_linear_mps=linear,
+            max_command_yaw_rps=angular,max_actual_forward_mps=max(abs(r['truth'][4]) for r in samples),
+            max_actual_lateral_mps=max(abs(r['truth'][5]) for r in samples),
+            command_cap_passed=positive>=10 and linear<=.150001 and angular<=.200001)
+    last_limited=max((e['stamp'] for e in states if e['data']['speed_limit_percent']==50.),default=None)
+    return dict(by_purpose=limits,restored_to_100_after_terminal=last_limited is not None and any(
+        e['stamp']>last_limited and e['data']['speed_limit_percent']==100. for e in states),
+        method='Source-timed status, command samples after 1s at 50%. Actual vessel velocity is measured separately; a command cap does not imply an instantaneous physical speed cap.')
 
 
 def route_switches(run,events,motion):
@@ -74,7 +105,7 @@ def summarize(run):
     route=rows(route_path) if route_path.exists() else []
     maps=run/'dynamic_map_result.json'
     map_result=json.loads(maps.read_text()) if maps.exists() else {}
-    evidence=['task1_result.json','task1_mission.jsonl','task1.jsonl']
+    evidence=['task1_result.json','task1_mission.jsonl','task1.jsonl','task1_judge.jsonl']
     if route:evidence.append('route_decisions.jsonl')
     switches=route_switches(run,events,motion)
     return dict(run=str(run),workspace_commit=json.loads((run/'provenance.json').read_text())['workspace_commit'],
@@ -98,6 +129,7 @@ def summarize(run):
                 collision_contacts=result['collision_contacts'],min_clearance_m=result['min_clearance_m'],
                 min_traffic_clearance_m=map_result.get('min_moving_obstacle_clearance_m'),
                 endpoint_error=result.get('endpoint_error'),completed_route_eta_errors=predictions,
+                terminal_speed_limit=speed_caps(run,motion),
                 advisory_compute_max_s=max((r['evaluation_wall_s'] for r in route),default=None),
                 advisory_compute_p95_s=float(np.quantile([r['evaluation_wall_s'] for r in route],.95)) if route else None,
                 evidence_sha256={name:hashlib.sha256((run/name).read_bytes()).hexdigest() for name in evidence})
