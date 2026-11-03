@@ -21,7 +21,8 @@ def main():
     buoys=scene['task1']['buoys'];rclpy.init()
     node=rclpy.create_node('task1_lidar_evidence',parameter_overrides=[Parameter('use_sim_time',value=True)])
     tf=Buffer();listener=TransformListener(tf,node);rows=[];pending={}
-    topics=('/usv/lidar/points','/usv/lidar/filtered','/scan')
+    topics=('/livox/lidar' if scene.get('lidar_model')=='mid360' else '/usv/lidar/points',
+            '/usv/lidar/filtered','/scan')
     for topic in topics:
         node.create_subscription(LaserScan if topic=='/scan' else PointCloud2,topic,
                                  lambda m,t=topic:pending.__setitem__(t,m),qos_profile_sensor_data)

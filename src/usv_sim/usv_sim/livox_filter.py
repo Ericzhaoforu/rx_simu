@@ -18,6 +18,7 @@ from scipy.spatial.transform import Rotation
 from tf2_ros import Buffer, TransformListener, TransformException
 
 from .cloud_filter import inside_polygon, xyz_view
+from .return_support import ReturnSupport
 
 
 def transform_points(points, transform):
@@ -65,6 +66,7 @@ class LivoxFilter(Node):
         self.listener = TransformListener(self.tf,self)
         self.cache = OrderedDict()
         self.pending = deque(maxlen=8)
+        self.support=ReturnSupport()
         self.filtered = self.create_publisher(PointCloud2,'/usv/lidar/filtered',qos_profile_sensor_data)
         self.marking = self.create_publisher(PointCloud2,'/usv/lidar/marking',qos_profile_sensor_data)
         self.clearing = self.create_publisher(PointCloud2,'/usv/lidar/clearing',qos_profile_sensor_data)
@@ -116,20 +118,24 @@ class LivoxFilter(Node):
             # Upper-bounded number of TF queries also works with real per-point
             # times, not only the simulator's five discrete time slices.
             bins=np.floor((times-base)/5000000).astype(np.int64)
-            clearing=[]
+            measured_times={}
             for b in np.unique(bins):
                 selected=bins==b
                 measurement_ns=int(np.mean(times[selected]))
                 movement=self.tf.lookup_transform_full(msg.header.frame_id,stamp,
                           msg.header.frame_id,Time(nanoseconds=measurement_ns),self.p['fixed_frame'])
                 points[selected]=transform_points(points[selected],movement)
-                ray_header=copy.deepcopy(msg.header)
-                ray_header.stamp=Time(nanoseconds=measurement_ns).to_msg()
-                clearing.append(self.cloud(ray_header,observed[selected]))
+                measured_times[b]=measurement_ns
             stable_tf=self.tf.lookup_transform(self.p['stabilized_frame'],msg.header.frame_id,stamp)
             stable=transform_points(points,stable_tf) if len(points) else points
             keep=(stable[:,2]>=self.p['marking_min_height'])&(stable[:,2]<=self.p['marking_max_height'])
-            out=self.cloud(msg.header,points)
+            fixed_tf=self.tf.lookup_transform(self.p['fixed_frame'],msg.header.frame_id,stamp)
+            supported=self.support.select(transform_points(points[keep],fixed_tf),base/1e9)
+            accepted=np.ones(len(points),bool);accepted[np.flatnonzero(keep)]=supported
+            # Scans and costmaps see the same supported marking surface. Keep
+            # other heights for genuine finite clearing rays, never max-range
+            # substitutes. Rejected returns also cannot clear an obstacle.
+            out=self.cloud(msg.header,points[accepted])
             key=(msg.header.stamp.sec,msg.header.stamp.nanosec)
             self.cache[key]=True
             while len(self.cache)>20:
@@ -139,9 +145,13 @@ class LivoxFilter(Node):
             # coordinates, not the deskewed cloud's frame-start ray origin.
             # Real hardware times are grouped within 5 ms; simulated slices
             # share an exact timestamp. No current-time restamping is used.
-            for measured in clearing:
-                self.clearing.publish(measured)
-            self.marking.publish(self.cloud(msg.header,points[keep]))
+            for b,measurement_ns in measured_times.items():
+                selected=(bins==b)&accepted
+                if not np.any(selected):continue
+                ray_header=copy.deepcopy(msg.header)
+                ray_header.stamp=Time(nanoseconds=measurement_ns).to_msg()
+                self.clearing.publish(self.cloud(ray_header,observed[selected]))
+            self.marking.publish(self.cloud(msg.header,points[keep&accepted]))
             return True
         except TransformException as error:
             self.get_logger().warning(str(error),throttle_duration_sec=2.)
