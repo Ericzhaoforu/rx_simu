@@ -24,6 +24,9 @@ export GZ_PARTITION="${USV_GZ_PARTITION:-usv_nav_validation}"
 # All simulator components run on this host. Avoid routing local transport
 # through a changing Wi-Fi / VPN interface; callers may explicitly override it.
 export GZ_IP="${GZ_IP:-127.0.0.1}"
+if [[ -f "$USV_NAV_ROOT/build/vrx_render_fix/libWaveVisual.so" ]]; then
+    export GZ_SIM_SYSTEM_PLUGIN_PATH="$USV_NAV_ROOT/build/vrx_render_fix:$GZ_SIM_SYSTEM_PLUGIN_PATH"
+fi
 export ROS_LOG_DIR="$USV_NAV_ROOT/log/ros"
 if [[ -f "$USV_NAV_ROOT/install/setup.bash" ]]; then
     source "$USV_NAV_ROOT/install/setup.bash"

@@ -26,6 +26,7 @@ class Task1Scene final : public gz::sim::System,
   gz::transport::Node node_;
   gz::transport::Node::Publisher pub_;
   gz::common::ConnectionPtr render_;
+  gz::common::ConnectionPtr teardown_;
   double lastPub_=-1, transit_=-1;
   uint64_t revision_=1;
   bool active_=false;
@@ -46,6 +47,11 @@ class Task1Scene final : public gz::sim::System,
     pub_=node_.Advertise<gz::msgs::StringMsg>("/task1/scene_state");
     node_.Subscribe("/task1/scene_command",&Task1Scene::Command,this);
     render_=events.Connect<gz::sim::events::SceneUpdate>([this]{Render();});
+    // Release Ogre-owned objects on the render thread before its shared
+    // library unloads; the system destructor runs later on another thread.
+    teardown_=events.Connect<gz::sim::events::RenderTeardown>([this]{
+      render_.reset();visuals_.clear();scene_.reset();
+    });
   }
   void Command(const gz::msgs::StringMsg &msg) {
     try {auto j=json::parse(msg.data());std::lock_guard<std::mutex> lock(mutex_);commands_.push_back(j);}

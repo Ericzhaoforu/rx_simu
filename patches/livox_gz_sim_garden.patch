@@ -50,7 +50,7 @@ index 3a5007a..d3e1bdc 100644
    <exec_depend>xacro</exec_depend>
    <!-- demo.launch.py -->
 diff --git a/src/livox_lidar.cpp b/src/livox_lidar.cpp
-index 29e25f2..93db360 100644
+index 29e25f2..76c802b 100644
 --- a/src/livox_lidar.cpp
 +++ b/src/livox_lidar.cpp
 @@ -67,7 +67,6 @@
@@ -74,7 +74,16 @@ index 29e25f2..93db360 100644
      range_noise_ = std::max(0.0, get("range_noise", 0.0));
      angular_noise_ = get("angular_noise", 0.0) * M_PI / 180.0;
      downsample_ = std::max(1, get("downsample", 1));
-@@ -140,11 +145,7 @@ public:
+@@ -134,17 +139,15 @@ public:
+     }
+ 
+     if (!rclcpp::ok()) {
+-      rclcpp::init(0, nullptr);
++      // Gazebo owns process signals. Installing ROS handlers here consumes
++      // SIGINT/SIGTERM without stopping the simulator's update loop.
++      rclcpp::init(0, nullptr, rclcpp::InitOptions(), rclcpp::SignalHandlerOptions::None);
+     }
+     auto name_c = ecm.Component<gz::sim::components::Name>(entity);
      std::string name = name_c ? name_c->Data() : "livox";
      node_ = std::make_shared<rclcpp::Node>("livox_sim_" + name);
      auto qos = rclcpp::SensorDataQoS().keep_last(5).reliable();
@@ -87,7 +96,7 @@ index 29e25f2..93db360 100644
  
      if (!gz_node_.Subscribe(gpu_topic, &LivoxLidar::OnScan, this)) {
        gzerr << "livox_gz_sim::LivoxLidar: cannot subscribe to [" << gpu_topic << "]\n";
-@@ -164,6 +165,9 @@ public:
+@@ -164,6 +167,9 @@ public:
      std::lock_guard<std::mutex> lock(mutex_);
      slice_ = 0;
      last_ns_ = 0;
@@ -97,7 +106,7 @@ index 29e25f2..93db360 100644
    }
  
  private:
-@@ -276,11 +280,7 @@ private:
+@@ -276,11 +282,7 @@ private:
      slice_ = 0;
      next_ = (next_ + samples_) % rays_.size();
  
@@ -110,7 +119,7 @@ index 29e25f2..93db360 100644
    }
  
    // as Lddc::InitPointcloud2MsgHeader / FillPointsToPclMsg
-@@ -316,30 +316,6 @@ private:
+@@ -316,30 +318,6 @@ private:
      cloud_pub_->publish(std::move(c));
    }
  
@@ -141,7 +150,7 @@ index 29e25f2..93db360 100644
    std::vector<PatternRay> rays_;
    size_t next_ = 0;
    std::vector<LivoxPoint> frame_;  // the frame being collected, slice_ of slices_ images in
-@@ -348,13 +324,13 @@ private:
+@@ -348,13 +326,13 @@ private:
    int64_t last_ns_ = 0;            // the previous image's time, to notice resets
    int samples_ = 20000, line_count_ = 4, xfer_format_ = 0, downsample_ = 1;
    double range_noise_ = 0.0, angular_noise_ = 0.0, default_reflectivity_ = 100.0;
