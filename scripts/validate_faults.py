@@ -118,6 +118,7 @@ def main():
         if process and process.poll() is None:
             os.killpg(process.pid,signal.SIGINT);process.wait(timeout=5)
         runner.close();rclpy.shutdown()
+    if not all(r['passed'] for r in results):raise SystemExit(1)
 
 
 if __name__=='__main__':main()

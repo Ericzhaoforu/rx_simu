@@ -148,6 +148,11 @@ def navigation(out):
         # Clearing the padded footprint here erases external returns before
         # physical contact, including a moving obstacle entering the margin.
         costmap['obstacle_layer']=voxel_obstacles()
+        if scene.get('lidar_model')=='mid360':
+            # Livox publishes several source-timed clearing groups per frame.
+            # A zero-duration buffer keeps only the last group, losing lower
+            # rays. Retain 0.2 s of measured rays; marking still uses newest data.
+            costmap['obstacle_layer']['rays']['observation_persistence']=.2
         costmap['plugins'].insert(-1,'known_buoys')
         costmap['known_buoys']={'plugin':'robotx_task1_nav/KnownBuoys'}
         costmap['plugins'].insert(-1,'traffic_prediction')
@@ -155,6 +160,7 @@ def navigation(out):
             map_topic='/task1/traffic_costmap',map_subscribe_transient_local=True,
             subscribe_to_updates=False,footprint_clearing_enabled=False)
     params['rover_bridge']['ros__parameters']['require_task_permission']=True
+    params['rover_bridge']['ros__parameters']['enable_stationkeeping']=scenario.get('native_loiter',False)
     (out/'nav2_wamv.yaml').write_text(json.dumps(params,indent=2)+'\n')
     area={'resolution':.2,'padding':1.,'navigable_boundary':scenario['boundary'],'exclusions':[]}
     for body in scenario.get('infrastructure',[]):

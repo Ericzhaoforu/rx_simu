@@ -67,6 +67,17 @@ class StaticMap:
         keep[valid] = ~self.occupied[indices[valid,1],indices[valid,0]]
         return np.asarray(points)[keep]
 
+    def disk_clear(self,center,radius):
+        delta=np.asarray(center)-self.origin[:2];c,s=math.cos(self.origin[2]),math.sin(self.origin[2])
+        cell=delta@np.array([[c,-s],[s,c]])/self.resolution
+        extent=radius/self.resolution+math.sqrt(.5)
+        lo=np.floor(cell-extent).astype(int);hi=np.ceil(cell+extent).astype(int)
+        h,w=self.occupied.shape
+        if np.any(lo<0) or hi[0]>=w or hi[1]>=h:return False
+        yy,xx=np.mgrid[lo[1]:hi[1]+1,lo[0]:hi[0]+1]
+        disk=(xx+.5-cell[0])**2+(yy+.5-cell[1])**2<=extent**2
+        return not np.any(self.occupied[lo[1]:hi[1]+1,lo[0]:hi[0]+1]&disk)
+
 
 def exclude_surveyed_markers(points, markers):
     """Fixed surveyed buoys remain in KnownBuoys/collision costs, not traffic tracks."""

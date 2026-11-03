@@ -1,6 +1,7 @@
 """Translate Nav2 Twist to MAVROS BODY_NED velocity + yaw-rate setpoints."""
 
 import math
+import json
 import time
 
 import rclpy
@@ -18,6 +19,7 @@ from rclpy.time import Time
 from .core import (BODY_NED_FRAME, VELOCITY_YAW_RATE_MASK, CommandGate,
                    bounded_command, normalise_quaternion, stamp_is_fresh, scan_ranges_valid)
 from .task_lease import TaskLease
+from .stationkeeping import StationKeeping
 
 
 class RoverBridge(Node):
@@ -40,6 +42,7 @@ class RoverBridge(Node):
             'state_timeout': 2.0,
             'publish_rate': 20.0,
             'require_task_permission': False,
+            'enable_stationkeeping': False,
         }
         for name, value in defaults.items():
             self.declare_parameter(name, value)
@@ -50,6 +53,9 @@ class RoverBridge(Node):
         self.gate = CommandGate(**{key: self.p[key] for key in (
             'command_timeout', 'odom_timeout', 'scan_timeout', 'state_timeout')})
         self.sensor_headers = {}
+        self.sensor_valid_received={}
+        self.fcu_state=None;self.position=None;self.station=None;self.last_heartbeat=-1e9
+        self.mode_future=None
         self.task_lease = TaskLease()
         if self.p['require_task_permission']:
             from robotx_task1_interfaces.msg import MotionPermission
@@ -61,6 +67,16 @@ class RoverBridge(Node):
         self.status_pub = self.create_publisher(String, '/usv/control_status', 10)
         self.output_pub = (self.create_publisher(PositionTarget, self.p['setpoint_topic'], 10)
                            if self.p['enable_control'] else None)
+        if self.p['enable_stationkeeping'] and self.output_pub is not None:
+            if not self.p['require_task_permission']:raise ValueError('Station keeping needs a fresh task lease')
+            from mavros_msgs.srv import SetMode
+            from mavros_msgs.msg import Mavlink
+            from pymavlink import mavutil
+            self.station=StationKeeping()
+            self.mode_client=self.create_client(SetMode,'/mavros/set_mode')
+            self.station_status_pub=self.create_publisher(String,'/usv/stationkeeping_status',10)
+            self.heartbeat_pub=self.create_publisher(Mavlink,'/uas1/mavlink_sink',10)
+            self.heartbeat_codec=mavutil.mavlink.MAVLink(None,srcSystem=252,srcComponent=191)
         self.create_subscription(Twist, self.p['command_topic'], self.on_command, 10)
         self.create_subscription(State, self.p['state_topic'], self.on_state, qos_profile_sensor_data)
         self.create_subscription(Odometry, self.p['odom_topic'], self.on_odom, qos_profile_sensor_data)
@@ -88,10 +104,13 @@ class RoverBridge(Node):
     def on_permission(self, msg):
         stamp = msg.header.stamp.sec + msg.header.stamp.nanosec/1e9
         if self.task_lease.update(msg.revision, msg.allow, stamp,
-                                  self.get_clock().now().nanoseconds/1e9, time.monotonic(), msg.reason):
+                                  self.get_clock().now().nanoseconds/1e9, time.monotonic(), msg.reason,
+                                  getattr(msg,'station_action','')):
             self.gate.invalidate('command')
 
     def on_state(self, msg):
+        self.fcu_state=msg
+        if self.station:self.station.observe(msg.mode,msg.armed)
         self.gate.update_state(msg.connected, msg.armed, msg.mode, time.monotonic())
 
     def header_fresh(self, header, timeout):
@@ -111,7 +130,9 @@ class RoverBridge(Node):
         except ValueError:
             valid = False
         if valid:
+            self.position=(p.x,p.y)
             self.gate.mark('odom', time.monotonic())
+            self.sensor_valid_received['odom']=time.monotonic()
             self.sensor_headers['odom'] = msg.header
         else:
             self.gate.invalidate('odom')
@@ -127,6 +148,7 @@ class RoverBridge(Node):
                                               Time.from_msg(msg.header.stamp)))
         if valid:
             self.gate.mark('scan', time.monotonic())
+            self.sensor_valid_received['scan']=time.monotonic()
             self.sensor_headers['scan'] = msg.header
         else:
             self.gate.invalidate('scan')
@@ -150,6 +172,7 @@ class RoverBridge(Node):
             elif source == 'scan' and not self.tf_buffer.can_transform(
                     self.p['body_frame'], header.frame_id, Time.from_msg(header.stamp)):
                 self.gate.invalidate(source)
+        if self.station:self.station_tick()
         command, reason = self.gate.evaluate(time.monotonic())
         if self.p['require_task_permission'] and not self.task_lease.valid(
                 self.get_clock().now().nanoseconds/1e9, time.monotonic()):
@@ -165,6 +188,42 @@ class RoverBridge(Node):
         if status != self.last_status:
             self.get_logger().info(status)
             self.last_status = status
+
+    def station_tick(self):
+        from mavros_msgs.srv import SetMode
+        from mavros.mavlink import convert_to_rosmsg
+        from pymavlink import mavutil
+        now=time.monotonic();sim=self.get_clock().now().nanoseconds/1e9
+        state=self.fcu_state
+        if state is None:return
+        # An isolated empty MID-360 frame must not extend freshness. The
+        # existing last-valid 0.5 s budget tolerates one scan gap in LOITER;
+        # GUIDED's command gate still sends zero immediately on invalid input.
+        healthy=(state.connected and self.task_lease.fresh(sim,now)
+            and self.gate.received['state'] is not None
+            and 0<=now-self.gate.received['state']<=self.p['state_timeout']
+            and all(k in self.sensor_valid_received and k in self.sensor_headers
+                    and 0<=now-self.sensor_valid_received[k]<=self.p[k+'_timeout']
+                    and self.header_fresh(self.sensor_headers[k],self.p[k+'_timeout'])
+                    for k in ('odom','scan')))
+        request=self.station.decide(state.mode,state.armed,healthy,self.task_lease.station_action,self.position,now)
+        if request:
+            self.gate.invalidate('command')
+            self.get_logger().info('station mode request '+request+': '+self.station.reason)
+            self.station_status_pub.publish(String(data=json.dumps(dict(
+                wall=now,sim=sim,request=request,reason=self.station.reason,owned=self.station.owned,
+                failed=self.station.failed,anchor=self.station.anchor))))
+            if self.mode_client.service_is_ready():
+                self.mode_future=self.mode_client.call_async(SetMode.Request(base_mode=0,custom_mode=request))
+        # In the optional profile SYSID_MYGCS=252. MAVROS's normal heartbeat
+        # (255) cannot hide a dead bridge; this heartbeat still travels through
+        # MAVROS, and native GCS failsafe owns loss of either process.
+        if now-self.last_heartbeat>=.25 and not self.station.failed:
+            msg=self.heartbeat_codec.heartbeat_encode(mavutil.mavlink.MAV_TYPE_ONBOARD_CONTROLLER,
+                mavutil.mavlink.MAV_AUTOPILOT_INVALID,0,0,mavutil.mavlink.MAV_STATE_ACTIVE)
+            msg.pack(self.heartbeat_codec);self.heartbeat_codec.seq=(self.heartbeat_codec.seq+1)%256
+            self.heartbeat_pub.publish(convert_to_rosmsg(msg,self.get_clock().now().to_msg()))
+            self.last_heartbeat=now
 
     def stop(self):
         if self.output_pub is not None and self.gate.eligible:

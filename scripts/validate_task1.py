@@ -25,6 +25,7 @@ class TaskRunner(Runner):
         # The evaluation process observes navigation; it never publishes velocity/setpoints.
         self.node.destroy_publisher(self.raw);self.node.destroy_publisher(self.twist)
         self.status=None;self.events=[];self.scene_state=None;self.writers={};self.frame_counts={};self.frame_stamps={}
+        self.station_log=(self.run/'task1_stationkeeping.jsonl').open('w')
         self.costmaps={}
         for topic in ('/global_costmap/costmap','/local_costmap/costmap'):
             self.node.create_subscription(OccupancyGrid,topic,lambda m,t=topic:self.costmaps.__setitem__(t,m),
@@ -32,6 +33,7 @@ class TaskRunner(Runner):
         self.node.create_subscription(String,'/task1/status',self.on_status,10)
         self.node.create_subscription(String,'/task1/events',lambda m:self.events.append(json.loads(m.data)),10)
         self.node.create_subscription(String,'/task1/scene_state',self.on_scene,10)
+        self.node.create_subscription(String,'/usv/stationkeeping_status',self.on_station,10)
         self.node.create_subscription(MotionPermission,'/task1/motion_permission',lambda m:self.receive('/task1/motion_permission',m),10)
         if video:
             for topic,name in (('/usv/overview/image','task1_overview'),('/task1/beacon_view','task1_beacon')):
@@ -39,6 +41,10 @@ class TaskRunner(Runner):
 
     def on_status(self,msg):
         self.status=json.loads(msg.data);self.phase=self.status['stage']+'/'+self.status['motion']
+
+    def on_station(self,msg):
+        row=json.loads(msg.data);row['received_wall']=time.monotonic()
+        self.station_log.write(json.dumps(row,allow_nan=False)+'\n');self.station_log.flush()
 
     def navigation_ready(self):
         super().navigation_ready()
@@ -99,7 +105,7 @@ class TaskRunner(Runner):
             'frames':self.frame_counts,'configured_camera_update_rate_hz':5,'encoded_fps':5,
             'source_sim_stamps':self.frame_stamps,
             'timing_note':'Received frames are encoded in order. Delivery may be below the configured rate; use source stamps, not MP4 elapsed time, for measurements.'},indent=2)+'\n')
-        self.mav.close();self.log.close();self.node.destroy_node()
+        self.mav.close();self.log.close();self.station_log.close();self.node.destroy_node()
 
 
 def main():

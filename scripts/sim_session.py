@@ -54,6 +54,7 @@ def stop(expected_run=None):
         return
     if expected_run is not None and state['run_dir'] != str(expected_run):
         return
+    started=time.monotonic()
     def active(child):
         try:
             stat=Path(f"/proc/{child['pid']}/stat").read_text().split(') ',1)[1].split()
@@ -70,6 +71,7 @@ def stop(expected_run=None):
         if not any(active(p) for p in state['processes']):
             break
         time.sleep(0.2)
+    terminated=[p['name'] for p in state['processes'] if active(p)]
     for child in state['processes']:
         signal_group(child,signal.SIGTERM)
     # Gazebo may remain blocked during shutdown after SIGTERM. Do not discard
@@ -78,12 +80,22 @@ def stop(expected_run=None):
     while time.monotonic()<deadline:
         if not any(active(p) for p in state['processes']):break
         time.sleep(.1)
+    killed=[p['name'] for p in state['processes'] if active(p)]
     for child in state['processes']:
         signal_group(child,signal.SIGKILL)
     deadline=time.monotonic()+2
     while any(active(p) for p in state['processes']) and time.monotonic()<deadline:time.sleep(.1)
     if any(active(p) for p in state['processes']):
         raise RuntimeError('Owned processes survived shutdown; retaining session identity and refusing a new session')
+    run=Path(state['run_dir'])
+    if run.is_dir():
+        log=(run/'gazebo.log').read_text(errors='replace') if (run/'gazebo.log').exists() else ''
+        crashes=[line for line in log.splitlines() if any(s in line for s in
+                 ('Segmentation fault','core dumped','Stack trace','SIGSEGV'))]
+        (run/'shutdown_audit.json').write_text(json.dumps(dict(
+            duration_wall_s=time.monotonic()-started,sigterm_required=terminated,sigkill_required=killed,
+            gazebo_crash_lines=crashes,all_owned_processes_stopped=True,
+            graceful_gazebo=not crashes and 'gazebo' not in terminated and 'gazebo' not in killed),indent=2)+'\n')
     # Another stop caller may already have removed this session, followed by a
     # new start. Never unlink the replacement session's process identities.
     with session_lock():
@@ -152,6 +164,13 @@ def start(args):
             provenance['files'][path]=hashlib.sha256((ROOT/path).read_bytes()).hexdigest()
         provenance['system_libraries']={str(path):hashlib.sha256(path.read_bytes()).hexdigest()
             for path in sorted(Path('/opt/ros/humble/lib/x86_64-linux-gnu').glob('libompl.so.*')) if not path.is_symlink()}
+    if (ROOT/'build/vrx_render_fix/libWaveVisual.so').exists():
+        for path in ('build/vrx_render_fix/libWaveVisual.so','patches/vrx_wavevisual_teardown.patch'):
+            provenance['files'][path]=hashlib.sha256((ROOT/path).read_bytes()).hexdigest()
+    for name in ('Waves','Surface','USVWind','SimpleHydrodynamics'):
+        library=vrx/'install/vrx_gz/lib'/('lib'+name+'.so')
+        if library.exists():
+            provenance.setdefault('system_libraries',{})[str(library)]=hashlib.sha256(library.read_bytes()).hexdigest()
     if args.lidar == 'mid360':
         for relative in ('external/livox_gz_sim/install/lib/liblivox_gz_sim.so',
                          'external/livox_gz_sim/scan_patterns/mid360.csv',
@@ -169,7 +188,11 @@ def start(args):
         prepare(generated,args.seed,args.changes,args.dynamic,args.task1_blocked,args.task1_visibility_guard,args.course)
     if args.lidar == 'mid360':
         from prepare_mid360 import prepare as prepare_mid360
-        prepare_mid360(generated)
+        prepare_mid360(generated,args.mid360_mount)
+    if args.task1_loiter:
+        if not args.task1:raise ValueError('--task1-loiter requires --task1')
+        scene=json.loads((generated/'scene.json').read_text());scene['task1']['native_loiter']=True
+        (generated/'scene.json').write_text(json.dumps(scene,indent=2)+'\n')
     # A build that finishes during preparation invalidates the initial binary
     # hashes. Refuse to launch rather than silently record a different library.
     for relative,expected in provenance['files'].items():
@@ -201,6 +224,9 @@ def start(args):
         parameters = (ROOT/'config/rover_wamv.parm').read_text()
         if args.gps_input:
             parameters = parameters.replace('GPS_TYPE 1\n', 'GPS_TYPE 14\n')
+        if args.task1_loiter:
+            parameters=parameters.replace('SYSID_MYGCS 255\n','SYSID_MYGCS 252\n').replace('FS_TIMEOUT 1.5\n','FS_TIMEOUT 0.5\n')
+            parameters+='\nFS_GCS_TIMEOUT 1\nLOIT_RADIUS 0.3\nLOIT_TYPE 0\nLOIT_SPEED_GAIN 0.5\nWP_SPEED 0.3\nATC_STR_RAT_MAX 23\n'
         (run/'rover.parm').write_text(parameters)
         # This exact firmware advertises --rate but has no case for it in its CLI.
         spawn('sitl', [str(ROOT/'external/ardupilot/build/sitl/bin/ardurover'), '--model', 'JSON:127.0.0.1',
@@ -275,10 +301,11 @@ def navigation(args):
                                    '-p','route_deceleration:='+str(abs(dynamics['decel_lim_x'])),
                                    '-p','run_dir:='+str(run)]
         commands['task1_mission']=['ros2','run','robotx_task1','mission','--ros-args','-p','use_sim_time:=true','-p','run_dir:='+str(run)]
+        if scene['task1'].get('native_loiter',False):commands['task1_mission']+=['-p','enable_stationkeeping:=true']
         commands['task1_judge']=['ros2','run','robotx_task1','judge','--ros-args','-p','use_sim_time:=true','-p','run_dir:='+str(run)]
     if scene.get('lidar_model') == 'mid360':
         commands['lidar_tf']=['ros2','run','tf2_ros','static_transform_publisher',
-                             '--x','0.7','--y','-0.3','--z','1.8','--frame-id','base_link',
+                             '--x',str(scene['lidar_xyz'][0]),'--y',str(scene['lidar_xyz'][1]),'--z',str(scene['lidar_xyz'][2]),'--frame-id','base_link',
                              '--child-frame-id','mid360_frame','--ros-args','-p','use_sim_time:=true']
         commands['cloud_filter']=['ros2','run','usv_sim','livox_filter','--ros-args',
                                  '-p','use_sim_time:=true','-p','footprint:='+json.dumps(json.dumps(scene['footprint']))]
@@ -300,6 +327,8 @@ def main():
     parser.add_argument('--wind', type=float, default=0)
     parser.add_argument('--wave-gain', type=float, default=0)
     parser.add_argument('--lidar', choices=('vrx','mid360'), default='vrx')
+    parser.add_argument('--mid360-mount',choices=('mast','bow','low_bow'),default='mast')
+    parser.add_argument('--task1-loiter',action='store_true')
     parser.add_argument('--lockstep', action='store_true')
     parser.add_argument('--navigation', action='store_true')
     parser.add_argument('--control', action='store_true')

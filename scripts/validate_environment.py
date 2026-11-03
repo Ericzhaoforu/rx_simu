@@ -279,7 +279,10 @@ def collision_sensor(runner):
 
 
 def reset(runner):
-    runner.phase='before_reset';runner.spin(2);before=runner.rows[-1]
+    runner.arm();runner.phase='before_reset'
+    for _ in range(60):runner.command(0.,.12);runner.spin(.05)
+    before=runner.rows[-1]
+    active_before=sum(map(abs,before.get('preview',[0.,0.])))>.05
     gz_service('/world/usv_nav/control','gz.msgs.WorldControl','reset { all: true }')
     runner.phase='after_reset';runner.spin(12)
     rows=[r for r in runner.rows if r['phase']=='after_reset']
@@ -288,7 +291,10 @@ def reset(runner):
             'final_sim_s':latest['sim'],'final_odom_age_s':latest.get('ekf_age'),
             'final_scan_age_s':latest.get('scan_age'),'final_gate':latest.get('gate'),
             'nonzero_preview_samples':sum(sum(abs(v) for v in r.get('preview',[0,0]))>.001 for r in rows),
-            'passed':0<=latest.get('ekf_age',999)<.5 and 0<=latest.get('scan_age',999)<.5}
+            'nonzero_command_before_reset':active_before,
+            'passed':active_before and 0<=latest.get('ekf_age',999)<.5 and 0<=latest.get('scan_age',999)<.5
+                and not any(sum(map(abs,r.get('preview',[0,0])))>.001 for r in rows
+                            if r['sim']<before['sim'])}
 
 
 def dynamic_navigation(runner):
@@ -336,6 +342,7 @@ def main():
         (runner.run/(args.case+'_result.json')).write_text(json.dumps(result,indent=2)+'\n')
         print(json.dumps(result,indent=2))
     finally:runner.close();rclpy.shutdown()
+    if result.get('passed') is False:raise SystemExit(1)
 
 
 if __name__=='__main__':main()

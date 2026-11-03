@@ -17,7 +17,7 @@ class GNSS(Node):
     def __init__(self):
         super().__init__('gnss_injector')
         for key,value in {'fix_type':6,'horizontal_sigma':0.02,'reported_accuracy':0.02,
-                          'delay_s':0.1,'drop':False,'seed':42}.items():
+                          'delay_s':0.1,'drop':False,'seed':42,'east_bias':0.,'north_bias':0.}.items():
             self.declare_parameter(key,value)
         self.random=random.Random(self.get_parameter('seed').value)
         self.previous=None;self.truth=None;self.queue=deque()
@@ -48,7 +48,8 @@ class GNSS(Node):
             velocity=[(p.x-self.previous[1])/dt,(p.y-self.previous[2])/dt,(p.z-self.previous[3])/dt]
         self.previous=(stamp,p.x,p.y,p.z)
         sigma=max(0.,self.get_parameter('horizontal_sigma').value)
-        east=p.x+self.random.gauss(0,sigma);north=p.y+self.random.gauss(0,sigma)
+        east=p.x+self.random.gauss(0,sigma)+self.get_parameter('east_bias').value
+        north=p.y+self.random.gauss(0,sigma)+self.get_parameter('north_bias').value
         # WGS84 radii at the fixed Sydney origin; <100 m local approximation.
         lat0=math.radians(-33.724223);a=6378137.;e2=6.6943799901413165e-3
         n=a/math.sqrt(1-e2*math.sin(lat0)**2);m=a*(1-e2)/(1-e2*math.sin(lat0)**2)**1.5
@@ -56,6 +57,7 @@ class GNSS(Node):
         sample={'stamp':stamp,'lat':lat,'lon':lon,'alt':p.z,'velocity':velocity,
                 'fix_type':int(self.get_parameter('fix_type').value),
                 'accuracy':max(.001,self.get_parameter('reported_accuracy').value),'sigma':sigma}
+        sample['bias_en_m']=[self.get_parameter('east_bias').value,self.get_parameter('north_bias').value]
         self.queue.append((now+max(0.,self.get_parameter('delay_s').value),sample))
         while self.queue and self.queue[0][0]<=now:
             _,sample=self.queue.popleft()

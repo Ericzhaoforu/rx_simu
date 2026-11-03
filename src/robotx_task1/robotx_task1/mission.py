@@ -34,6 +34,10 @@ class Mission(Node):
         self.declare_parameter('stop_speed',.04);self.declare_parameter('stop_yaw_rate',.04)
         self.declare_parameter('stop_dwell',1.5)
         self.declare_parameter('traffic_yield_wait',90.)
+        self.declare_parameter('enable_stationkeeping',False)
+        self.enable_stationkeeping=self.get_parameter('enable_stationkeeping').value
+        self.station_resume_until=-1e9
+        self.station_hold_pending=False
         self.declare_parameter('circle_completion_margin',.05)
         # Reserve time for the 10 Hz mission tick, bridge forwarding and the
         # independent recorder within the 0.6 s interruption response budget.
@@ -52,7 +56,7 @@ class Mission(Node):
         run=self.get_parameter('run_dir').value
         self.log=(Path(run)/'task1_mission.jsonl').open('w') if run else None
         self.obs=None;self.buoys=[];self.pose=None;self.odom=None;self.pose_stamp=-1.;self.pose_wall=0.
-        self.state=None;self.tf=Buffer();self.listener=TransformListener(self.tf,self)
+        self.state=None;self.state_wall=0.;self.tf=Buffer();self.listener=TransformListener(self.tf,self)
         self.stage='WAIT_SURVEY';self.motion='IDLE';self.started=False;self.generation=0
         self.bits=0;self.circle=None;self.arc_index=0;self.entry=None;self.exit=None
         self.target=None;self.plan_future=None;self.send_future=None;self.result_future=None
@@ -75,12 +79,15 @@ class Mission(Node):
         self.create_subscription(Odometry,'/usv/odom',self.on_odom,qos_profile_sensor_data)
         self.create_subscription(TrafficSafety,'/task1/traffic_safety',self.on_traffic,10)
         self.create_subscription(RouteAssessment,'/task1/route_assessment',self.on_route,10)
-        self.create_subscription(State,'/mavros/state',lambda m:setattr(self,'state',m),qos_profile_sensor_data)
+        self.create_subscription(State,'/mavros/state',self.on_state,qos_profile_sensor_data)
         self.create_service(Trigger,'/task1/start',self.start)
         self.create_service(Trigger,'/task1/cancel',self.cancel)
         self.create_timer(.1,self.tick)
 
     def now(self):return self.get_clock().now().nanoseconds/1e9
+
+    def on_state(self,msg):
+        self.state=msg;self.state_wall=time.monotonic()
 
     def event(self,kind,**values):
         row=dict(sim=self.now(),wall=time.monotonic(),event=kind,stage=self.stage,
@@ -112,7 +119,7 @@ class Mission(Node):
 
     def abort(self,reason):
         if self.stage=='ABORTED':return
-        self.interrupt(reason);self.stage='ABORTED';self.motion='ABORTED';self.event('aborted',reason=reason)
+        self.stage='ABORTED';self.interrupt(reason);self.motion='ABORTED';self.event('aborted',reason=reason)
 
     def on_observation(self,msg):
         t=seconds(msg.header.stamp)
@@ -210,7 +217,26 @@ class Mission(Node):
 
     def permission(self,allow):
         m=MotionPermission();m.header.stamp=self.get_clock().now().to_msg();m.header.frame_id='map'
-        m.revision=self.last_revision;m.allow=allow;m.reason=self.reason;self.permission_pub.publish(m)
+        m.revision=self.last_revision;m.allow=allow;m.reason=self.reason
+        if self.enable_stationkeeping:
+            m.station_action='resume'
+            free=not any((self.follow_handle,self.send_future,self.result_future))
+            valid=self.inputs_valid() and self.traffic.valid(self.now(),time.monotonic())
+            holding=bool(self.state and (self.state.mode=='LOITER' or self.station_hold_pending))
+            if (self.stage in ('COMPLETE','ABORTED') or not valid):m.station_action='stop'
+            elif (self.started and free and (self.motion in ('WAIT_CLEAR','WAIT_ROUTE','ENTERING_HOLD')
+                  or (holding and self.motion in ('PLANNING','CHECKING_TRAFFIC')))
+                  and self.now()>=self.station_resume_until):
+                v=self.odom.twist.twist.linear
+                if self.traffic_message is not None and self.traffic_message.hold_clear:
+                    # The entry speed limit is not a command to interrupt an
+                    # ongoing native correction. Excursion/health remain gated.
+                    if holding or math.hypot(v.x,v.y)<.15:m.station_action='hold'
+                elif holding:m.station_action='stop'
+            elif holding and self.motion!='RESUMING':
+                m.station_action='stop'
+            if m.station_action=='hold':self.station_hold_pending=self.state.mode!='LOITER'
+        self.permission_pub.publish(m)
 
     def publish_speed_limit(self):
         target=self.planned_target or self.target
@@ -311,6 +337,14 @@ class Mission(Node):
         self.permission(False)
         self.event('observation_point_reached',observation_target=self.planned_target,mission_target=self.target,ekf_pose=self.pose)
 
+    def leave_station_for_replan(self):
+        if self.state.mode=='LOITER':
+            self.station_hold_pending=False
+            self.motion='RESUMING';self.reason='leave LOITER, confirm GUIDED, then replan current pose'
+            self.event('station_resume_requested')
+        else:
+            self.motion='ENTERING_HOLD';self.reason='await in-flight LOITER acknowledgement before release'
+
     def request_plan(self):
         if not self.plan_client.server_is_ready() or not self.follow_client.server_is_ready():return
         self.route_wait_until=None
@@ -367,6 +401,14 @@ class Mission(Node):
     def tick(self):
         speed_limit=self.publish_speed_limit()
         self.publish_context();self.poll_actions()
+        if getattr(self,'enable_stationkeeping',False) and self.started and self.stage not in ('COMPLETE','ABORTED'):
+            if self.state and self.state.mode not in ('GUIDED','LOITER'):
+                self.abort('FCU left task modes; operator or failsafe owns motion')
+            if self.motion=='ENTERING_HOLD' and self.state and self.state.mode=='LOITER':self.leave_station_for_replan()
+            if self.motion=='RESUMING' and self.state and self.state.mode=='GUIDED' and time.monotonic()-self.state_wall<2.:
+                self.motion='STOPPING';self.still_since=None;self.last_retry=self.now()
+                self.station_resume_until=self.now()+5.
+                self.event('station_guided_confirmed')
         if self.started and self.stage not in ('COMPLETE','ABORTED'):
             if self.now()-self.started_at>1200:self.abort('1200 sim-second task timeout')
             elif not self.inputs_valid() or not self.traffic.valid(self.now(),time.monotonic()):
@@ -389,22 +431,30 @@ class Mission(Node):
                 if (self.motion=='CHECKING_TRAFFIC' and self.traffic.path_stamp==seconds(self.last_path.header.stamp)
                         and self.candidate_route_ready()):
                     if self.traffic_permits_path() and self.traffic.clear_for(self.now(),time.monotonic()):
-                        if self.stage=='TRANSIT':
-                            d=self.route_assessment
-                            self.event('route_selected',source_stamp=self.route_stamp,path_stamp=seconds(d.path_stamp),
-                                       eta_s=d.eta_s,reference_eta_s=d.reference_eta_s,switch_cost_s=d.switch_cost_s,
-                                       purpose='observation' if self.plan_is_observation else 'mission',
-                                       preference_budget_expired=self.yield_until is not None and self.now()>=self.yield_until)
-                        self.route_wait_started=None;self.yield_until=None
-                        self.executing_observation=self.plan_is_observation
-                        if self.stage=='TRANSIT' and not self.plan_is_observation:self.corridor_path=self.last_path
-                        self.preferred_path_stamp=self.last_path.header.stamp
-                        self.publish_context()
-                        self.path_pub.publish(self.last_path)
-                        goal=FollowPath.Goal();goal.path=self.last_path;goal.controller_id='FollowPath';goal.goal_checker_id='goal_checker'
-                        self.send_future=self.follow_client.send_goal_async(goal);self.motion='STARTING'
-                        self.event('path_ready',poses=len(goal.path.poses),target=self.target,
-                                   planned_target=self.planned_target,purpose='observation' if self.plan_is_observation else 'mission')
+                        if (getattr(self,'enable_stationkeeping',False) and self.state
+                                and (self.state.mode=='LOITER' or self.station_hold_pending)):
+                            # Keep a fixed native target while evaluating blocked
+                            # alternatives. A usable candidate only triggers
+                            # release; its path is discarded and recomputed once
+                            # GUIDED is acknowledged and the vessel has settled.
+                            self.leave_station_for_replan()
+                        else:
+                            if self.stage=='TRANSIT':
+                                d=self.route_assessment
+                                self.event('route_selected',source_stamp=self.route_stamp,path_stamp=seconds(d.path_stamp),
+                                           eta_s=d.eta_s,reference_eta_s=d.reference_eta_s,switch_cost_s=d.switch_cost_s,
+                                           purpose='observation' if self.plan_is_observation else 'mission',
+                                           preference_budget_expired=self.yield_until is not None and self.now()>=self.yield_until)
+                            self.route_wait_started=None;self.yield_until=None
+                            self.executing_observation=self.plan_is_observation
+                            if self.stage=='TRANSIT' and not self.plan_is_observation:self.corridor_path=self.last_path
+                            self.preferred_path_stamp=self.last_path.header.stamp
+                            self.publish_context()
+                            self.path_pub.publish(self.last_path)
+                            goal=FollowPath.Goal();goal.path=self.last_path;goal.controller_id='FollowPath';goal.goal_checker_id='goal_checker'
+                            self.send_future=self.follow_client.send_goal_async(goal);self.motion='STARTING'
+                            self.event('path_ready',poses=len(goal.path.poses),target=self.target,
+                                       planned_target=self.planned_target,purpose='observation' if self.plan_is_observation else 'mission')
                     elif not self.traffic.clear:
                         self.motion='WAIT_CLEAR';self.reason='candidate path blocked by traffic';self.last_retry=self.now()
                         self.event('path_blocked_traffic',source_stamp=self.traffic.stamp)
@@ -415,7 +465,9 @@ class Mission(Node):
                     else:self.still_since=None
                     free=not any((self.follow_handle,self.send_future,self.plan_future,getattr(self,'plan_result',None)))
                     retry_delay=2. if self.traffic.clear else 5.
-                    if (free and self.still_since is not None and self.now()-self.still_since>=self.stop_dwell
+                    hold_ready=(getattr(self,'enable_stationkeeping',False) and self.state and self.state.mode=='LOITER'
+                                and math.hypot(v.x,v.y)<.15)
+                    if (free and ((self.still_since is not None and self.now()-self.still_since>=self.stop_dwell) or hold_ready)
                             and self.now()-self.last_retry>=retry_delay):
                         # Compute alternatives while stopped, then compare wait
                         # and detour using fresh arrival estimates. A timeout

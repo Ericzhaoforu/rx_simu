@@ -48,6 +48,17 @@ class TrafficTests(unittest.TestCase):
         points=np.array([[2.,3.,1.],[6.,6.,1.],[25.,1.,1.]])
         np.testing.assert_equal(mapped.unmapped(points),points[:1])
 
+    def test_hold_rotation_disk_rejects_unknown_land_and_boundary(self):
+        grid=np.zeros((40,40),dtype=int);grid[20,20]=100;grid[10,10]=-1
+        mapped=StaticMap(grid,.5,[0.,0.,0.],padding=0.)
+        self.assertTrue(mapped.disk_clear([5.,10.],2.))
+        self.assertFalse(mapped.disk_clear([9.,10.],2.))
+        self.assertFalse(mapped.disk_clear([4.,5.],2.))
+        self.assertFalse(mapped.disk_clear([1.,10.],2.))
+        rotated=StaticMap(grid,.5,[30.,-5.,math.pi/2],padding=0.)
+        self.assertTrue(rotated.disk_clear([20.,0.],2.))
+        self.assertFalse(rotated.disk_clear([20.,4.],2.))
+
     def test_measured_motion_and_partial_view_retains_front(self):
         tracker = Tracker()
         for t in np.arange(0,4,.1):tracker.update(surface(y=-6+.25*t),float(t))

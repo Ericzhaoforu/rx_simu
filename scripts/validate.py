@@ -75,7 +75,7 @@ class Runner:
             except OSError:
                 if time.monotonic()>deadline:raise
                 time.sleep(.5)
-        for message_id in (24,193,36):
+        for message_id in (24,193,36,87):
             self.mav.mav.command_long_send(1,1,mavutil.mavlink.MAV_CMD_SET_MESSAGE_INTERVAL,0,
                                            message_id,500000,0,0,0,0,0)
         self.single = ActionClient(self.node, NavigateToPose, '/navigate_to_pose')
@@ -138,7 +138,7 @@ class Runner:
             state=self.data['/mavros/state']
             row['fcu_state']={'connected':state.connected,'armed':state.armed,'mode':state.mode,
                               'wall_age_s':now-self.received['/mavros/state']}
-        for name in ('GPS_RAW_INT','EKF_STATUS_REPORT','SERVO_OUTPUT_RAW','HEARTBEAT'):
+        for name in ('GPS_RAW_INT','EKF_STATUS_REPORT','SERVO_OUTPUT_RAW','HEARTBEAT','POSITION_TARGET_GLOBAL_INT'):
             if name in self.telemetry:row[name]=self.telemetry[name]
         self.rows.append(row)
         self.log.write(json.dumps(row,allow_nan=False)+'\n');self.log.flush()
@@ -152,7 +152,7 @@ class Runner:
                 if not self.mav_available:break
                 message=self.mav.recv_match(blocking=False)
                 if message is None:break
-                if message.get_type() in ('GPS_RAW_INT','EKF_STATUS_REPORT','SERVO_OUTPUT_RAW','HEARTBEAT') and message.get_srcSystem()==1 and message.get_srcComponent()==1:
+                if message.get_type() in ('GPS_RAW_INT','EKF_STATUS_REPORT','SERVO_OUTPUT_RAW','HEARTBEAT','POSITION_TARGET_GLOBAL_INT') and message.get_srcSystem()==1 and message.get_srcComponent()==1:
                     self.telemetry[message.get_type()]=message.to_dict()
                 if message.get_type()=='STATUSTEXT':
                     self.log.write(json.dumps({'status_text':message.text,'wall':time.monotonic()})+'\n')

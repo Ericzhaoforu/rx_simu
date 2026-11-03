@@ -237,6 +237,16 @@ class TrafficGuard(Node):
         result.reason = risk['reason'] if risk else 'observed traffic corridor clear'
         result.track_id = risk['track_id'] if risk else 0
         result.conflict_after_s = risk['future_s'] if risk else -1.
+        # LOITER may rotate and reverse. Check its entire rotation envelope,
+        # plus 0.8 m excursion and 0.5 m reserve, not only the forward corridor.
+        radius=float(np.linalg.norm(self.footprint,axis=1).max()+.8+.5)
+        angles=np.linspace(0,2*math.pi,32,endpoint=False)
+        disk=np.column_stack([np.cos(angles),np.sin(angles)])*(radius/math.cos(math.pi/32))+pose[:2]
+        marker_clear=np.all(np.linalg.norm(self.markers[:,:2]-pose[:2],axis=1)>radius+self.markers[:,2])
+        measured_clear=not np.any(np.linalg.norm(points[:,:2]-pose[:2],axis=1)<radius)
+        result.hold_clear=(self.static_map.disk_clear(pose[:2],radius) and bool(marker_clear) and measured_clear
+                           and conflict(tracks,stamp,disk,self.horizon,self.margin) is None)
+        result.hold_envelope_radius=radius
         self.publisher.publish(result)
         row = dict(source_stamp=stamp, evaluated_at=self.get_clock().now().nanoseconds/1e9,
                    processing_started_at=now,safety_compute_wall_s=time.monotonic()-started,
@@ -244,6 +254,7 @@ class TrafficGuard(Node):
                    horizon=self.horizon,speed_bound=self.speed,margin=self.margin,
                    acquisition_range=self.tracker.observation_range,continuation_range=self.continuation_range,
                    clear=result.clear, risk=risk, pose=pose, corridor=swept.tolist(),
+                   hold_clear=result.hold_clear,hold_envelope_radius=radius,
                    merged_tracks=self.tracker.merges, retired_tracks=self.tracker.retired,
                    tracks=[dict(id=t.id, stamp=t.stamp, bounds=t.bounds.tolist(),
                                 velocity=t.velocity.tolist(), moving=t.moving) for t in tracks])
