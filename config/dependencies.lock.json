@@ -94,5 +94,6 @@
       "file": "ros-humble-pointcloud-to-laserscan_2.0.1-3jammy.20260915.221044_amd64.deb"
     }
   ],
-  "geoid_sha256": "c46224f8f723dc915d97179f4e1580a98d6c742fe2b82cd8fef0ecaaad13e614"
+  "geoid_sha256": "c46224f8f723dc915d97179f4e1580a98d6c742fe2b82cd8fef0ecaaad13e614",
+  "livox_gz_sim": "4ca09c3876c2ae60c63f7507578ced57f638e236"
 }

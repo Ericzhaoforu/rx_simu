@@ -2,6 +2,7 @@
 """Start/stop only this workspace's processes; run after sourcing scripts/env.sh."""
 import argparse
 import datetime
+import fcntl
 import hashlib
 import json
 import os
@@ -12,10 +13,32 @@ import subprocess
 import sys
 import tarfile
 import time
+from contextlib import contextmanager
 
 ROOT = Path(__file__).resolve().parents[1]
 PIDFILE = ROOT/'runs/session.json'
 REVISION = 'd0356316eb0fa34ed1c9f39f7b059b9ae7ba4664'
+
+
+@contextmanager
+def session_lock():
+    with PIDFILE.with_suffix('.lock').open('a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX)
+        yield
+
+
+def read_session():
+    try:
+        return json.loads(PIDFILE.read_text())
+    except FileNotFoundError:
+        return None
+
+
+def write_session(state):
+    with session_lock():
+        temporary=PIDFILE.with_name(f'session.{os.getpid()}.tmp')
+        temporary.write_text(json.dumps(state,indent=2)+'\n')
+        temporary.replace(PIDFILE)
 
 
 def process_start(pid):
@@ -25,10 +48,12 @@ def process_start(pid):
         return None
 
 
-def stop():
-    if not PIDFILE.exists():
+def stop(expected_run=None):
+    state = read_session()
+    if state is None:
         return
-    state = json.loads(PIDFILE.read_text())
+    if expected_run is not None and state['run_dir'] != str(expected_run):
+        return
     def active(child):
         try:
             stat=Path(f"/proc/{child['pid']}/stat").read_text().split(') ',1)[1].split()
@@ -59,7 +84,12 @@ def stop():
     while any(active(p) for p in state['processes']) and time.monotonic()<deadline:time.sleep(.1)
     if any(active(p) for p in state['processes']):
         raise RuntimeError('Owned processes survived shutdown; retaining session identity and refusing a new session')
-    PIDFILE.unlink(missing_ok=True)
+    # Another stop caller may already have removed this session, followed by a
+    # new start. Never unlink the replacement session's process identities.
+    with session_lock():
+        current=read_session()
+        if current is not None and current['run_dir'] == state['run_dir']:
+            PIDFILE.unlink(missing_ok=True)
     print('Stopped workspace session:', state['run_dir'])
 
 
@@ -85,6 +115,14 @@ def start(args):
     vrx=Path(os.environ.get('VRX_ROOT','/home/zjy/vrx_docking'))
     if subprocess.check_output(['git','rev-parse','HEAD'],cwd=vrx,text=True).strip()!=lock['vrx']:
         raise RuntimeError('VRX revision mismatch')
+    if args.lidar == 'mid360':
+        source=ROOT/'external/livox_gz_sim'
+        if subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip()!=lock['livox_gz_sim']:
+            raise RuntimeError('MID-360 plugin revision mismatch')
+        if subprocess.check_output(['git','diff','--binary'],cwd=source)!=(ROOT/'patches/livox_gz_sim_garden.patch').read_bytes():
+            raise RuntimeError('MID-360 checkout differs from the tracked Garden patch')
+        if not (source/'install/lib/liblivox_gz_sim.so').exists():
+            raise RuntimeError('Run bash scripts/build_mid360.sh and source scripts/env.sh first')
     for family, port in ((socket.SOCK_DGRAM, 9002), (socket.SOCK_DGRAM, 14550), (socket.SOCK_STREAM, 5760), (socket.SOCK_STREAM, 5762)):
         with socket.socket(socket.AF_INET, family) as probe:
             probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -114,6 +152,11 @@ def start(args):
             provenance['files'][path]=hashlib.sha256((ROOT/path).read_bytes()).hexdigest()
         provenance['system_libraries']={str(path):hashlib.sha256(path.read_bytes()).hexdigest()
             for path in sorted(Path('/opt/ros/humble/lib/x86_64-linux-gnu').glob('libompl.so.*')) if not path.is_symlink()}
+    if args.lidar == 'mid360':
+        for relative in ('external/livox_gz_sim/install/lib/liblivox_gz_sim.so',
+                         'external/livox_gz_sim/scan_patterns/mid360.csv',
+                         'patches/livox_gz_sim_garden.patch'):
+            provenance['files'][relative]=hashlib.sha256((ROOT/relative).read_bytes()).hexdigest()
     (run/'provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
     generated = run/'generated'
     command = [sys.executable, str(ROOT/'scripts/generate_world.py'), '--output', str(generated),
@@ -124,6 +167,9 @@ def start(args):
     if args.task1:
         from prepare_task1 import prepare
         prepare(generated,args.seed,args.changes,args.dynamic,args.task1_blocked,args.task1_visibility_guard,args.course)
+    if args.lidar == 'mid360':
+        from prepare_mid360 import prepare as prepare_mid360
+        prepare_mid360(generated)
     # A build that finishes during preparation invalidates the initial binary
     # hashes. Refuse to launch rather than silently record a different library.
     for relative,expected in provenance['files'].items():
@@ -135,7 +181,7 @@ def start(args):
         process = subprocess.Popen(command, cwd=cwd, start_new_session=True,
                                    stdout=(run/(name+'.log')).open('w'), stderr=subprocess.STDOUT)
         state['processes'].append({'name': name, 'pid': process.pid, 'start': process_start(process.pid), 'command': command})
-        PIDFILE.write_text(json.dumps(state, indent=2)+'\n')
+        write_session(state)
         time.sleep(0.4)
         if process.poll() is not None:
             raise RuntimeError(f'{name} exited: see {run}/{name}.log')
@@ -165,7 +211,7 @@ def start(args):
         if args.gps_input:
             spawn('gnss', ['ros2','run','usv_sim','gnss_injector','--ros-args','-p','use_sim_time:=true'])
     except Exception:
-        stop()
+        stop(expected_run=run)
         raise
     (ROOT/'runs/latest.txt').write_text(str(run)+'\n')
     print(run, flush=True)
@@ -174,12 +220,12 @@ def start(args):
     # ArduPilot deliberately exits when its parent exits. Keep a supervisor alive.
     signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
     try:
-        while PIDFILE.exists():
+        while (read_session() or {}).get('run_dir') == str(run):
             time.sleep(1)
     except KeyboardInterrupt:
         pass
     finally:
-        stop()
+        stop(expected_run=run)
 
 
 def navigation(args):
@@ -196,6 +242,7 @@ def navigation(args):
         state['processes']=[p for p in state['processes'] if p['name'] not in names]
     subprocess.run([sys.executable, str(ROOT/'scripts/prepare_navigation.py'), str(generated/'scene.json')], check=True)
     task1='task1' in json.loads((generated/'scene.json').read_text())
+    scene=json.loads((generated/'scene.json').read_text())
     if task1:
         from prepare_task1 import navigation as task_navigation
         task_navigation(generated)
@@ -229,6 +276,12 @@ def navigation(args):
                                    '-p','run_dir:='+str(run)]
         commands['task1_mission']=['ros2','run','robotx_task1','mission','--ros-args','-p','use_sim_time:=true','-p','run_dir:='+str(run)]
         commands['task1_judge']=['ros2','run','robotx_task1','judge','--ros-args','-p','use_sim_time:=true','-p','run_dir:='+str(run)]
+    if scene.get('lidar_model') == 'mid360':
+        commands['lidar_tf']=['ros2','run','tf2_ros','static_transform_publisher',
+                             '--x','0.7','--y','-0.3','--z','1.8','--frame-id','base_link',
+                             '--child-frame-id','mid360_frame','--ros-args','-p','use_sim_time:=true']
+        commands['cloud_filter']=['ros2','run','usv_sim','livox_filter','--ros-args',
+                                 '-p','use_sim_time:=true','-p','footprint:='+json.dumps(json.dumps(scene['footprint']))]
     for name, command in commands.items():
         previous_log=run/(name+'.log')
         if previous_log.exists():
@@ -236,7 +289,7 @@ def navigation(args):
         process = subprocess.Popen(command, cwd=ROOT, start_new_session=True,
                                    stdout=(run/(name+'.log')).open('w'), stderr=subprocess.STDOUT)
         state['processes'].append({'name': name, 'pid': process.pid, 'start': process_start(process.pid), 'command': command})
-        PIDFILE.write_text(json.dumps(state, indent=2)+'\n')
+        write_session(state)
     print('Attached navigation, control='+str(args.control), flush=True)
 
 
@@ -246,6 +299,7 @@ def main():
     parser.add_argument('--name', default='baseline')
     parser.add_argument('--wind', type=float, default=0)
     parser.add_argument('--wave-gain', type=float, default=0)
+    parser.add_argument('--lidar', choices=('vrx','mid360'), default='vrx')
     parser.add_argument('--lockstep', action='store_true')
     parser.add_argument('--navigation', action='store_true')
     parser.add_argument('--control', action='store_true')

@@ -21,7 +21,16 @@ if [[ -f /usr/share/glvnd/egl_vendor.d/10_nvidia.json ]]; then
 fi
 export ROS_DOMAIN_ID="${USV_ROS_DOMAIN_ID:-42}"
 export GZ_PARTITION="${USV_GZ_PARTITION:-usv_nav_validation}"
+# All simulator components run on this host. Avoid routing local transport
+# through a changing Wi-Fi / VPN interface; callers may explicitly override it.
+export GZ_IP="${GZ_IP:-127.0.0.1}"
 export ROS_LOG_DIR="$USV_NAV_ROOT/log/ros"
 if [[ -f "$USV_NAV_ROOT/install/setup.bash" ]]; then
     source "$USV_NAV_ROOT/install/setup.bash"
+fi
+if [[ -f "$USV_NAV_ROOT/external/livox_gz_sim/install/lib/liblivox_gz_sim.so" ]]; then
+    export GZ_SIM_SYSTEM_PLUGIN_PATH="$USV_NAV_ROOT/external/livox_gz_sim/install/lib:$GZ_SIM_SYSTEM_PLUGIN_PATH"
+    export AMENT_PREFIX_PATH="$USV_NAV_ROOT/external/livox_gz_sim/install:$AMENT_PREFIX_PATH"
+    export CMAKE_PREFIX_PATH="$USV_NAV_ROOT/external/livox_gz_sim/install:$CMAKE_PREFIX_PATH"
+    export GZ_SIM_RESOURCE_PATH="$USV_NAV_ROOT/external/livox_gz_sim/install/share:$GZ_SIM_RESOURCE_PATH"
 fi
