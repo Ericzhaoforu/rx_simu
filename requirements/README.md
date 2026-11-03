@@ -41,6 +41,22 @@
 
 可选 MID-360 仿真使用 `livox_gz_sim` 固定提交 `4ca09c3876c2ae60c63f7507578ced57f638e236` 与仓库内 Garden 补丁，执行 `bash scripts/build_mid360.sh` 单独构建。它复用上表的 Humble / Garden 依赖；当前仅输出 PointCloud2，无需安装硬件 Livox 驱动或 SDK，不提供 CustomMsg。完整模型、CSV 和构建结果在 `external/livox_gz_sim`；详见 [模型参数、运行与限制](../docs/loiter_mid360.md)。
 
+补充验证使用独立的 `WaveVisual` 退出修复：`bash scripts/build_render_fix.sh` 从固定 VRX 提交提取三个源文件到 `external/vrx_render_fix`，应用本仓库补丁，生成 `build/vrx_render_fix/libWaveVisual.so`。`scripts/build.sh` 已包含此步骤；`scripts/env.sh` 优先加载修复库，不覆盖 `VRX_ROOT` 的源码或安装。需要 `patch` 命令和已有 `libWaves.so`。MID-360 插件同时禁用自身 ROS 信号处理器，使 Gazebo 正常接收退出信号。
+
+自动等待 LOITER 是显式可选功能，更新后需一起重建消息与消费者：
+
+```bash
+source scripts/env.sh
+colcon build --symlink-install --base-paths src \
+  --packages-select robotx_task1_interfaces usv_nav2 usv_sim robotx_task1 robotx_task1_nav \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release
+bash scripts/build_mid360.sh
+bash scripts/build_render_fix.sh
+source scripts/env.sh
+```
+
+新增 `MotionPermission.station_action`、`TrafficSafety.hold_clear/hold_envelope_radius`；旧节点必须停止后统一更新，旧接口版本的 rosbag 需要对应版本的消息定义。补充实验流程与通过范围见 [仿真补充验证](../docs/simulation_verification.md)。
+
 ## 3. 系统与 Python 依赖
 
 新机器先配置 ROS Humble 和 OSRF apt 软件源。入口可参考 [ROS Humble Ubuntu 安装说明](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html) 和 [Gazebo Garden Ubuntu 安装说明](https://gazebosim.org/docs/garden/install_ubuntu/)。下面是本项目使用的主要包，**仅用于尚未配置的新机器**；当前服务器无需重复安装。
@@ -48,7 +64,7 @@
 ```bash
 sudo apt update
 sudo apt install \
-  build-essential cmake git curl wget pkg-config ccache gawk libtool \
+  build-essential cmake git curl wget pkg-config ccache gawk libtool patch \
   python3-dev python3-pip python3-setuptools python3-venv \
   python3-colcon-common-extensions python3-empy python3-pexpect \
   python3-numpy python3-scipy python3-yaml python3-matplotlib \

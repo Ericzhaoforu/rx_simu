@@ -16,6 +16,8 @@ RobotX 2026 Task 1 使用独立的新 RoboBuoy 模型、已知 UAV 观测替身�
 
 原生 LOITER 独立测试和可选 MID-360 仿真入口见 [LOITER 与 MID-360](docs/loiter_mid360.md)。默认仍使用原雷达；新增传感器和定点实验的验证范围单独记录。
 
+后续的低位 MID-360 实体检测、回波过滤、原生保持重复实验、模式故障与 Task1 验证见 [补充验证记录](docs/experiments/20261104_simulation_verification.md)，复现入口见 [运行说明](docs/simulation_verification.md)。原生等待通过显式选项启用，报告保留开放水面清除、定位偏差和实船未验证边界。
+
 ## 启动
 
 首次使用先阅读 [环境要求与依赖安装](requirements/README.md)：包含系统与 Python 依赖、固定版本、独立 VRX/ArduPilot 来源、构建和安装后的检查。当前已验证的是本服务器环境，新机器从零安装尚未完整复测。
