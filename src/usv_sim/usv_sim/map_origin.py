@@ -1,6 +1,7 @@
 """Align a fixed georeferenced water map with the FCU's reported EKF origin."""
 import json
 import math
+import time
 
 import rclpy
 from rclpy.node import Node
@@ -26,7 +27,7 @@ class MapOrigin(Node):
         super().__init__('map_origin')
         self.declare_parameter('origin_latitude',-33.724223)
         self.declare_parameter('origin_longitude',150.679736)
-        self.tf=StaticTransformBroadcaster(self);self.origin=None;self.request=None
+        self.tf=StaticTransformBroadcaster(self);self.origin=None;self.request=None;self.request_at=0.
         qos=QoSProfile(depth=1,durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.publisher=self.create_publisher(String,'/usv/map_alignment',qos)
         self.create_subscription(GeoPointStamped,'/mavros/global_position/gp_origin',self.on_origin,qos)
@@ -35,9 +36,16 @@ class MapOrigin(Node):
 
     def ask_origin(self):
         if self.origin is not None or not self.client.service_is_ready():return
-        if self.request is not None and not self.request.done():return
+        if self.request is not None and not self.request.done():
+            if time.monotonic()-self.request_at<6.:return
+            # A dropped ROS service response can leave this future pending
+            # forever, even after the FCU has initialized its EKF origin.
+            # Retry only the read request; no transform is fabricated.
+            self.request.cancel()
+            self.get_logger().warning('FCU origin request response timed out; retrying read')
         # MAV_CMD_REQUEST_MESSAGE / GPS_GLOBAL_ORIGIN. This never changes the FCU origin.
         self.request=self.client.call_async(CommandLong.Request(command=512,param1=49.))
+        self.request_at=time.monotonic()
 
     def on_origin(self,message):
         p=message.position
