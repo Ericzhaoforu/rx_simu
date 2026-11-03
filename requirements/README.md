@@ -39,6 +39,8 @@
 
 启动器核对飞控、递归子模块、插件补丁和 VRX 提交。不应使用升级固件或任意更新 VRX 来跳过版本检查。
 
+可选 MID-360 仿真使用 `livox_gz_sim` 固定提交 `4ca09c3876c2ae60c63f7507578ced57f638e236` 与仓库内 Garden 补丁，执行 `bash scripts/build_mid360.sh` 单独构建。它复用上表的 Humble / Garden 依赖；当前仅输出 PointCloud2，无需安装硬件 Livox 驱动或 SDK，不提供 CustomMsg。完整模型、CSV 和构建结果在 `external/livox_gz_sim`；详见 [模型参数、运行与限制](../docs/loiter_mid360.md)。
+
 ## 3. 系统与 Python 依赖
 
 新机器先配置 ROS Humble 和 OSRF apt 软件源。入口可参考 [ROS Humble Ubuntu 安装说明](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html) 和 [Gazebo Garden Ubuntu 安装说明](https://gazebosim.org/docs/garden/install_ubuntu/)。下面是本项目使用的主要包，**仅用于尚未配置的新机器**；当前服务器无需重复安装。
