@@ -1,5 +1,7 @@
 # 环境要求与依赖安装
 
+本文主要面向 x86_64 仿真服务器；Orin ARM64 实船只安装 ROS 导航、MAVROS 和真实雷达驱动，见 [实机部署流程](../docs/hardware_deployment.md)。不要在 Orin 复用本仓库锁定的 amd64 deb 或仿真 bootstrap。
+
 本项目运行 **ROS 2 Humble / Nav2 → MAVROS → ArduRover 4.4.0 SITL → Gazebo Garden / VRX WAM-V**，并包含 RobotX 2026 Task 1 的场景、规则规划、动态交通避让和实验记录工具。
 
 本文按 **2026-11-02 服务器实际环境、构建脚本和依赖导入**整理。当前服务器已完成闭环验证；全新 Ubuntu 从零安装的流程尚未在另一台机器完整复测。`scripts/bootstrap.py` 需要预先存在 ROS、Garden 和已构建的指定 VRX，不能单独完成所有系统安装。这里的依赖包含 C++、ROS、Gazebo、模型和地理数据，不能仅通过 `pip install -r requirements.txt` 安装。

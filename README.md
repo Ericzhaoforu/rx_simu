@@ -20,6 +20,8 @@ RobotX 2026 Task 1 使用独立的新 RoboBuoy 模型、已知 UAV 观测替身�
 
 ## 启动
 
+**实船 Orin 部署**请使用 [实机启动顺序、命令与测试流程](docs/hardware_deployment.md)，配套配置在 `config/real/`。这条流程使用真实飞控和 MID-360，不运行下文的仿真 bootstrap / SITL / Gazebo。部署文档所在分支为 `codex/orin-deployment`。
+
 首次使用先阅读 [环境要求与依赖安装](requirements/README.md)：包含系统与 Python 依赖、固定版本、独立 VRX/ArduPilot 来源、构建和安装后的检查。当前已验证的是本服务器环境，新机器从零安装尚未完整复测。
 
 本服务器的 Ubuntu 22.04、ROS 2 Humble、Garden 7.9 与既有 VRX 安装是环境基础。新增依赖安装在仓库的 `external/`，不要求 sudo，不覆盖既有工程。详细依赖和排障见 [运行说明](docs/runbook.md)。
