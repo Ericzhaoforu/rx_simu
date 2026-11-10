@@ -2,6 +2,22 @@
 
 在 Ubuntu 上使用 **VRX WAM-V + ArduRover SITL + ROS 2 Humble Nav2** 验证导航、避障和异常响应。目标固件固定为 **ArduRover V4.4.0 / `d0356316eb0fa34ed1c9f39f7b059b9ae7ba4664`**。
 
+## 第一次使用
+
+先阅读 **[从零理解、部署与测试](docs/hardware_deployment.md)**。文档先说明代码结构、完整信息流和算法，再按“检查现状 → 缺失时安装 → 验证结果”逐步部署，不假定 Orin 已有 ROS、Nav2、MAVROS、Livox 或特定工作空间。
+
+普通导航使用飞控 EKF 定位、Navfn/Dijkstra 全局规划、DWB 局部控制和 MID-360 → 点云过滤 → `pointcloud_to_laserscan` 障碍输入；控制经 `rover_bridge → MAVROS → ArduRover` 到推进器。Task1 在此基础上增加比赛规则搜索、交通预测及等待/绕行决策；其真实 UAV 感知尚未接入。
+
+| 你要做什么 | 从哪里开始 |
+|---|---|
+| 理解代码、准备 Orin/实船或先做无硬件检查 | [部署与测试指南](docs/hardware_deployment.md)，分支 `codex/orin-deployment` |
+| 在 Ubuntu server 复现 VRX + SITL | [仿真依赖](requirements/README.md) → [仿真运行说明](docs/runbook.md) |
+| 研究 RobotX Task1 规则与动态避障 | [Task1 运行说明](docs/task1/runbook.md) → [等待/绕行与 ETA](docs/task1/traffic_avoidance.md) |
+
+软件安装、构建、传感器接入和实船闭环是不同验证阶段；以下历史结果的模型、配置和限制请以对应报告为准。
+
+## 已有验证
+
 已实现独立的 VRX 场景、固定版本 SITL、MAVROS 控制链、飞控 EKF 定位和 LiDAR 避障输入。WAM-V 配置按实际碰撞几何生成；原包 1.2 m × 0.7 m 参数保留。验证结果、已知限制与失败记录见 [验证报告](docs/validation_report.md)。
 
 单目标和多途经点各三次冷启动回归通过。最终 WAM-V 速度命令上限为 0.3 m/s；具体误差与净空见 [测量表](docs/results_summary.md)。直接 Gazebo 时间重置尚不能自动恢复，使用整链停止/重启流程。当前桥没有 RTK/EKF 质量门控，定位降级实验按现有行为记录。
@@ -20,7 +36,7 @@ RobotX 2026 Task 1 使用独立的新 RoboBuoy 模型、已知 UAV 观测替身�
 
 ## 启动
 
-**实船 Orin 部署**请使用 [实机启动顺序、命令与测试流程](docs/hardware_deployment.md)，配套配置在 `config/real/`。这条流程使用真实飞控和 MID-360，不运行下文的仿真 bootstrap / SITL / Gazebo。部署文档所在分支为 `codex/orin-deployment`。
+**实船 Orin 部署**请使用 [从零理解、部署与测试](docs/hardware_deployment.md)，配套配置在 `config/real/`。独立构建入口为 `bash scripts/build_hardware.sh`，运行终端使用 `source scripts/hardware_env.sh`。这条流程使用真实飞控和 MID-360，不运行下文的仿真 bootstrap / SITL / Gazebo。部署文档所在分支为 `codex/orin-deployment`。
 
 首次使用先阅读 [环境要求与依赖安装](requirements/README.md)：包含系统与 Python 依赖、固定版本、独立 VRX/ArduPilot 来源、构建和安装后的检查。当前已验证的是本服务器环境，新机器从零安装尚未完整复测。
 
@@ -54,6 +70,7 @@ python3 scripts/sim_session.py stop
 |---|---|
 | [AGENTS.md](AGENTS.md) | 工作约定，包括遇到问题先自主 debug、修复后回归验证 |
 | [requirements/README.md](requirements/README.md) | 环境要求、依赖版本、安装构建与复现前置条件 |
+| [docs/hardware_deployment.md](docs/hardware_deployment.md) | 新手入口：算法、从零安装、实测配置、启动顺序、分阶段测试与排障 |
 | [docs/validation_plan.md](docs/validation_plan.md) | 当前 VRX、ArduRover 和 Nav2 验证计划 |
 | [docs/environment_baseline.md](docs/environment_baseline.md) | 服务器调查结果、版本和待补依赖 |
 | [docs/navigation_handoff.md](docs/navigation_handoff.md) | 原始交接附件，原文保存 |
@@ -96,8 +113,10 @@ GitHub：[Ericzhaoforu/rx_simu](https://github.com/Ericzhaoforu/rx_simu)（公�
 克隆仓库：
 
 ```bash
-git clone https://github.com/Ericzhaoforu/rx_simu.git
+git clone --branch codex/orin-deployment --single-branch https://github.com/Ericzhaoforu/rx_simu.git
 cd rx_simu
 ```
+
+上面的命令获取本文对应的部署分支。只需默认主分支时可省略 `--branch`；两个分支的内容不一定相同。
 
 GitHub 克隆只包含受版本管理的文件；`runs/` 内的视频、rosbag 和历史实验归档仍保存在服务器，报告中的对应本地链接不会随克隆自动下载。

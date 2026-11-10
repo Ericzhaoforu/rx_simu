@@ -2,7 +2,7 @@
 
 本文主要面向 x86_64 仿真服务器；Orin ARM64 实船只安装 ROS 导航、MAVROS 和真实雷达驱动，见 [实机部署流程](../docs/hardware_deployment.md)。不要在 Orin 复用本仓库锁定的 amd64 deb 或仿真 bootstrap。
 
-Orin 的独立构建入口是 `bash scripts/build_hardware.sh`；运行节点前使用 `source scripts/hardware_env.sh`。该流程在本仓库 `.venv` 中安装 [hardware-pip.txt](hardware-pip.txt)，使用系统 NumPy / SciPy，并隔离用户目录中的 Python 包；不修改既有 `robotx_ws` 或全局 Python 版本。它只构建实船导航所需三包，不启动硬件或控制。具体依赖准备、现场参数和验证范围以上述部署文档为准。
+实船导航的独立构建入口是 `bash scripts/build_hardware.sh`，支持 Orin ARM64 和用于离线检查的 x86_64；运行节点前使用 `source scripts/hardware_env.sh`。该流程在本仓库 `.venv` 中安装 [hardware-pip.txt](hardware-pip.txt)，使用系统 NumPy / SciPy，并隔离用户目录中的 Python 包。可选 MAVROS/Livox 工作空间必须在 `.env.boat` 中显式填写，不默认任何工作空间已经存在。它只构建实船导航所需三包，产物位于 `build/hardware`、`install/hardware`，不启动硬件或控制。第一次使用请从[从零理解、部署与测试](../docs/hardware_deployment.md)开始，而不是先执行本文件后面的仿真安装命令。
 
 本项目运行 **ROS 2 Humble / Nav2 → MAVROS → ArduRover 4.4.0 SITL → Gazebo Garden / VRX WAM-V**，并包含 RobotX 2026 Task 1 的场景、规则规划、动态交通避让和实验记录工具。
 

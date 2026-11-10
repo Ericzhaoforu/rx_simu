@@ -1,87 +1,362 @@
-# Orin 实机部署：启动顺序、命令与测试流程
+# 从零理解、部署与测试 rx_simu
 
-更新：2026-11-09。对象为 Orin + 真实 MID-360 + Pixhawk / 双推进器船，目标飞控固定 **ArduRover V4.4.0，`d0356316eb0fa34ed1c9f39f7b059b9ae7ba4664`**。本文提供现场执行流程；仓库仿真通过不代表实船通过。首次水试先用普通 Navfn + DWB 导航及独立原生 LOITER，Task1 自动任务仍有动态占据清除缺口，不能直接当作已验收的比赛实船程序。
+更新：2026-11-10。读者不需要预先了解本仓库，也不假定目标电脑已经安装 ROS、Nav2、MAVROS 或 Livox 驱动。本文的实船路线是 **Ubuntu 22.04 + ROS 2 Humble + MID-360 + ArduRover 4.4.0**。安装和离线检查可以在没有连接船的电脑上完成；实船数据检查和水试需要对应设备。
 
-## 1. 本次核查的 Orin 环境
+目标飞控固定 **ArduRover V4.4.0，源码提交 `d0356316eb0fa34ed1c9f39f7b059b9ae7ba4664`**。本文不刷写飞控，也不假定当前飞控已满足此版本。历史仿真结果不代表第一次部署的电脑、船体或传感器已经通过测试。
 
-以下状态来自 **2026-11-09 10:14（UTC+8）** 的 SSH 核查，设备连接状态需要每次启动前复查。
+阅读顺序：[1. 代码与算法](#1-先理解代码在做什么) → [2. 获取代码](#2-检查平台并获取代码) → [3. ROS/Nav2](#3-检查或安装-ros-2-humble-与-nav2) → [4. MAVROS](#4-检查或安装-mavros) → [5. MID-360 驱动](#5-检查或安装-mid-360-驱动) → [6. 构建和离线测试](#6-构建本仓库并做离线检查) → [7. 实测配置](#7-填写实测配置和地图) → [8. 启动](#8-按顺序启动保持控制关闭) → [9. 数据与规划检查](#9-数据检查规划预览与记录) → [10. 水试](#10-分阶段水试) → [11. 停止](#11-取消停止和关机) → [12. 排障与验证范围](#12-常见问题和验证范围)。
 
-| 项目 | SSH 核查结果 |
+## 1. 先理解代码在做什么
+
+### 1.1 一次导航任务如何执行
+
+你给出地图中的目标位置和航向。Nav2 在地图上找路，并不断计算当前应该向前多快、转弯多快。`rover_bridge` 检查数据是否新鲜、飞控是否允许控制，再把速度请求交给 MAVROS。MAVROS 将 ROS 消息转成 MAVLink，ArduRover 执行速度与转向控制，最终驱动左右推进器。
+
+定位始终来自 **飞控 EKF**。雷达在这条路线中用于检测障碍，不负责 SLAM 或船体定位。`map_origin` 将地图原点与飞控本地坐标对齐；`odom_tf` 保留飞控源时间戳并提供 Nav2 所需的坐标变换。
+
+```mermaid
+flowchart LR
+    GPS[GNSS / IMU / 罗盘] --> FCU[ArduRover 4.4.0 / EKF]
+    FCU --> M[MAVROS]
+    M --> O[odom_tf / 飞控定位]
+    M --> G[map_origin / 地图配准]
+    O --> N[Nav2]
+    G --> N
+    Map[水域边界与禁航区地图] --> N
+    L[MID-360 / Livox 驱动] --> F[livox_filter / 去船体点与去畸变]
+    F --> P[pointcloud_to_laserscan]
+    P --> S[扫描有效性处理 / scan]
+    S --> N
+    N --> B[rover_bridge / 控制门控]
+    S --> B
+    B --> M
+    M --> FCU
+    FCU --> T[左右推进器]
+```
+
+ROS 的 **topic（话题）**传递持续数据；**service（服务）**完成一次请求，例如查询或切换模式；**action（动作）**执行可反馈、可取消的任务，例如到达目标。**TF** 是坐标系之间的变换，**costmap** 是叠加静态地图、雷达障碍和安全膨胀区后的导航代价地图。
+
+### 1.2 普通导航使用的算法
+
+| 环节 | 当前实现 | 对部署的影响 |
+|---|---|---|
+| 定位 | 飞控 EKF；MAVROS 输出 `/mavros/local_position/odom` | 必须先校准并验证飞控定位；不启动 AMCL 或把雷达当定位来源 |
+| 地图 | `make_water_map` 将米制水域边界、禁航多边形栅格化为 PGM/YAML | 必须测量现场水域；仓库 demo 地图仅用于离线练习 |
+| 全局规划 | Navfn，当前 `use_astar=false`，使用 Dijkstra 搜索 | 规划受地图和膨胀层影响；`allow_unknown=false` |
+| 局部控制 | DWB 采样前进速度与转速，按加速度约束预测轨迹并评分 | 速度、转速、加减速限制须用本船实验调整；不是 MPC |
+| DWB 评分 | 障碍 footprint、贴合路径、接近目标、朝向与振荡等 critics | footprint 必须覆盖船体、推进器及突出物 |
+| 任务执行 | 行为树约 1 Hz 重规划，controller 约 10 Hz 跟踪 | 本仓库没有默认启用 Nav2 自动倒车/旋转清障恢复树 |
+| 雷达处理 | 去船体点；以飞控 TF 按最多约 5 ms 分组去畸变；空间/时间回波支持过滤 | 不改原始帧时间；不能用当前时间掩盖驱动时钟问题 |
+| 扫描投影 | **使用 `pointcloud_to_laserscan`**；高度窗口内的三维点投影为二维扫描 | 原始投影送 `/usv/scan_raw`，经过滤器校验后才发布 `/scan` |
+| 控制门控 | command/odom/scan 默认 0.5 s 超时，state 默认 2 s；还检查 TF、帧名、GUIDED、armed | 预览模式没有飞控 setpoint 发布者；输入中断测试要单独测延时 |
+| 定点保持 | ArduRover 原生 **LOITER** | 普通到点任务不自动变成持续定点；现场先独立验证 LOITER |
+
+过滤器要求 Livox PointCloud2 中有 `timestamp: FLOAT64`，单位为逐点绝对纳秒。它不是只支持 VRX 的有序雷达格式，也不是 FAST-LIO。没有返回的扫描格保持未知；`observation_persistence=0` 不表示旧障碍会自动消失。
+
+坐标链为：`map → odom → base_stabilized → base_link → 雷达 frame`。地图 +X 向东、+Y 向北，yaw=0 朝东、正角度逆时针。`map_origin` 发布 `map→odom`；`odom_tf` 从飞控姿态拆出 yaw 和剩余 roll/pitch；`sensor_tf` 发布雷达安装外参。每段只能有一个发布者。MAVROS 负责 ENU/FLU 与 NED/FRD 的转换，桥中不要再反转一次转向符号。
+
+### 1.3 Task1 比赛规划是另一套配置
+
+本仓库还包含 RobotX 2026 Safe Passage：先完成入口绕圈，再按红/绿浮标侧向规则通过，最后完成出口绕圈。浮标位置和语义灯态目前由已知观测替身提供；真实 UAV 视觉识别、飞行和 RoboCommand 上报尚未集成。
+
+它使用带 `(x,y,航向,通过颜色状态)` 的**加权 A\* 格点搜索**，以 Dubins 距离等作为启发，逐段检查整船外廓和通过规则；DWB 增加规则与完整船体 critics。LiDAR 聚类、轨迹关联和速度拟合用于动态目标短时常速度预测。任务层比较等待和绕行的预计到达时间，加入转弯、加减速、末端制动和路线切换代价；灯态改变会取消旧路线并重新验证。它不是全局时空最优算法，也不把交通真值交给规划器。
+
+**本文先部署普通 Navfn + DWB 导航。** Task1 的消息包因桥的可选接口而一起编译，但这不等于 Task1 规划器、交通预测或任务许可已经启动。比赛扩展的配置、运行步骤和已有缺口见 [Task1 运行说明](task1/runbook.md)、[交通与路线选择](task1/traffic_avoidance.md)。
+
+### 1.4 从哪里开始读源码
+
+| 路径 | 职责 |
 |---|---|
-| 登录 / 主机 | `robotx@100.91.153.16` / `t-wave-orin` |
-| 平台 | Ubuntu 22.04.5、aarch64、L4T R36.4.3 |
-| ROS | `/opt/ros/humble`，系统 Python；已有 colcon、tmux |
-| 既有工作空间 | `/home/robotx/robotx_ws`，本次不改动其源码、安装和配置 |
-| MAVROS | 加载既有 workspace 后为 **2.14.0**；仿真服务器为 2.16.0，不能把服务器版本写成 Orin 已安装版本 |
-| Livox | 既有 workspace 中 `livox_ros_driver2` 包版本 1.0.0，Git `21445540f0d100dc86a7e6df312dd70bbdb4afdf`；已有本地修改，保留 |
-| 点云格式 | 既有驱动源码包含 `timestamp: FLOAT64`，逐点绝对纳秒时间；运行时仍须检查实际消息和时钟 |
-| Nav2 | **1.1.20 已安装**；包含 bringup、Navfn、DWB、planner/controller/BT navigator；检查的可执行文件和插件无缺失动态库 |
-| 点云投影 / 地理数据 | pointcloud_to_laserscan 2.0.1；`/usr/share/GeographicLib/geoids/egm96-5.pgm` 已存在 |
-| 雷达网络 | 配置为雷达 `192.168.1.188` → Orin `192.168.1.5`（`enP8p1s0`）；核查时网卡 DOWN、没有该地址，实时收包未验证 |
-| 飞控接口 | 本次未枚举到此前的 Pixhawk USB 接口；只有 CH340 `/dev/ttyUSB0`，不能据此认定为飞控，未打开串口 |
-| 本仓库目录 | `/home/robotx/rx_simu`，分支 `codex/orin-deployment`，核查时提交 `c90a54c`、尚无 build/install 或实船配置 |
-| 运行状态 | ROS domain 0、62 的短时发现中未发现业务节点；未启动导航链 |
-| Python 依赖 | 默认加载用户目录 NumPy 1.26.1，与系统 SciPy 1.8.0 有兼容警告；关闭 user site 后系统 NumPy 为 1.21.5，但 pymavlink 不可见，需按下文建立独立环境 |
+| [`src/usv_nav2`](../src/usv_nav2) | 导航 launch、Navfn/DWB 参数、飞控 odom/TF、控制桥、地图生成 |
+| [`src/usv_sim/usv_sim/livox_filter.py`](../src/usv_sim/usv_sim/livox_filter.py) | 可用于真实 MID-360 的点云适配器；包名中有 sim，不代表此节点生成假数据 |
+| [`src/usv_sim/usv_sim/map_origin.py`](../src/usv_sim/usv_sim/map_origin.py) | 读取飞控 EKF 原点，计算地图到 odom 的平移；不设置飞控原点 |
+| [`src/robotx_task1`](../src/robotx_task1) | 比赛任务机、观测替身、交通跟踪、等待/绕行决策及独立裁判 |
+| [`src/robotx_task1_nav`](../src/robotx_task1_nav) | C++ 规则规划器、DWB critics、浮标与预测代价层 |
+| [`src/robotx_task1_interfaces`](../src/robotx_task1_interfaces) | 浮标、任务许可、路线评估等 ROS 消息定义 |
+| [`config/real`](../config/real) | 实船配置模板；没有默认飞控端口或安装外参 |
+| [`scripts/build_hardware.sh`](../scripts/build_hardware.sh) | 构建实船导航三包；不启动设备或控制 |
+| [`scripts/hardware_env.sh`](../scripts/hardware_env.sh) | 每个运行终端加载同一套环境 |
+| `external/`、`build/`、`install/`、`runs/` | 本机依赖、构建产物和记录；GitHub 克隆不会包含这些内容 |
 
-`100.91.153.16` 是管理 SSH 地址，**不是 MID-360 数据接收网卡地址，也不是 FCU URL**。账号密码不写入仓库。MAVROS / 雷达 / 导航使用独立 ROS domain；仍须检查串口和雷达 UDP 端口是否被旧进程占用。
+如果只想在 server 复现实验，使用 [仿真依赖说明](../requirements/README.md) 和 [仿真运行说明](runbook.md)。实船不需要 Gazebo、VRX 或 SITL；不要在实船运行 `bootstrap.py`、`sim_session.py` 或 `validate_*.py` 控船脚本。
 
-## 2. 获取源码、补依赖和构建
+## 2. 检查平台并获取代码
 
-在电脑或服务器登录；长期前台节点可分别放入 tmux 窗口：
+以下命令使用 **Bash**。先在目标电脑本机终端执行；是否通过 SSH 登录不影响后续步骤。
 
 ```bash
-ssh robotx@100.91.153.16
-# 首次获取；已有目录时不要再次 clone 或覆盖。
+cat /etc/os-release
+uname -m
+/usr/bin/python3 --version
+```
+
+完成标志：Ubuntu **22.04**、系统 Python **3.10**；Orin 为 `aarch64`，离线开发电脑可为 `x86_64`。其他 Ubuntu/ROS 版本不属于这份已对照的流程，先准备匹配的系统；Orin 的 JetPack/驱动应与其镜像兼容，不从这里复制 server 的二进制。
+
+如 `git` 尚未安装，先执行 `sudo apt update && sudo apt install git`。在希望存放项目的目录克隆：
+
+```bash
 git clone --branch codex/orin-deployment --single-branch \
   https://github.com/Ericzhaoforu/rx_simu.git "$HOME/rx_simu"
 cd "$HOME/rx_simu"
 git status --short --branch
 git rev-parse HEAD
+cp -n config/real/boat.env.example .env.boat
 ```
 
-后续更新先停止本仓库节点、检查本地改动，再在该分支 `git pull --ff-only`；有分叉或改动时先保存和检查，不用 `reset --hard` 清掉现场文件。
+本文发布在 **`codex/orin-deployment` 分支**；普通 `git clone` 获取的 `main` 可能没有这些新入口。已有仓库时先 `git status`，切到此分支后用 `git pull --ff-only`；不删除现场改动或重置工作区。`.env.boat`、依赖和实验记录均被 Git 忽略。
 
-**不要运行仿真 `scripts/bootstrap.py`、`scripts/build.sh`、`scripts/env.sh`、`sim_session.py` 或任何 `validate_*.py` 控船脚本。** 它们面向服务器上的 SITL / Garden / WAM-V，有 amd64 二进制、仿真时钟、假 GPS 或场景假设。实船不需要 Gazebo、VRX、SITL 或 `livox_gz_sim`。
+后续代码块默认当前目录是仓库根目录。新开终端时先 `cd "$HOME/rx_simu"`；若克隆到了其他目录，替换这一处路径。不要在同一个终端混用仿真 `scripts/env.sh` 和本文的硬件环境。
 
-以下是依赖准备命令；已安装的软件不必重复升级。2026-11-09 的核查不等于后续构建和实船验收已完成。
+## 3. 检查或安装 ROS 2 Humble 与 Nav2
+
+### 3.1 先检查
+
+```bash
+test -f /opt/ros/humble/setup.bash && echo 'ROS Humble setup exists'
+```
+
+若存在，执行 `source /opt/ros/humble/setup.bash`，继续 3.3 检查/补齐包。若不存在，执行 3.2；文件存在只说明安装入口存在，不代表 Nav2 已安装。
+
+### 3.2 没有 ROS 时，先配置软件源并安装
+
+本步骤依据 [ROS 官方 Humble 安装说明](https://github.com/ros2/ros2_documentation/blob/humble/source/Installation/Ubuntu-Install-Debs.rst) 与 [ROS apt 软件源配置](https://github.com/ros2/ros2_documentation/blob/humble/source/Installation/_Apt-Repositories.rst)。已有 ROS 源时先复用，不重复添加同地址不同密钥的源。
 
 ```bash
 sudo apt update
-sudo apt install ros-humble-navigation2 ros-humble-nav2-bringup \
-  ros-humble-pointcloud-to-laserscan ros-humble-rosbag2 \
-  python3-colcon-common-extensions python3-rosdep \
-  python3-venv python3-pip python3-setuptools \
-  python3-numpy python3-scipy python3-yaml
+sudo apt install locales software-properties-common curl ca-certificates python3
+sudo locale-gen en_US en_US.UTF-8
+export LANG=en_US.UTF-8
+sudo add-apt-repository universe
 
+USV_ROS_APT_RELEASE="$(curl -fsSL \
+  https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"])')"
+curl -fL -o /tmp/rx_ros2_apt_source.deb \
+  "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${USV_ROS_APT_RELEASE}/ros2-apt-source_${USV_ROS_APT_RELEASE}.jammy_all.deb"
+sudo dpkg -i /tmp/rx_ros2_apt_source.deb
+sudo apt update
+sudo apt install ros-humble-ros-base
 source /opt/ros/humble/setup.bash
-source "$HOME/robotx_ws/install/setup.bash"
+```
+
+### 3.3 安装导航和构建依赖
+
+```bash
+sudo apt install --no-upgrade \
+  build-essential cmake git curl pkg-config \
+  python3-dev python3-pip python3-venv python3-setuptools \
+  python3-colcon-common-extensions python3-rosdep python3-empy \
+  python3-numpy python3-scipy python3-yaml \
+  ros-humble-navigation2 ros-humble-nav2-bringup ros-humble-rviz2 \
+  ros-humble-pointcloud-to-laserscan ros-humble-rosbag2 \
+  ros-humble-rosbag2-storage-default-plugins \
+  ros-humble-rosidl-default-generators ros-humble-geographic-msgs
+source /opt/ros/humble/setup.bash
+ros2 pkg prefix nav2_bringup
+ros2 pkg prefix nav2_navfn_planner
+ros2 pkg prefix dwb_core
+ros2 pkg prefix pointcloud_to_laserscan
+```
+
+完成标志：四个命令均输出安装路径。记录实际版本；现有实验基线为 Nav2 **1.1.20**、点云投影 **2.0.1**。apt 仓库可能提供不同构建版本，安装成功不等于这一组合已复现实验。
+
+```bash
+dpkg-query -W ros-humble-nav2-bringup ros-humble-pointcloud-to-laserscan
+# 只有数据库尚未初始化时执行 sudo rosdep init。
+if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
+  sudo rosdep init
+fi
+rosdep update --rosdistro humble
+```
+
+若 apt 提议移除 JetPack、内核或 ROS 核心包，先处理源/系统版本冲突，不继续这次安装。不要通过全局 `pip upgrade numpy scipy` 修复 ROS 依赖。
+
+## 4. 检查或安装 MAVROS
+
+MAVROS 是 ROS 与飞控 MAVLink 的接口。**能发现 `mavros_msgs` 不等于已安装 `mavros_node`。**
+
+```bash
+source /opt/ros/humble/setup.bash
 ros2 pkg prefix mavros
+ros2 pkg executables mavros
+```
+
+若已有独立工作空间，显式 source 它的 `install/setup.bash` 再检查；不要默认它叫 `robotx_ws`。确认可用后，在 `.env.boat` 中填写 `USV_MAVROS_SETUP='/实际路径/install/setup.bash'`。若使用 apt 安装，保持此变量为空。
+
+找不到可用 MAVROS 时：
+
+```bash
+sudo apt install --no-upgrade ros-humble-mavros ros-humble-mavros-extras
+source /opt/ros/humble/setup.bash
+ros2 pkg executables mavros
+```
+
+安装 GeographicLib 地球重力模型数据；先检查，缺失再安装：
+
+```bash
+if [ ! -r /usr/share/GeographicLib/geoids/egm96-5.pgm ]; then
+  sudo "$(ros2 pkg prefix mavros)/lib/mavros/install_geographiclib_datasets.sh"
+fi
+test -r /usr/share/GeographicLib/geoids/egm96-5.pgm && echo 'egm96-5 present'
+```
+
+完成标志：可找到 `mavros_node` 和 geoid 数据，且节点动态库没有 `not found`：
+
+```bash
+ldd "$(ros2 pkg prefix mavros)/lib/mavros/mavros_node"
+python3 - <<'PY_VERSION'
+from ament_index_python.packages import get_package_share_directory
+from pathlib import Path
+import xml.etree.ElementTree as ET
+for name in ('mavros', 'mavros_msgs', 'nav2_bringup'):
+    print(name, ET.parse(Path(get_package_share_directory(name))/'package.xml').getroot().findtext('version'))
+PY_VERSION
+```
+
+MAVROS 2.14.0 和仿真用 2.16.0 是已记录过的不同环境，不能写成每台电脑都已安装。复用源码版本时，`mavros` 与 `mavros_msgs` 应来自匹配的 overlay，后续按实际话题和服务验证。此处还不连接飞控。
+
+## 5. 检查或安装 MID-360 驱动
+
+### 5.1 已有驱动的检查
+
+```bash
 ros2 pkg prefix livox_ros_driver2
-# 首次机器尚无 rosdep 数据库时先 sudo rosdep init；已初始化则不重复。
-rosdep update
+ros2 pkg executables livox_ros_driver2
+```
+
+若已存在，记录安装路径、源码 SHA 和本地修改，在 `.env.boat` 中填写 `USV_LIVOX_SETUP`；若驱动直接装在当前系统 ROS 前缀，可留空。安装在独立前缀的 SDK 还需填写 `USV_LIVOX_SDK_PREFIX`。然后跳到 5.3。此时只验证软件，不假定雷达在线。
+
+### 5.2 没有驱动时，在本仓库忽略目录内独立构建
+
+[Livox 官方驱动说明](https://github.com/Livox-SDK/livox_ros_driver2/blob/21445540f0d100dc86a7e6df312dd70bbdb4afdf/README.md) 要求先安装 SDK2。本流程使用下面两个固定提交，不把某个旧 SDK tag 与较新的驱动混用：
+
+| 依赖 | 固定提交 |
+|---|---|
+| Livox SDK2 | `c0796f04c143143899c87a773d9f6b7136453c0b` |
+| livox_ros_driver2 | `21445540f0d100dc86a7e6df312dd70bbdb4afdf` |
+
+机器可读版本记录在 [hardware_dependencies.lock.json](../config/hardware_dependencies.lock.json)。这对提交已在 server x86_64 构建通过，ARM64 和真实雷达仍需在目标机按后续步骤验证。
+
+以下目录只用于这次独立安装；若已存在，先核对其 SHA，从构建步骤继续，不覆盖其他项目。官方驱动的 `build.sh` 会清理其上级工作空间构建目录，所以这里显式调用 colcon。
+
+```bash
+sudo apt install --no-upgrade libpcl-dev libapr1-dev \
+  ros-humble-pcl-conversions ros-humble-ament-cmake-auto
+source /opt/ros/humble/setup.bash
 cd "$HOME/rx_simu"
-# pymavlink 由构建脚本安装到本仓库 venv，并在随后无 skip 的 check 中验证。
+mkdir -p external/hardware_livox_ws/src
+
+git clone https://github.com/Livox-SDK/Livox-SDK2.git external/hardware_livox_sdk2
+git -C external/hardware_livox_sdk2 checkout --detach c0796f04c143143899c87a773d9f6b7136453c0b
+cmake -S external/hardware_livox_sdk2 -B external/hardware_livox_sdk2/build \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX="$PWD/external/hardware_livox_sdk2/install"
+cmake --build external/hardware_livox_sdk2/build -j2
+cmake --install external/hardware_livox_sdk2/build
+
+git clone https://github.com/Livox-SDK/livox_ros_driver2.git \
+  external/hardware_livox_ws/src/livox_ros_driver2
+git -C external/hardware_livox_ws/src/livox_ros_driver2 checkout --detach \
+  21445540f0d100dc86a7e6df312dd70bbdb4afdf
+cp external/hardware_livox_ws/src/livox_ros_driver2/package_ROS2.xml \
+  external/hardware_livox_ws/src/livox_ros_driver2/package.xml
+
+PYTHONNOUSERSITE=1 /usr/bin/python3 -m colcon \
+  --log-base external/hardware_livox_ws/log build \
+  --base-paths external/hardware_livox_ws/src \
+  --build-base external/hardware_livox_ws/build \
+  --install-base external/hardware_livox_ws/install \
+  --packages-select livox_ros_driver2 --executor sequential \
+  --cmake-args -DROS_EDITION=ROS2 -DDISTRO_ROS=humble -DBUILD_TESTING=OFF \
+  -DPython3_EXECUTABLE=/usr/bin/python3 -DPYTHON_EXECUTABLE=/usr/bin/python3 \
+  -DLIVOX_LIDAR_SDK_LIBRARY="$PWD/external/hardware_livox_sdk2/install/lib/liblivox_lidar_sdk_shared.so" \
+  -DLIVOX_LIDAR_SDK_INCLUDE_DIR="$PWD/external/hardware_livox_sdk2/install/include"
+```
+
+编译通过后编辑 `.env.boat`，设为以下两个值（这是本流程创建的目录，不是假定已有环境）：
+
+```bash
+export USV_LIVOX_SETUP="$USV_WORKSPACE/external/hardware_livox_ws/install/setup.bash"
+export USV_LIVOX_SDK_PREFIX="$USV_WORKSPACE/external/hardware_livox_sdk2/install"
+```
+
+### 5.3 验证发现和动态库
+
+```bash
+source scripts/hardware_underlay.sh
+ros2 pkg prefix livox_ros_driver2
+ros2 pkg executables livox_ros_driver2
+ldd "$(ros2 pkg prefix livox_ros_driver2)/lib/livox_ros_driver2/livox_ros_driver2_node"
+```
+
+完成标志：可执行文件存在，`ldd` 没有 `not found`。后续明确使用 `xfer_format=0` 的 PointCloud2。CustomMsg 不能只靠 remap 改成 PointCloud2；逐点时间格式还要用真实消息核验。
+
+## 6. 构建本仓库并做离线检查
+
+### 6.1 构建三个普通导航包
+
+先确认 `.env.boat` 中仅填写了**实际存在**的可选 overlay 路径；硬件测量值可暂时空着。source 环境本身不会启动硬件。
+
+```bash
+cd "$HOME/rx_simu"
+source scripts/hardware_underlay.sh
 rosdep install --from-paths src/robotx_task1_interfaces src/usv_nav2 src/usv_sim \
   --ignore-src --rosdistro humble -r -y --skip-keys python3-pymavlink-pip
 bash scripts/build_hardware.sh
 source scripts/hardware_env.sh
+ros2 pkg prefix usv_nav2
+ros2 pkg prefix usv_sim
+ros2 pkg prefix robotx_task1_interfaces
 ```
 
-`build_hardware.sh` 只用于 ARM64：用系统 Python 3.10 创建 `.venv`，继承系统 ROS / NumPy / SciPy，通过 `PYTHONNOUSERSITE=1` 排除 `~/.local` 的版本干扰，并按 [hardware-pip.txt](../requirements/hardware-pip.txt) 在 venv 内安装 pymavlink。脚本用同一解释器执行 rosdep 检查和 colcon 构建，保留日志、版本和导入结果到 `runs/hardware_build_<时间>/`。它不会启动 MAVROS、雷达或控制节点。不能仅设置 `PYTHONNOUSERSITE=1` 后省略 venv 中的 pymavlink 安装。
+`pymavlink` 由构建脚本按 [hardware-pip.txt](../requirements/hardware-pip.txt) 安装到 `.venv`，随后运行不跳过该项的 rosdep check。使用系统 Python 3.10 和系统 NumPy/SciPy，通过 `PYTHONNOUSERSITE=1` 排除 `~/.local` 干扰。构建目录为 `build/hardware`、`install/hardware`，不覆盖原仿真构建；结果、版本和日志在 `runs/hardware_build_<时间>/`。
 
-两个 rosdep 声明已修正：`ament_python` 是构建类型，不作为此处可解析的 buildtool 依赖，实际构建工具声明为 `python3-setuptools`；pymavlink 使用官方键 `python3-pymavlink-pip`，不再使用不存在的 `python3-pymavlink`。依据为 [ROS 2 Python 包指南](https://github.com/ros2/ros2_documentation/blob/humble/source/How-To-Guides/Using-Python-Packages.rst) 和 [官方 rosdep Python 规则](https://github.com/ros/rosdistro/blob/master/rosdep/python.yaml)。实船三个包的构建不包含其他 Task1 包。
+完成标志：colcon 显示 **3 packages finished**；三个安装路径均指向本仓库 `install/hardware`。脚本未检测到 Livox 时允许构建导航软件，但会提示补装；这不能当作传感器阶段通过。
 
-本流程复用 Orin 既有 MAVROS / Livox，不覆盖其 vendor 源码。记录实际版本并重新做接口验收；若必须对齐服务器 MAVROS 2.16.0，应在独立 ARM64 工作空间构建并复测，不能拷贝服务器 amd64 的 `external/deps`。没有既有 MAVROS 的新机器可安装 `ros-humble-mavros` 和 `ros-humble-mavros-extras`；缺 geoid 数据时再运行该包的 GeographicLib 安装脚本。本 Orin 已有 geoid 文件。
+### 6.2 逻辑测试、地图生成和 launch 参数检查
 
-本阶段只构建普通实船导航所需三包。Task1 规则插件、任务许可、交通预测与真实观测接入是后续阶段，不能只启动 `mission` 就认为比赛链已就绪。
+```bash
+(cd src/usv_nav2 && python3 -m unittest discover -s test -v)
+python3 -m unittest discover -s scripts -p 'test_hardware_setup.py' -v
+mkdir -p runs/offline_check
+ros2 run usv_nav2 make_water_map \
+  src/usv_nav2/maps/demo_area.json runs/offline_check/demo
+ros2 launch usv_nav2 navigation.launch.py --show-args
+```
 
-## 3. 填写实测配置和地图
+完成标志：测试通过；生成 demo.pgm/demo.yaml；能列出 navigation 的启动参数。**demo 地图不用于实船；这一步没有验证定位、避障或到点。**
+
+### 6.3 验证预览桥确实不向飞控输出
+
+终端 A：
+
+```bash
+cd "$HOME/rx_simu"
+source scripts/hardware_env.sh
+export ROS_DOMAIN_ID=162 ROS_LOCALHOST_ONLY=1
+ros2 run usv_nav2 rover_bridge --ros-args \
+  -p use_sim_time:=false -p enable_control:=false \
+  -p enable_stationkeeping:=false -p require_task_permission:=false
+```
+
+终端 B（先同样 cd/source，再设置同一 domain）：
+
+```bash
+export ROS_DOMAIN_ID=162 ROS_LOCALHOST_ONLY=1
+ros2 param get /rover_bridge enable_control
+ros2 topic echo /usv/control_status --once
+ros2 node info /rover_bridge
+```
+
+完成标志：控制参数为 false，状态以 `PREVIEW:` 开头，发布者包含 `/usv/setpoint_preview`，**不包含 `/mavros/setpoint_raw/local`**。没有传感器时零预览是预期结果。此处不启动 MAVROS，不发布假 odom，不解锁。检查后在 A 按 Ctrl-C，关闭两个终端；后续新终端重新 source，使用实船 domain 62。
+
+## 7. 填写实测配置和地图
 
 ```bash
 cd "$HOME/rx_simu"
 # 首次创建；-n 保留已有现场设置。
 cp -n config/real/boat.env.example .env.boat
-nano .env.boat
+nano .env.boat  # 没有 nano 时可用其他文本编辑器
 ```
 
 `.env.boat` 和 `runs/` 已被 Git 忽略。必须填的值：
@@ -89,28 +364,72 @@ nano .env.boat
 | 变量 | 填写依据 |
 |---|---|
 | `USV_FCU_URL`、`USV_FCU_SYSID` | 实际 MAVLink 连接和飞控 SYSID。例如串口 URL 形如 `/dev/serial/by-id/<确认的接口>:<确认的波特率>`；不能直接套 SITL 的 localhost UDP |
-| `USV_LIVOX_SETUP` / `USV_LIVOX_CONFIG` | 既有驱动的 setup 与本仓库独立配置副本 |
+| `USV_MAVROS_SETUP` / `USV_LIVOX_SETUP` / `USV_LIVOX_CONFIG` | 第 4–5 步确认的可选 overlay 与本仓库独立配置副本 |
 | `USV_LIDAR_FRAME` 和 6 个安装量 | 实际点云 frame、相对 `base_link` 的 x/y/z（m）和 roll/pitch/yaw（rad） |
 | `USV_FOOTPRINT` | `base_link` 中的实测船体多边形，包含推进器和突出物；不能套 WAM-V，也不能仅凭“1.2×0.7 m”假定参考点位于中心 |
 | `USV_MARK_MIN_Z/MAX_Z` | `base_stabilized` 中的障碍高度窗口；先看真实点云，确认不会过滤掉浮标和低矮障碍 |
 | `USV_MAP_LAT/LON`、`USV_MAP_YAML` | 实测地图原点经纬度和地图文件；地图 x 向东、y 向北，单位 m |
+| `USV_LIDAR_NIC` / `USV_LIDAR_HOST_CIDR` / `USV_LIDAR_IP` | 雷达直连网卡、该网卡的 IP/掩码和实际雷达 IP；SSH/Tailscale 地址不用于此处 |
 
 `base_link` 应对应 FCU 状态所使用的机体参考点。GNSS 杆臂、罗盘方向、雷达外参和 footprint 都要相对此点定义。Livox SDK 的外参保持零、由 TF 应用一次安装变换，避免 SDK 和 TF 重复转换。
+
+先用 `ip -brief address` 找到雷达直连网卡。填写与实际雷达同网段且不冲突的地址；例如 `192.168.1.5/24` 只是一种配置，不代表设备出厂地址。使用 NetworkManager 的电脑可创建专用连接；已有正确连接时复用，不重复创建：
+
+```bash
+source scripts/hardware_env.sh
+nmcli connection show
+# 仅在没有本雷达的正确连接配置时执行；不要选择 SSH 所用网卡。
+sudo nmcli connection add type ethernet con-name rx-lidar \
+  ifname "${USV_LIDAR_NIC:?填写雷达网卡}" \
+  ipv4.method manual ipv4.addresses "${USV_LIDAR_HOST_CIDR:?填写主机IP/掩码}" \
+  ipv4.never-default yes ipv6.method disabled
+sudo nmcli connection up rx-lidar
+```
+
+没有 `nmcli` 时按该系统正在使用的 netplan/networkd 配置同样的专用静态地址，不为了本步骤切换网络管理器。网线有链路、`ip route get` 指向正确网卡且使用填写的源 IP 才继续；仅 SSH 连通不能证明雷达网络连通。
 
 先复制雷达配置，再核对网卡、目标 IP 和 UDP 端口；不改动旧工作空间的配置：
 
 ```bash
-source .env.boat
+source scripts/hardware_env.sh
 mkdir -p runs/hardware_config
-cp -n "$HOME/robotx_ws/src/vendor/livox_ros_driver2/config/MID360_config.json" \
+cp -n "$(ros2 pkg prefix livox_ros_driver2)/share/livox_ros_driver2/config/MID360_config.json" \
   "$USV_LIVOX_CONFIG"
 ip -brief address
-ip route get 192.168.1.188
+ip route get "${USV_LIDAR_IP:?填写雷达实际IP}"
 ss -lunp
 ls -l /dev/serial/by-id/
 ```
 
-使用实测的可航行边界和禁航多边形，按 [demo_area.json 的结构](../src/usv_nav2/maps/demo_area.json) 编写 `runs/hardware_config/area.json`，再生成地图。示例地图不代表现场水域。
+将**独立副本**中的主机和雷达 IP 改成 `.env.boat` 的实际值；端口沿用这份固定驱动的 MID360 配置，不改旧工作空间：
+
+```bash
+python3 - <<'PY'
+import ipaddress, json, os
+from pathlib import Path
+host = ipaddress.ip_interface(os.environ['USV_LIDAR_HOST_CIDR'])
+lidar = ipaddress.ip_address(os.environ['USV_LIDAR_IP'])
+assert host.version == 4 and lidar.version == 4
+assert lidar in host.network and lidar != host.ip
+p = Path(os.environ['USV_LIVOX_CONFIG'])
+cfg = json.loads(p.read_text())
+for key in ('cmd_data_ip', 'push_msg_ip', 'point_data_ip', 'imu_data_ip'):
+    cfg['MID360']['host_net_info'][key] = str(host.ip)
+cfg['lidar_configs'][0]['ip'] = str(lidar)
+cfg['lidar_configs'][0]['extrinsic_parameter'] = dict(roll=0, pitch=0, yaw=0, x=0, y=0, z=0)
+p.write_text(json.dumps(cfg, indent=2)+'\n')
+PY
+```
+
+飞控使用实际 MAVLink 端口和波特率，先用 `ls -l /dev/serial/by-id/`、`id -nG` 检查设备与权限。若串口属于 dialout 而账号不在该组，执行 `sudo usermod -aG dialout "$USER"` 后重新登录。通用 USB 串口名不能证明它就是飞控；只在确认接线后填写 `USV_FCU_URL`。
+
+使用实测的可航行边界和禁航多边形，按 [demo_area.json 的结构](../src/usv_nav2/maps/demo_area.json) 编写 `runs/hardware_config/area.json`。坐标均为相对 `USV_MAP_LAT/LON` 的东、北距离（m）；`navigable_boundary` 为依次连接的边界点，`exclusions` 为多个禁航多边形。可从下面的空模板开始，必须填入至少三个实测边界点；空模板会被拒绝，不产生可航地图。
+
+```json
+{"resolution": 0.2, "padding": 1.0, "navigable_boundary": [], "exclusions": []}
+```
+
+在编辑器中保存上述文件并填好边界后生成地图；不要直接把仓库 demo 地图用在实船。
 
 ```bash
 source scripts/hardware_env.sh
@@ -120,55 +439,19 @@ ros2 run usv_nav2 make_water_map \
 
 `map_origin` 只把飞控报告的真实 EKF 原点平移到地图原点，**不设置飞控原点，不旋转地图，不提高 GNSS 精度**。若地图不是 ENU 朝向，先完成地图坐标转换；不能用改 frame 名或固定零变换假装对齐。飞控原点变化时停止任务并重新核验配准。
 
-填好 `.env.boat` 后生成本船参数（默认拒绝覆盖已有文件；修改参数时先备份旧版）：
+填好 `.env.boat` 并生成真实地图后，使用配置生成器。它检查必填项、地图是否存在、船体凸包和速度上限；不会自动猜测外参或打开控制：
 
 ```bash
-source .env.boat
-python3 - <<'PY'
-import json, math, os
-from pathlib import Path
-import yaml
-root = Path(os.environ['USV_WORKSPACE'])
-def number(name):
-    value = float(os.environ[name])
-    assert math.isfinite(value), name
-    return value
-hull = json.loads(os.environ['USV_FOOTPRINT'])
-assert len(hull) >= 3 and all(len(p) == 2 and all(math.isfinite(float(x)) for x in p) for p in hull)
-low, high = number('USV_MARK_MIN_Z'), number('USV_MARK_MAX_Z')
-assert low < high
-speed, yaw_rate = number('USV_MAX_SPEED'), number('USV_MAX_YAW_RATE')
-assert 0 < speed <= 0.4 and 0 < yaw_rate <= 0.4
-cfg = yaml.safe_load((root/'src/usv_nav2/config/nav2_params.yaml').read_text())
-cfg['odom_tf']['ros__parameters']['expected_parent_frame'] = 'odom'
-bridge = cfg['rover_bridge']['ros__parameters']
-bridge.update(expected_parent_frame='odom', enable_control=False,
-              require_task_permission=False, enable_stationkeeping=False,
-              max_speed=speed, max_yaw_rate=yaw_rate)
-dwb = cfg['controller_server']['ros__parameters']['FollowPath']
-dwb.update(max_vel_x=speed, max_speed_xy=speed, max_vel_theta=yaw_rate)
-for name in ('local_costmap', 'global_costmap'):
-    cost = cfg[name][name]['ros__parameters']
-    cost['footprint'] = json.dumps(hull)
-    cost['footprint_padding'] = 0.2
-    cost['inflation_layer']['inflation_radius'] = 1.0
-cfg['local_costmap']['local_costmap']['ros__parameters']['global_frame'] = 'odom'
-lidar = {'livox_filter': {'ros__parameters': dict(
-    use_sim_time=False, footprint=json.dumps(hull), body_frame='base_link',
-    stabilized_frame='base_stabilized', fixed_frame='odom', input_topic='/livox/lidar',
-    marking_min_height=low, marking_max_height=high, input_timeout=0.5)}}
-out = root/'runs/hardware_config'
-out.mkdir(parents=True, exist_ok=True)
-for filename, data in [('nav2.yaml', cfg), ('livox_filter.yaml', lidar)]:
-    with (out/filename).open('x') as stream:
-        yaml.safe_dump(data, stream, sort_keys=False)
-print('Generated', out)
-PY
+source scripts/hardware_env.sh
+python3 scripts/prepare_hardware.py --check
+python3 scripts/prepare_hardware.py
 ```
+
+完成标志：`runs/hardware_config/nav2.yaml` 和 `livox_filter.yaml` 已生成，`enable_control`、`enable_stationkeeping`、`require_task_permission` 均为 false。已存在的文件不会被覆盖；调整配置时先备份这两份文件，再重新生成。footprint 应按外缘依序填写严格凸包，包含推进器；不重复首点。
 
 初始速度上限 **0.2 m/s / 0.2 rad/s**、padding **0.2 m**、膨胀 **1.0 m** 是低速调试初值，尚未由本船停车/转弯试验验证。全局 Navfn、局部 DWB；目标容差保留 0.5 m / 0.25 rad，超时保留 command/odom/scan 0.5 s、state 2 s。不得通过放宽数据超时或缩小 footprint 让异常消失。
 
-## 4. 每次启动顺序：先只读与预览
+## 8. 按顺序启动，保持控制关闭
 
 顺序为 **现场飞控检查 → MAVROS → 地图配准/安装 TF → 真实雷达 → 导航预览 → 点云过滤 → 扫描投影 → 数据检查与记录 → 现场启用控制**。所有长驻命令各占一个终端或 tmux 窗口。每个窗口先执行：
 
@@ -228,7 +511,7 @@ ros2 run livox_ros_driver2 livox_ros_driver2_node --ros-args \
   -p user_config_path:="${USV_LIVOX_CONFIG:?}"
 ```
 
-`xfer_format=0` 和参数名已对照 [Livox 官方 ROS 2 启动文件](https://github.com/Livox-SDK/livox_ros_driver2/blob/master/launch_ROS2/rviz_MID360_launch.py)；时间字段对照 [官方发布代码](https://github.com/Livox-SDK/livox_ros_driver2/blob/master/src/lddc.cpp) 及 Orin 当前源码。CustomMsg 不能仅靠重映射变成 PointCloud2。保证 MID 与 Orin / MAVROS 处在可比较的时间基准，检查实际 PTP/GNSS/驱动时钟处理；仅 Orin 系统 NTP 正常不能证明雷达已同步。不能用“当前时间”覆盖旧消息。
+`xfer_format=0` 和参数名已对照 [固定提交的 Livox ROS 2 启动文件](https://github.com/Livox-SDK/livox_ros_driver2/blob/21445540f0d100dc86a7e6df312dd70bbdb4afdf/launch_ROS2/rviz_MID360_launch.py)；时间字段对照 [同一提交的发布代码](https://github.com/Livox-SDK/livox_ros_driver2/blob/21445540f0d100dc86a7e6df312dd70bbdb4afdf/src/lddc.cpp)。CustomMsg 不能仅靠重映射变成 PointCloud2。保证 MID 与 Orin / MAVROS 处在可比较的时间基准，检查实际 PTP/GNSS/驱动时钟处理；仅 Orin 系统 NTP 正常不能证明雷达已同步。不能用“当前时间”覆盖旧消息。
 
 **E. 导航预览。** 此步骤建立 odom TF 和 Nav2；控制默认关闭，即使输入齐全也没有向 FCU 的 setpoint 发布者。
 
@@ -259,9 +542,9 @@ ros2 launch usv_nav2 cloud_to_scan.launch.py \
 
 完整数据流：真实 MID → `/livox/lidar` → livox_filter（实测船体、飞控 TF、回波支持过滤）→ `/usv/lidar/filtered` → pointcloud_to_laserscan → `/usv/scan_raw` → `/scan` → Nav2 costmap。飞控 → MAVROS EKF odom → odom_tf → `/usv/odom` / TF。控制开启后才有 Nav2 → `/usv/cmd_vel` → rover_bridge → MAVROS → ArduRover → 推进器。
 
-此处普通 Nav2 使用 LaserScan 障碍层，**没有启用 Task1 的 Voxel / 交通预测层**。过滤器还发布 marking/clearing 云，但不能将这些发布话题误当成普通参数已订阅。无返回保持未知，不能把无回波水面解释为已证明可通行；本轮仿真确认过的动态残留问题仍需实测。
+此处普通 Nav2 使用 LaserScan 障碍层，**没有启用 Task1 的 Voxel / 交通预测层**。过滤器还发布 marking/clearing 云，但不能将这些发布话题误当成普通参数已订阅。无返回保持未知，不能把无回波水面解释为已证明可通行；现有仿真已记录的动态残留问题仍需实测。
 
-## 5. 数据检查、规划预览与记录
+## 9. 数据检查、规划预览与记录
 
 ```bash
 ros2 node list
@@ -330,7 +613,7 @@ ros2 bag record -o "$USV_RUN/bag" \
 
 目标反馈话题未由 FCU 输出时不能用空 bag 证明目标不变，应检查 MAVLink 消息流。记录时同步保存现场视频、独立位置测量、风流情况、操作时刻和急停方式；MAVROS / EKF 自身位置不是独立真值。RC 输出或 ESC 指令也不等于实测牛顿推力。
 
-## 6. 水试：分阶段启用，不跳级
+## 10. 分阶段水试
 
 | 阶段 | 操作 | 通过条件 / 记录 |
 |---|---|---|
@@ -371,7 +654,7 @@ ros2 launch usv_nav2 navigation.launch.py \
 
 `enable_control` 在节点创建时决定是否建立输出发布者；当前实现没有动态重配置回调，**不能靠 `ros2 param set` 就认为已切换控制**。重新启动后再次确认生命周期、TF、扫描与状态。
 
-以下两条由现场操作者在水试条件满足时执行；本次 SSH 拉取代码不执行解锁或模式切换：
+以下模式请求和解锁仅在现场水试条件满足后执行；安装、构建和前述预览阶段不执行这些命令：
 
 ```bash
 ros2 service call /mavros/set_mode mavros_msgs/srv/SetMode \
@@ -387,7 +670,34 @@ ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose \
 
 普通模式下 MAVROS 还活着时，其 GCS 心跳可能掩盖导航桥退出；实船必须分别测桥退出、MAVROS 退出和整机断链。仿真可选模式的 252 号心跳 / FS 参数不能整包覆盖现有遥控与地面站保护。
 
-## 7. 取消、停止和关机
+### 多途经点与中断检查
+
+单目标通过后，按 `[[x,y,yaw], ...]` 格式填写 `runs/hardware_config/waypoints_xy_yaw.json`（至少两个实测安全目标，单位 m、rad）。先结束上一任务，再生成动作请求并执行：
+
+```bash
+python3 - <<'PY'
+import json, math
+from pathlib import Path
+p = Path('runs/hardware_config')
+points = json.loads((p/'waypoints_xy_yaw.json').read_text())
+assert len(points) >= 2
+poses = []
+for x, y, yaw in points:
+    assert all(math.isfinite(v) for v in (x, y, yaw))
+    poses.append(dict(header=dict(frame_id='map'), pose=dict(
+        position=dict(x=x, y=y, z=0.0),
+        orientation=dict(x=0.0, y=0.0, z=math.sin(yaw/2), w=math.cos(yaw/2)))))
+(p/'waypoints.json').write_text(json.dumps(dict(poses=poses)))
+PY
+ros2 action send_goal /navigate_through_poses nav2_msgs/action/NavigateThroughPoses \
+  "$(cat runs/hardware_config/waypoints.json)" --feedback
+```
+
+取消用下一节的 cancel_goal 命令。不可达测试先在控制关闭的规划预览中选择禁航区内目标，预期返回规划失败，不进入控制阶段。
+
+输入中断先在预览模式做：停止 G 扫描投影终端，观察 `/scan` 停更及桥状态；恢复 G 后检查源时间和输入恢复。水试时再记录最后一帧有效 scan 至零 setpoint 的时间。停止整个 MAVROS 同时中断多类输入，不能当作单独的 odom/state 超时试验；桥/MAVROS 进程退出是另两项飞控保护实验。每项均记录命令、推力/电机反馈和船体运动，失败后先恢复并排查再继续。
+
+## 11. 取消、停止和关机
 
 先结束动作并由现场确认安全模式/推进器状态，再停数据链。紧急情况优先用现场 RC / 硬件接管，不能只依赖 SSH：
 
@@ -403,12 +713,26 @@ ros2 service call /mavros/cmd/arming mavros_msgs/srv/CommandBool '{value: false}
 
 若有风流需要继续定点，现场明确选择 LOITER 并保持必要定位/数据链，不能把上述 HOLD 流程理解为保持位置。常规关闭顺序：导航/桥 → 点云投影/过滤 → 雷达驱动 → 安装 TF/配准 → MAVROS；记录器最后 Ctrl-C 正常结束，检查 `ros2 bag info <bag目录>` 和日志后再关机。不使用 `killall` 清理整台 Orin 的其他任务。
 
-## 8. 本次交付与尚未执行项
+## 12. 常见问题和验证范围
 
-Nav2 1.1.20 已在 2026-11-09 的 Orin 核查中确认安装。服务器仓库已修正实船包的依赖声明，新增独立构建和环境入口，并通过 32 项纯逻辑测试、包声明解析、Bash / 内嵌 Python 语法、ShellCheck 与 diff 空白检查。
+| 现象 | 先检查什么 | 处理方向 / 通过条件 |
+|---|---|---|
+| `ros2: command not found` | `/opt/ros/humble/setup.bash` 是否存在并已 source | 回到第 3 步；不要把其他 ROS 发行版混入终端 |
+| `Package ... not found` | 当前终端的 setup、构建 summary、`ros2 pkg prefix` | 每个终端重新 `source scripts/hardware_env.sh`；只有源码目录不算安装 |
+| `robotx_ws` 不存在 | `.env.boat` 的 overlay 值 | apt 安装留空；源码安装填写自己的实际路径，本流程不默认该目录存在 |
+| SciPy 报 NumPy 版本警告 | `python3 -c 'import numpy,scipy; print(numpy.__version__,numpy.__file__,scipy.__version__)'` | 确认 Python 指向本仓库 `.venv`，`PYTHONNOUSERSITE=1`；不修改全局科学计算库 |
+| rosdep 找不到 pymavlink | 仓库是否更新、rosdep 数据是否刷新 | 使用 `python3-pymavlink-pip`；构建脚本在 venv 内安装和检查，不用错误的 `python3-pymavlink` 键 |
+| `kLivoxLidarDoubleEchoData` 未定义 | SDK 与驱动的源码 SHA、CMake 缓存中的 include 路径 | 第 5 步两个 SHA 必须配套；SDK2 v1.3.1 与这里的驱动组合曾实际编译失败 |
+| SDK `.so` 找不到 | `ldd`、`USV_LIVOX_SDK_PREFIX` | source 本仓库环境；前缀指向实际 SDK install，不能指向源码根目录 |
+| 没有 `/livox/lidar` | 雷达供电、直连网卡、主机/IP 配置、UDP 端口占用、驱动日志 | 检查路由和驱动 bind 错误；SSH 在线不能替代雷达收包验证 |
+| 有点云但没有 `/scan` | 字段、源时间、安装 TF、飞控 odom、F/G 节点及投影订阅 | 看 livox_filter 警告；缺 TF/过期输入会拒绝处理，不靠改时间戳解决 |
+| TF 缺失或 costmap 等待 | `/mavros/local_position/odom`、`/usv/map_alignment`、frame 名 | 等飞控建立有效 EKF 原点；检查地图原点和单一 TF 发布者，不补假零变换 |
+| costmap 不清障碍 | 实际有限返回、射线是否看到旧位置、扫描是否全 NaN | 无返回不是自由空间证据；记录缺口，不用周期性清图把测试变成“通过” |
+| 路径有但船不动 | `enable_control`、armed/GUIDED、`/usv/control_status`、新鲜输入 | 预览模式本来不控船；参数需按第 10 步重启生效，不能跳过门控 |
+| 到点后仍漂移 | 是否在普通导航或 LOITER，定位和外部风流 | 到点不等于持续定点；按独立 LOITER 测试记录，不混淆模式 |
 
-本轮进入远程安装阶段时 Orin 已离线；截至 2026-11-09 12:16（UTC+8），Tailscale 显示 offline，SSH 连接超时。上述修正和检查在服务器完成，尚未据此宣称 Orin 已更新、独立环境已安装或 ARM64 构建已通过。连接恢复后继续本节流程，实际结果以 `runs/hardware_build_<时间>/` 的新日志为准。服务器连接失败记录位于 `runs/orin_deployment_20261109/connection_attempts.jsonl`，该目录不提交 Git。
+发生故障时先保存本次 SHA、完整启动命令和节点日志，缩小到最早失败的一步；修复后重跑该步和受影响的数据链。记录使用独立 `runs/<时间>/`，大点云、bag 和视频不上传 GitHub。
 
-**没有将源码拉取、单元测试或离线参数解析写成 ARM64 全栈构建/实机闭环通过。** 配置中的硬件测量值、MAVROS 2.14 实时接口、驱动时钟/数据、真正的模式切换、解锁和水试仍须按上文逐项验收。
+验证必须分层记录：**包已安装 → 构建/导入通过 → 无硬件启动通过 → 实际传感器/TF 通过 → 实船控制和水试通过**。后一层不能由前一层代替。本次文档和辅助脚本在 server 上检查，没有远程连接 Orin，也没有完成新的 Orin 或水试验证。server 实际构建与启动检查详见 [部署文档验证记录](experiments/20261110_deployment_guide.md)。
 
-每次现场试验保存：仓库 SHA、实际驱动/MAVROS 版本、飞控完整参数、地图和外参、bag、视频、独立位置证据、退出状态、失败原因及修复后的新运行目录。现有仿真证据及其限制见 [MID-360 / LOITER 验证报告](experiments/20261104_simulation_verification.md)。
+已有仿真结论与剩余问题见 [验证报告](validation_report.md)、[MID-360 / LOITER 补充实验](experiments/20261104_simulation_verification.md)。原生保持、动态占据清除、定位偏差、真实灯态/UAV 接入和控制进程失效仍须按各自范围验证；当前普通桥没有完整的 RTK/EKF 质量门控。

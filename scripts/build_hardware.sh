@@ -1,20 +1,17 @@
 #!/usr/bin/env bash
-# Build the three hardware navigation packages on Ubuntu 22.04 / Orin.
+# Build the three hardware navigation packages on Ubuntu 22.04 / Humble.
 # This script never opens hardware connections or starts ROS nodes.
 set -eo pipefail
 USV_BUILD_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$USV_BUILD_ROOT"
-if [[ "$(uname -m)" != aarch64 ]]; then
-    echo 'This entry point targets the ARM64 Orin; use a separate checkout there.' >&2
+if [[ "$(uname -m)" != aarch64 && "$(uname -m)" != x86_64 ]]; then
+    echo 'Supported architectures: aarch64 (Orin) and x86_64 (offline checks).' >&2
     exit 2
 fi
 USV_BUILD_RUN="$USV_BUILD_ROOT/runs/hardware_build_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$USV_BUILD_RUN"
 exec > >(tee -a "$USV_BUILD_RUN/build.log") 2>&1
-export PYTHONNOUSERSITE=1
-source /opt/ros/humble/setup.bash
-# shellcheck source=/dev/null
-source "${USV_LIVOX_SETUP:-$HOME/robotx_ws/install/setup.bash}"
+source scripts/hardware_underlay.sh
 /usr/bin/python3 -c 'import sys; assert sys.version_info[:2] == (3, 10), sys.version'
 if [[ ! -f "$USV_BUILD_ROOT/.venv/pyvenv.cfg" ]]; then
     /usr/bin/python3 -m venv --system-site-packages "$USV_BUILD_ROOT/.venv"
@@ -38,13 +35,14 @@ PY
 # Resolve Python dependencies using this interpreter and its pip, not ~/.local.
 python3 "$(command -v rosdep)" check --rosdistro humble \
     --from-paths src/robotx_task1_interfaces src/usv_nav2 src/usv_sim --ignore-src
-python3 -m colcon build --symlink-install \
+python3 -m colcon --log-base log/hardware build --symlink-install \
+    --build-base build/hardware --install-base install/hardware \
     --base-paths src/robotx_task1_interfaces src/usv_nav2 src/usv_sim \
     --packages-select robotx_task1_interfaces usv_nav2 usv_sim \
     --executor sequential --event-handlers console_direct+ \
     --cmake-args "-DPython3_EXECUTABLE=$USV_BUILD_ROOT/.venv/bin/python3" \
                  "-DPYTHON_EXECUTABLE=$USV_BUILD_ROOT/.venv/bin/python3"
-source install/local_setup.bash
+source install/hardware/local_setup.bash
 python3 - "$USV_BUILD_RUN" <<'PY'
 import importlib.metadata, json, platform, subprocess, sys
 from datetime import datetime
@@ -61,11 +59,16 @@ report = {
     'git_status': subprocess.check_output(['git', 'status', '--short'], text=True),
     'packages': {name: get_package_prefix(name) for name in (
         'robotx_task1_interfaces', 'usv_nav2', 'usv_sim', 'nav2_bringup',
-        'mavros', 'livox_ros_driver2', 'pointcloud_to_laserscan')},
+        'mavros', 'pointcloud_to_laserscan')},
     'python_versions': {name: importlib.metadata.version(name) for name in (
         'numpy', 'scipy', 'pymavlink', 'setuptools')},
     'scope': 'Build and import checks only; no hardware connections or control.',
 }
+try:
+    report['packages']['livox_ros_driver2'] = get_package_prefix('livox_ros_driver2')
+except LookupError:
+    report['packages']['livox_ros_driver2'] = None
+    print('Livox driver not found; install it before the live sensor stage.')
 out = Path(sys.argv[1])
 (out / 'build_result.json').write_text(json.dumps(report, indent=2) + '\n')
 (out / 'pip_freeze.txt').write_text(subprocess.check_output(
