@@ -1,10 +1,12 @@
 # Orin 实机部署：启动顺序、命令与测试流程
 
-更新：2026-11-04。对象为 Orin + 真实 MID-360 + Pixhawk / 双推进器船，目标飞控固定 **ArduRover V4.4.0，`d0356316eb0fa34ed1c9f39f7b059b9ae7ba4664`**。本文提供现场执行流程；仓库仿真通过不代表实船通过。首次水试先用普通 Navfn + DWB 导航及独立原生 LOITER，Task1 自动任务仍有动态占据清除缺口，不能直接当作已验收的比赛实船程序。
+更新：2026-11-09。对象为 Orin + 真实 MID-360 + Pixhawk / 双推进器船，目标飞控固定 **ArduRover V4.4.0，`d0356316eb0fa34ed1c9f39f7b059b9ae7ba4664`**。本文提供现场执行流程；仓库仿真通过不代表实船通过。首次水试先用普通 Navfn + DWB 导航及独立原生 LOITER，Task1 自动任务仍有动态占据清除缺口，不能直接当作已验收的比赛实船程序。
 
 ## 1. 本次核查的 Orin 环境
 
-| 项目 | SSH 只读核查结果 |
+以下状态来自 **2026-11-09 10:14（UTC+8）** 的 SSH 核查，设备连接状态需要每次启动前复查。
+
+| 项目 | SSH 核查结果 |
 |---|---|
 | 登录 / 主机 | `robotx@100.91.153.16` / `t-wave-orin` |
 | 平台 | Ubuntu 22.04.5、aarch64、L4T R36.4.3 |
@@ -13,11 +15,13 @@
 | MAVROS | 加载既有 workspace 后为 **2.14.0**；仿真服务器为 2.16.0，不能把服务器版本写成 Orin 已安装版本 |
 | Livox | 既有 workspace 中 `livox_ros_driver2` 包版本 1.0.0，Git `21445540f0d100dc86a7e6df312dd70bbdb4afdf`；已有本地修改，保留 |
 | 点云格式 | 既有驱动源码包含 `timestamp: FLOAT64`，逐点绝对纳秒时间；运行时仍须检查实际消息和时钟 |
-| Nav2 | 既有 ROS 环境中未发现 `nav2_bringup` / `nav2_navfn_planner`，需补齐依赖后构建 |
+| Nav2 | **1.1.20 已安装**；包含 bringup、Navfn、DWB、planner/controller/BT navigator；检查的可执行文件和插件无缺失动态库 |
 | 点云投影 / 地理数据 | pointcloud_to_laserscan 2.0.1；`/usr/share/GeographicLib/geoids/egm96-5.pgm` 已存在 |
-| 雷达网络 | 现有配置为雷达 `192.168.1.188` → Orin `192.168.1.5`（`enP8p1s0`）；这是配置核查，未据此宣称实时收包通过 |
-| 飞控接口 | 已枚举 Pixhawk6C 的两个 USB 接口；实际 MAVLink 端口、波特率和 SYSID 尚需核实 |
-| 本仓库目录 | `/home/robotx/rx_simu`，分支 `codex/orin-deployment` |
+| 雷达网络 | 配置为雷达 `192.168.1.188` → Orin `192.168.1.5`（`enP8p1s0`）；核查时网卡 DOWN、没有该地址，实时收包未验证 |
+| 飞控接口 | 本次未枚举到此前的 Pixhawk USB 接口；只有 CH340 `/dev/ttyUSB0`，不能据此认定为飞控，未打开串口 |
+| 本仓库目录 | `/home/robotx/rx_simu`，分支 `codex/orin-deployment`，核查时提交 `c90a54c`、尚无 build/install 或实船配置 |
+| 运行状态 | ROS domain 0、62 的短时发现中未发现业务节点；未启动导航链 |
+| Python 依赖 | 默认加载用户目录 NumPy 1.26.1，与系统 SciPy 1.8.0 有兼容警告；关闭 user site 后系统 NumPy 为 1.21.5，但 pymavlink 不可见，需按下文建立独立环境 |
 
 `100.91.153.16` 是管理 SSH 地址，**不是 MID-360 数据接收网卡地址，也不是 FCU URL**。账号密码不写入仓库。MAVROS / 雷达 / 导航使用独立 ROS domain；仍须检查串口和雷达 UDP 端口是否被旧进程占用。
 
@@ -39,13 +43,14 @@ git rev-parse HEAD
 
 **不要运行仿真 `scripts/bootstrap.py`、`scripts/build.sh`、`scripts/env.sh`、`sim_session.py` 或任何 `validate_*.py` 控船脚本。** 它们面向服务器上的 SITL / Garden / WAM-V，有 amd64 二进制、仿真时钟、假 GPS 或场景假设。实船不需要 Gazebo、VRX、SITL 或 `livox_gz_sim`。
 
-以下是准备部署时执行的安装命令，本次拉取源码不等于已执行安装：
+以下是依赖准备命令；已安装的软件不必重复升级。2026-11-09 的核查不等于后续构建和实船验收已完成。
 
 ```bash
 sudo apt update
 sudo apt install ros-humble-navigation2 ros-humble-nav2-bringup \
   ros-humble-pointcloud-to-laserscan ros-humble-rosbag2 \
   python3-colcon-common-extensions python3-rosdep \
+  python3-venv python3-pip python3-setuptools \
   python3-numpy python3-scipy python3-yaml
 
 source /opt/ros/humble/setup.bash
@@ -55,12 +60,16 @@ ros2 pkg prefix livox_ros_driver2
 # 首次机器尚无 rosdep 数据库时先 sudo rosdep init；已初始化则不重复。
 rosdep update
 cd "$HOME/rx_simu"
+# pymavlink 由构建脚本安装到本仓库 venv，并在随后无 skip 的 check 中验证。
 rosdep install --from-paths src/robotx_task1_interfaces src/usv_nav2 src/usv_sim \
-  --ignore-src -r -y
-colcon build --symlink-install --base-paths src \
-  --packages-select robotx_task1_interfaces usv_nav2 usv_sim
-source install/setup.bash
+  --ignore-src --rosdistro humble -r -y --skip-keys python3-pymavlink-pip
+bash scripts/build_hardware.sh
+source scripts/hardware_env.sh
 ```
+
+`build_hardware.sh` 只用于 ARM64：用系统 Python 3.10 创建 `.venv`，继承系统 ROS / NumPy / SciPy，通过 `PYTHONNOUSERSITE=1` 排除 `~/.local` 的版本干扰，并按 [hardware-pip.txt](../requirements/hardware-pip.txt) 在 venv 内安装 pymavlink。脚本用同一解释器执行 rosdep 检查和 colcon 构建，保留日志、版本和导入结果到 `runs/hardware_build_<时间>/`。它不会启动 MAVROS、雷达或控制节点。不能仅设置 `PYTHONNOUSERSITE=1` 后省略 venv 中的 pymavlink 安装。
+
+两个 rosdep 声明已修正：`ament_python` 是构建类型，不作为此处可解析的 buildtool 依赖，实际构建工具声明为 `python3-setuptools`；pymavlink 使用官方键 `python3-pymavlink-pip`，不再使用不存在的 `python3-pymavlink`。依据为 [ROS 2 Python 包指南](https://github.com/ros2/ros2_documentation/blob/humble/source/How-To-Guides/Using-Python-Packages.rst) 和 [官方 rosdep Python 规则](https://github.com/ros/rosdistro/blob/master/rosdep/python.yaml)。实船三个包的构建不包含其他 Task1 包。
 
 本流程复用 Orin 既有 MAVROS / Livox，不覆盖其 vendor 源码。记录实际版本并重新做接口验收；若必须对齐服务器 MAVROS 2.16.0，应在独立 ARM64 工作空间构建并复测，不能拷贝服务器 amd64 的 `external/deps`。没有既有 MAVROS 的新机器可安装 `ros-humble-mavros` 和 `ros-humble-mavros-extras`；缺 geoid 数据时再运行该包的 GeographicLib 安装脚本。本 Orin 已有 geoid 文件。
 
@@ -104,9 +113,7 @@ ls -l /dev/serial/by-id/
 使用实测的可航行边界和禁航多边形，按 [demo_area.json 的结构](../src/usv_nav2/maps/demo_area.json) 编写 `runs/hardware_config/area.json`，再生成地图。示例地图不代表现场水域。
 
 ```bash
-source /opt/ros/humble/setup.bash
-source "$USV_LIVOX_SETUP"
-source install/setup.bash
+source scripts/hardware_env.sh
 ros2 run usv_nav2 make_water_map \
   runs/hardware_config/area.json runs/hardware_config/water
 ```
@@ -167,10 +174,7 @@ PY
 
 ```bash
 cd "$HOME/rx_simu"
-source .env.boat
-source /opt/ros/humble/setup.bash
-source "${USV_LIVOX_SETUP:?填写驱动环境}"
-source install/setup.bash
+source scripts/hardware_env.sh
 ```
 
 该配置使用 `ROS_DOMAIN_ID=62`、`ROS_LOCALHOST_ONLY=1`，ROS 节点都在 Orin 上；Tailscale 只负责 SSH。若要电脑直接运行 RViz，需要另外配置双方 DDS 网络，不把改成 `ROS_LOCALHOST_ONLY=0` 当作已经打通发现。现场先通过遥控器确认 MANUAL / HOLD 的接管和推进器停止能力；岸上阶段保持 disarm，测试推进器时由现场人员单独安排。
@@ -401,6 +405,10 @@ ros2 service call /mavros/cmd/arming mavros_msgs/srv/CommandBool '{value: false}
 
 ## 8. 本次交付与尚未执行项
 
-本次工作包括 SSH 环境核查、独立仓库获取、部署文档和配置模板，以及不连接设备的源码基础检查。**没有将源码拉取、单元测试或离线参数解析写成 ARM64 全栈构建/实机闭环通过。** Nav2 依赖安装、配置中的硬件测量值、MAVROS 2.14 实时接口、驱动时钟/数据、真正的模式切换、解锁和水试均按上文逐项验收。
+Nav2 1.1.20 已在 2026-11-09 的 Orin 核查中确认安装。服务器仓库已修正实船包的依赖声明，新增独立构建和环境入口，并通过 32 项纯逻辑测试、包声明解析、Bash / 内嵌 Python 语法、ShellCheck 与 diff 空白检查。
+
+本轮进入远程安装阶段时 Orin 已离线；截至 2026-11-09 12:16（UTC+8），Tailscale 显示 offline，SSH 连接超时。上述修正和检查在服务器完成，尚未据此宣称 Orin 已更新、独立环境已安装或 ARM64 构建已通过。连接恢复后继续本节流程，实际结果以 `runs/hardware_build_<时间>/` 的新日志为准。服务器连接失败记录位于 `runs/orin_deployment_20261109/connection_attempts.jsonl`，该目录不提交 Git。
+
+**没有将源码拉取、单元测试或离线参数解析写成 ARM64 全栈构建/实机闭环通过。** 配置中的硬件测量值、MAVROS 2.14 实时接口、驱动时钟/数据、真正的模式切换、解锁和水试仍须按上文逐项验收。
 
 每次现场试验保存：仓库 SHA、实际驱动/MAVROS 版本、飞控完整参数、地图和外参、bag、视频、独立位置证据、退出状态、失败原因及修复后的新运行目录。现有仿真证据及其限制见 [MID-360 / LOITER 验证报告](experiments/20261104_simulation_verification.md)。

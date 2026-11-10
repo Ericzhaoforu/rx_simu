@@ -5,7 +5,7 @@
   <description>ROS 2 Humble Nav2 integration for a 1.2 m by 0.7 m differential thrust boat.</description>
   <maintainer email="admin@example.com">RobotX project</maintainer>
   <license>MIT</license>
-  <buildtool_depend>ament_python</buildtool_depend>
+  <buildtool_depend>python3-setuptools</buildtool_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>robotx_task1_interfaces</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
@@ -14,6 +14,7 @@
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>mavros</exec_depend>
   <exec_depend>mavros_msgs</exec_depend>
+  <exec_depend>python3-pymavlink-pip</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
